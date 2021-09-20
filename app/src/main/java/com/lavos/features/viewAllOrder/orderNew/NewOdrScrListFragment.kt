@@ -293,25 +293,26 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
                     ex.printStackTrace()
                 }
 
-                var heading = "ORDER SUMMARY.\n\n"
-                var pdfBody: String = ""
+                var heading = "ORDER SUMMARY"
+                var pdfBody: String = "\n\n"
                 for (i in 0..viewDataListPDF!!.size - 1) {
                     var qty_Order: Int = 0
                     var qtty_list = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderQtyOrderIDWise(viewDataListPDF!!.get(i).order_id)
                     for (j in 0..qtty_list!!.size - 1) {
                         qty_Order = qty_Order + qtty_list.get(j).toString().toInt()
                     }
-                    var content= "Order ID  : "+viewDataListPDF!!.get(0).order_id+"\n"+"Qty : "+qty_Order.toString()+"\n"+viewDataListPDF!!.get(i).shop_name+"\n"+viewDataListPDF!!.get(i).shop_addr+"\n"
+                    var content= "\n\n"+"Order ID  : "+viewDataListPDF!!.get(0).order_id+"\n"+"Qty           : "+qty_Order.toString()+"\n"+"Name      : "+viewDataListPDF!!.get(i).shop_name+"\n"+"Address  :"+viewDataListPDF!!.get(i).shop_addr+"\n"+
+                            "\n__________________________"
                     pdfBody=pdfBody+content
                 }
 
 
                 val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)
 
-                val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderDtls_" +
+                val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderDtls" +
                         "_" + Pref.user_id+AppUtils.getCurrentDateTime().toString() + ".pdf", image, heading, 3.7f)
 
-                /*if (!TextUtils.isEmpty(path)) {
+                if (!TextUtils.isEmpty(path)) {
                     try {
                         val shareIntent = Intent(Intent.ACTION_SEND)
                         val fileUrl = Uri.parse(path)
@@ -325,7 +326,7 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
                         e.printStackTrace()
                     }
                 } else
-                    (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")*/
+                    (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
 
 
             }
