@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.media.Image
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
@@ -17,6 +16,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.elvishew.xlog.XLog
 import com.lavos.CustomStatic
 import com.lavos.R
 import com.lavos.app.AppDatabase
@@ -26,23 +26,17 @@ import com.lavos.app.domain.NewOrderScrOrderEntity
 import com.lavos.app.types.FragType
 import com.lavos.app.uiaction.IntentActionable
 import com.lavos.app.utils.AppUtils
+import com.lavos.app.utils.FTStorageUtils
 import com.lavos.base.presentation.BaseActivity
 import com.lavos.base.presentation.BaseFragment
-import com.lavos.features.commondialog.presentation.CommonDialog
-import com.lavos.features.commondialog.presentation.CommonDialogClickListener
 import com.lavos.features.dashboard.presentation.DashboardActivity
-import com.lavos.features.stockAddCurrentStock.UpdateShopStockFragment
-import com.lavos.features.stockCompetetorStock.api.AddCompStockProvider
-import com.lavos.features.stockCompetetorStock.api.AddCompStockRepository
 import com.lavos.features.viewAllOrder.api.addorder.AddOrderRepoProvider
-import com.lavos.features.viewAllOrder.presentation.NewOrderCartAdapter
 import com.lavos.features.viewAllOrder.interf.NewOrderorderCount
 import com.lavos.features.viewAllOrder.model.NewOrderCartModel
 import com.lavos.features.viewAllOrder.model.NewOrderSaveApiModel
+import com.lavos.features.viewAllOrder.presentation.NewOrderCartAdapter
 import com.lavos.features.viewAllOrder.presentation.NewOrderCartAdapterNew
 import com.lavos.widgets.AppCustomTextView
-import com.elvishew.xlog.XLog
-import com.lavos.app.utils.FTStorageUtils
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_new_order_scr_cart.*
@@ -193,7 +187,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
                 R.id.btn_new_order_save_db -> {
                     if (cartOrder!!.size > 0)
                         showCheckAlert()
-                        //saveToDB()
+                    //saveToDB()
                 }
                 R.id.iv_frag_new_order_scr_cart_phone -> {
                     IntentActionable.initiatePhoneCall(mContext, shop_phone)
@@ -217,8 +211,8 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         for(i in 0..cartOrder!!.size-1){
             for(j in 0..cartOrder!!.get(i).color_list.size-1){
                 for(k in 0..cartOrder!!.get(i).color_list.get(j).order_list.size-1){
-                    var newOrderRoomData=NewOrderRoomData(ordID,cartOrder!!.get(i).product_id.toString(),cartOrder!!.get(i).product_name.toString(),cartOrder!!.get(i).gender.toString(),
-                            cartOrder!!.get(i).color_list.get(j).color_id,cartOrder!!.get(i).color_list.get(j).color_name,cartOrder!!.get(i).color_list.get(j).order_list.get(k).size, cartOrder!!.get(i).color_list.get(j).order_list.get(k).qty)
+                    var newOrderRoomData=NewOrderRoomData(ordID, cartOrder!!.get(i).product_id.toString(), cartOrder!!.get(i).product_name.toString(), cartOrder!!.get(i).gender.toString(),
+                            cartOrder!!.get(i).color_list.get(j).color_id, cartOrder!!.get(i).color_list.get(j).color_name, cartOrder!!.get(i).color_list.get(j).order_list.get(k).size, cartOrder!!.get(i).color_list.get(j).order_list.get(k).qty)
 
                     newOrderRoomDataList.add(newOrderRoomData)
 
@@ -236,9 +230,9 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
                     obj.isUploaded=false
                     AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.insert(obj)
 
-                    XLog.d("NeworderScrCartFragment ITEM : "  + AppUtils.getCurrentDateTime().toString()+"\n"+
-                    "ordID:"+ordID+"~product_id:"+obj.product_id+"~gender:"+obj.gender+"~size:"+obj.size+"~qty:"+obj.qty+"~order_date:"+obj.order_date+"~shop_id:"+obj.shop_id+
-                    "~color_id:"+obj.color_id+"~color_name:"+obj.color_name+"\n")
+                    XLog.d("NeworderScrCartFragment ITEM : " + AppUtils.getCurrentDateTime().toString() + "\n" +
+                            "ordID:" + ordID + "~product_id:" + obj.product_id + "~gender:" + obj.gender + "~size:" + obj.size + "~qty:" + obj.qty + "~order_date:" + obj.order_date + "~shop_id:" + obj.shop_id +
+                            "~color_id:" + obj.color_id + "~color_name:" + obj.color_name + "\n")
                 }
             }
         }
@@ -254,10 +248,10 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
 
     }
 
-    data class NewOrderRoomData(var order_id:String,var product_id:String,var product_name:String,var gender:String,var color_id:String,var color_name:String ,var size:String,var qty:String)
+    data class NewOrderRoomData(var order_id: String, var product_id: String, var product_name: String, var gender: String, var color_id: String, var color_name: String, var size: String, var qty: String)
 
 
-    private fun sendToApi(ordID:String){
+    private fun sendToApi(ordID: String){
         var newOrderSaveApiModel: NewOrderSaveApiModel=NewOrderSaveApiModel()
         newOrderSaveApiModel.user_id=Pref.user_id
         newOrderSaveApiModel.session_token=Pref.session_token
@@ -273,7 +267,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : RESPONSE " + result.status)
-                            if (result.status == NetworkConstant.SUCCESS){
+                            if (result.status == NetworkConstant.SUCCESS) {
 
                                 doAsync {
 
@@ -286,9 +280,9 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
 
 
                             }
-                        },{error ->
+                        }, { error ->
                             if (error == null) {
-                                XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR " )
+                                XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR ")
                             } else {
                                 XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR " + error.localizedMessage)
                                 error.printStackTrace()
@@ -314,7 +308,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         val dialogYes = simpleDialog.findViewById(R.id.tv_message_ok_new) as AppCustomTextView
         dialogYes.setOnClickListener({ view ->
             simpleDialog.cancel()
-            voiceAttendanceMsg( AppUtils.hiFirstNameText() + " , Your order has been placed successfully.")
+            voiceAttendanceMsg(AppUtils.hiFirstNameText() + " , Your order has been placed successfully.")
         })
         simpleDialog.show()
     }
@@ -326,7 +320,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
                 Log.e("Speeh Error", "NewOrderScrCartFragment");
         }
 
-        (mContext as DashboardActivity).loadFragment(FragType.NewOrderScrOrderDetailsFragment, false, NewOrderScrActiFragment.shop_id!! )
+        (mContext as DashboardActivity).loadFragment(FragType.NewOrderScrOrderDetailsFragment, false, NewOrderScrActiFragment.shop_id!!)
     }
 
 
@@ -334,19 +328,23 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         var heading = "ORDER DETAILS"
         var pdfBody: String = "\n\n"
 
-        pdfBody=pdfBody+"Party : "+AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(NewOrderScrOrderDetailsFragment.shop_id).shopName!!+ "     "+ " Phone : "+shop_phone.toString()+"\n\n"
-        pdfBody=pdfBody+"Order ID : "+CustomStatic.IsFromViewNewOdrScrOrderID+ "     "+" Date : "+AppUtils.convertToCommonFormat(CustomStatic.IsFromViewNewOdrScrOrderDate)+"\n\n\n"
+        pdfBody=pdfBody+"Party      : "+AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(NewOrderScrOrderDetailsFragment.shop_id).shopName!!+ "                                  "+ "Phone : "+shop_phone.toString()+"\n\n"
+        pdfBody=pdfBody+"Order ID : "+CustomStatic.IsFromViewNewOdrScrOrderID+ "     "+"                         Date : "+AppUtils.convertToCommonFormat(CustomStatic.IsFromViewNewOdrScrOrderDate)+"\n\n\n"
 
         for(i in 0..cartOrder!!.size-1){
+//            val currentPos: Int = cartOrder!!.size - i
+           /* if(currentPos >= 0){
+
+            }*/
             var rootObjj=cartOrder!!.get(i)
-            var contextHeader="Product Name : "+rootObjj.product_name!!+"       "+" Gender : "+rootObjj.gender+"\n"
+            var contextHeader="Product Name : "+rootObjj.product_name!!+"       "+" Gender : " +rootObjj.gender+"\n"
             var colorObjj=cartOrder!!.get(i).color_list
             for(j in 0..colorObjj!!.size!!-1){
-                var colorRoot="Color : "+colorObjj.get(j).color_name+"\n"
+                var colorRoot="Color              : "+colorObjj.get(j).color_name+"\n"
                 contextHeader+=colorRoot
                 var sizeQtyObjj=colorObjj.get(j).order_list
                 for(k in 0..sizeQtyObjj!!.size-1){
-                    var sizeQtyRoot="       Size : "+sizeQtyObjj.get(k).size+"              Qty : "+sizeQtyObjj.get(k).qty+"\n"
+                    var sizeQtyRoot="       Size : "+sizeQtyObjj.get(k).size+"                                                                               "+"\u0020"+"Qty : " +sizeQtyObjj.get(k).qty+"\n"
                     contextHeader+=sizeQtyRoot
                 }
             }
@@ -356,7 +354,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)
 
         val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderDetalis" +
-                "_" + Pref.user_id+AppUtils.getCurrentDateTime().toString().replace(" ","R").replace(":","_") + ".pdf", image, heading, 3.7f)
+                "_" + Pref.user_id + AppUtils.getCurrentDateTime().toString().replace(" ", "R").replace(":", "_") + ".pdf", image, heading, 3.7f)
 
 
 
