@@ -311,9 +311,9 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
         var heading = "ORDER SUMMARY"
         var pdfBody: String = "\n\n"
 
-        pdfBody=pdfBody+"Name    : "+mAddShopDataObj?.shopName.toString()+"\n\n"
+        pdfBody=pdfBody+"Name     : "+mAddShopDataObj?.shopName.toString()+"\n\n"
         pdfBody=pdfBody+"Address : "+mAddShopDataObj?.address.toString()+"\n\n"
-        pdfBody=pdfBody+"Phone   : "+mAddShopDataObj?.ownerContactNumber.toString()+"\n\n"
+        pdfBody=pdfBody+"Phone    : "+mAddShopDataObj?.ownerContactNumber.toString()+"\n\n"
 
         pdfBody=pdfBody+"\n\n"+"Order Date"+"       "+"           Order ID"+"       "+"                 QTY"+"\n"
 
