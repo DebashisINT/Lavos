@@ -309,7 +309,7 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
 
                 val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)
 
-                val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderDtls" +
+                val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderDetalis" +
                         "_" + Pref.user_id+AppUtils.getCurrentDateTime().toString().replace(" ","R").replace(":","_") + ".pdf", image, heading, 3.7f)
 
                 if (!TextUtils.isEmpty(path)) {
