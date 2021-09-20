@@ -172,7 +172,7 @@
                 android:gravity="center"
                 android:text="Date"
                 android:textColor="@color/white"
-                android:textSize="@dimen/_10sdp"
+                android:textSize="@dimen/_9sdp"
                 android:textStyle="bold" />
 
             <com.lavos.widgets.AppCustomTextView
@@ -183,7 +183,7 @@
                 android:gravity="center"
                 android:text="Order#"
                 android:textColor="@color/white"
-                android:textSize="@dimen/_10sdp"
+                android:textSize="@dimen/_9sdp"
                 android:textStyle="bold" />
 
 
@@ -195,7 +195,7 @@
                 android:gravity="center"
                 android:text="QTY"
                 android:textColor="@color/white"
-                android:textSize="@dimen/_11sdp"
+                android:textSize="@dimen/_9sdp"
                 android:textStyle="bold" />
 
             <com.lavos.widgets.AppCustomTextView
@@ -206,7 +206,7 @@
                 android:gravity="center"
                 android:text="View"
                 android:textColor="@color/white"
-                android:textSize="@dimen/_10sdp"
+                android:textSize="@dimen/_9sdp"
                 android:textStyle="bold" />
 
             <com.lavos.widgets.AppCustomTextView
@@ -217,7 +217,7 @@
                 android:gravity="center"
                 android:text="Sync"
                 android:textColor="@color/white"
-                android:textSize="@dimen/_10sdp"
+                android:textSize="@dimen/_9sdp"
                 android:textStyle="bold"
                 android:visibility="visible" />
         </LinearLayout>

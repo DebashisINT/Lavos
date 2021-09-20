@@ -18,11 +18,11 @@
             android:id="@+id/tv_row_new_ord_scr_list_date"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_weight="1.1"
             android:hint="Date"
             android:gravity="center"
             android:textColor="@color/black"
-            android:textSize="@dimen/_10sdp"/>
+            android:textSize="@dimen/_9sdp"/>
 
         <TextView
             android:id="@+id/tv_row_new_ord_scr_list_order_id"
@@ -32,7 +32,17 @@
             android:hint="Order"
             android:gravity="center"
             android:textColor="@color/black"
-            android:textSize="@dimen/_10sdp"/>
+            android:textSize="@dimen/_9sdp"/>
+
+        <TextView
+            android:id="@+id/tv_row_new_ord_scr_list_order_qty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1.2"
+            android:hint="Qty"
+            android:gravity="center"
+            android:textColor="@color/black"
+            android:textSize="@dimen/_9sdp"/>
 
 
 

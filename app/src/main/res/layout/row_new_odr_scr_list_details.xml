@@ -24,7 +24,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:hint="Order ID"
-                android:textSize="@dimen/_13sdp"
+                android:textSize="@dimen/_12sdp"
                 android:textColor="@color/colorPrimary"
                 android:gravity="center|start"/>
 
@@ -44,6 +44,21 @@
                 android:src="@drawable/ic_registered_shop_sync"
                 android:contentDescription="@null"
                 android:visibility="gone"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/_30sdp"
+            android:orientation="horizontal"
+            android:padding="@dimen/_5sdp">
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_row_new_odr_scr_dtls_order_qty"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textSize="@dimen/_12sdp"
+                android:textColor="@color/colorPrimary"/>
 
         </LinearLayout>
 
