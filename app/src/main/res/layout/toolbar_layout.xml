@@ -172,6 +172,16 @@
                 android:contentDescription="@null"
                 android:visibility="gone"/>
 
+            <ImageView
+                android:id="@+id/rl_share_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/_5sdp"
+                android:src="@drawable/ic_share"
+                android:tint="@color/white"
+                android:contentDescription="@null"
+                android:visibility="gone"/>
+
             <RelativeLayout
                 android:id="@+id/rl_cart"
                 android:layout_width="wrap_content"

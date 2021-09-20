@@ -1,6 +1,10 @@
 package com.lavos.features.viewAllOrder.orderNew
 
 import android.content.Context
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.TextUtils
@@ -17,6 +21,8 @@ import com.lavos.app.AppDatabase
 import com.lavos.app.Pref
 import com.lavos.app.domain.AddShopDBModelEntity
 import com.lavos.app.types.FragType
+import com.lavos.app.utils.AppUtils
+import com.lavos.app.utils.FTStorageUtils
 import com.lavos.base.presentation.BaseFragment
 import com.lavos.features.dashboard.presentation.DashboardActivity
 import com.lavos.features.stockCompetetorStock.CompetetorStockFragment
@@ -26,7 +32,10 @@ import com.lavos.features.viewAllOrder.model.NewOrderCartModel
 import com.lavos.features.viewAllOrder.model.ProductOrder
 import com.lavos.features.viewAllOrder.presentation.AdapterNewOrdScrOrdList
 import com.lavos.widgets.AppCustomTextView
+import java.io.File
 import java.lang.Exception
+import java.util.*
+import kotlin.collections.ArrayList
 
 class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
     private lateinit var mContext: Context
@@ -39,6 +48,8 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
     private lateinit var myshop_contact_TV: AppCustomTextView
 
     private var adapterNewOrdScrOrdList: AdapterNewOrdScrOrdList? = null
+
+    private lateinit var share_Icon: LinearLayout
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -71,6 +82,60 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
         super.onResume()
     }
 
+
+    fun onShareClick() {
+        var qty_Order: Int = 0
+        val heading = "ORDER SUMMARY"
+
+
+        var pdfBody = "\n\n\n\nShop Name: " +  mAddShopDataObj?.shopName + "\n\nShop Address: " + mAddShopDataObj?.address +
+                "\n\nShop Contact: "+  mAddShopDataObj?.ownerContactNumber
+
+        val orderList =  AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderAll(shop_id)
+
+
+
+        orderList?.forEach {it1 ->
+            pdfBody = pdfBody + "\n\n-----------------------------------------------------------------------------\n\n"+
+                    "Date: " + it1.order_date + "Order#: " + it1.order_id +""
+                 var qtty_list = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderQtyOrderIDWise(it1.order_id!!)
+                 qtty_list?.forEach { it->
+                      //  qty_Order=  qty_Order + it.qtty_list.toInt()
+                       /* for (i in 0..qtty_list!!.size - 1) {
+                            qty_Order = qty_Order + qtty_list.get(i).toString().toInt()
+                        }*/
+
+            }
+            pdfBody = pdfBody +
+                    "  QTY: " + qty_Order + "\n\n"
+
+        }
+
+
+        val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)
+
+        val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderSummary_" +
+                "_" + Pref.user_id + ".pdf", image, heading, 3.7f)
+
+        if (!TextUtils.isEmpty(path)) {
+            try {
+                val shareIntent = Intent(Intent.ACTION_SEND)
+                val fileUrl = Uri.parse(path)
+
+                val file = File(fileUrl.path)
+                val uri = Uri.fromFile(file)
+                shareIntent.type = "image/png"
+                shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+                startActivity(Intent.createChooser(shareIntent, "Share pdf using"));
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        } else
+            (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
+
+
+    }
+
     private fun initView(view: View?) {
         mRv_orderDetails = view!!.findViewById(R.id.rv_new_order_list)
         mRv_orderDetails.layoutManager = LinearLayoutManager(mContext)
@@ -80,11 +145,14 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
         myshop_name_TV = view!!.findViewById(R.id.myshop_name_TV)
         myshop_addr_TV = view!!.findViewById(R.id.myshop_address_TV)
         myshop_contact_TV = view!!.findViewById(R.id.tv_contact_number)
+        share_Icon = view!!.findViewById(R.id.ll_frag_new_order_detalis_share)
 
 
         myshop_name_TV.text = mAddShopDataObj?.shopName
         myshop_addr_TV.text = mAddShopDataObj?.address
         myshop_contact_TV.text = "Owner Contact Number: " + mAddShopDataObj?.ownerContactNumber.toString()
+
+        share_Icon.setOnClickListener(this)
 
         getOrderList()
     }
@@ -230,6 +298,10 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
             when (v.id) {
                 R.id.ll_frag_new_order_detalis_add -> {
                     (mContext as DashboardActivity).loadFragment(FragType.NewOrderScrActiFragment, true, shop_id)
+                }
+
+                R.id.ll_frag_new_order_detalis_share->{
+                    onShareClick()
                 }
             }
         }

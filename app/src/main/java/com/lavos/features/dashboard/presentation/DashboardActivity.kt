@@ -360,6 +360,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
     private lateinit var profilePicture: de.hdodenhof.circleimageview.CircleImageView
     private lateinit var iv_filter_icon: ImageView
     private lateinit var rl_confirm_btn: RelativeLayout
+    private lateinit var rl_share_icon: ImageView
     private lateinit var tv_pp_dd_outstanding: AppCustomTextView
     private lateinit var tv_location: AppCustomTextView
     private lateinit var collection_TV: AppCustomTextView
@@ -1541,6 +1542,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
         tv_cart_count = findViewById(R.id.tv_cart_count)
         iv_filter_icon = findViewById(R.id.iv_filter_icon)
         rl_confirm_btn = findViewById(R.id.rl_confirm_btn)
+        rl_share_icon = findViewById(R.id.rl_share_icon) //20-09-2021
         tv_pp_dd_outstanding = findViewById(R.id.tv_pp_dd_outstanding)
 
         /*if (AppUtils.getCurrentTimeWithMeredian() >= "8:00 AM" && AppUtils.getCurrentTimeWithMeredian() <= "10:30 AM")
@@ -1710,6 +1712,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
         iv_delete_icon.setOnClickListener(this)
         iv_filter_icon.setOnClickListener(this)
         rl_confirm_btn.setOnClickListener(this)
+        rl_share_icon.setOnClickListener(this)//20-09-2021
         tv_pp_dd_outstanding.setOnClickListener(this)
         tv_location.setOnClickListener(this)
         //collection_TV.setOnClickListener(this)
@@ -3010,6 +3013,13 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             R.id.micro_learning_TV -> {
                 loadFragment(FragType.MicroLearningListFragment, false, "")
             }
+
+
+          /*  R.id.rl_share_icon -> {
+                if (getCurrentFragType() == FragType.NewOrderScrOrderDetailsFragment) {
+                    (getFragment() as NewOrderScrOrderDetailsFragment).onShareClick()
+                }
+            }*/
 
         }
     }
@@ -4492,6 +4502,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 }
                 setTopBarTitle(getString(R.string.new_order_scr_list))
                 setTopBarVisibility(TopBarConfig.BACK)
+//                setTopBarVisibility(TopBarConfig.SHARE)
             }
             FragType.NewOdrScrListFragment -> {
                 if (enableFragGeneration) {
@@ -5939,6 +5950,36 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 mDrawerToggle.setHomeAsUpIndicator(R.drawable.ic_header_back_arrow)
                 drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
             }
+            TopBarConfig.SHARE->{
+                rl_share_icon.visibility = View.VISIBLE
+                iv_home_icon.visibility = View.VISIBLE
+                mDrawerToggle.isDrawerIndicatorEnabled = false
+                iv_search_icon.visibility = View.GONE
+                iv_sync_icon.visibility = View.GONE
+                rl_cart.visibility = View.GONE
+                iv_filter_icon.visibility = View.GONE
+                rl_confirm_btn.visibility = View.GONE
+                logo.visibility = View.VISIBLE
+                logo.clearAnimation()
+                logo.animate().cancel()
+                iv_list_party.visibility = View.GONE
+                iv_map.visibility = View.GONE
+                iv_settings.visibility = View.GONE
+                ic_calendar.visibility = View.GONE
+                ic_chat_bot.visibility = View.GONE
+                iv_cancel_chat.visibility = View.GONE
+                iv_people.visibility = View.GONE
+                iv_scan.visibility = View.GONE
+                iv_view_text.visibility = View.GONE
+                fl_net_status.visibility = View.GONE
+
+                // Show back button
+                supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+                mDrawerToggle.setHomeAsUpIndicator(R.drawable.ic_header_back_arrow)
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+            }
+
+
             else -> {
                 iv_home_icon.visibility = View.VISIBLE
                 mDrawerToggle.isDrawerIndicatorEnabled = false

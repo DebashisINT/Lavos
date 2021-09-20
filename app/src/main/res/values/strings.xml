@@ -1471,7 +1471,6 @@
     <string name="new_order_scr_list" translatable="false">Order  Details</string>
 
 
-
     <string-array name="order_sort_gender">
         <item>Select Gender</item>
         <item>Male</item>
