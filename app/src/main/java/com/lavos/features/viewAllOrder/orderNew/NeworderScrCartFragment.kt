@@ -335,22 +335,30 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         var pdfBody: String = "\n\n"
 
         pdfBody=pdfBody+"Party : "+AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(NewOrderScrOrderDetailsFragment.shop_id).shopName!!+ "     "+ " Phone : "+shop_phone.toString()+"\n\n"
-        pdfBody=pdfBody+"Order ID : "+CustomStatic.IsFromViewNewOdrScrOrderID+ "     "+" Date : "+AppUtils.convertToCommonFormat(CustomStatic.IsFromViewNewOdrScrOrderDate)+"\n\n\n"
+        pdfBody=pdfBody+"Order ID : "+CustomStatic.IsFromViewNewOdrScrOrderID+ "     "+" Date : "+AppUtils.convertToCommonFormat(CustomStatic.IsFromViewNewOdrScrOrderDate)+"\n\n"
 
         for(i in 0..cartOrder!!.size-1){
             var rootObjj=cartOrder!!.get(i)
-            var contextHeader="Product Name : "+rootObjj.product_name!!+"       "+" Gender : "+rootObjj.gender+"\n"
+            var contextHeader="____________________________________\n"+"Product Name : "+rootObjj.product_name!!+"       "+" Gender : "+rootObjj.gender+"\n\n"
             var colorObjj=cartOrder!!.get(i).color_list
             for(j in 0..colorObjj!!.size!!-1){
                 var colorRoot="Color : "+colorObjj.get(j).color_name+"\n"
                 contextHeader+=colorRoot
                 var sizeQtyObjj=colorObjj.get(j).order_list
                 for(k in 0..sizeQtyObjj!!.size-1){
-                    var sizeQtyRoot="       Size : "+sizeQtyObjj.get(k).size+"              Qty : "+sizeQtyObjj.get(k).qty+"\n"
+                    var spaceCount=sizeQtyObjj.get(k).size.length
+                    var spacee=""
+                    for(l in 0..(20-spaceCount-1)){
+                        spacee+=" "
+                    }
+                    var tt=spacee.length
+                    var sizeQtyRoot="       Size : "+sizeQtyObjj.get(k).size+spacee+"Qty : "+sizeQtyObjj.get(k).qty+"\n"
+
+
                     contextHeader+=sizeQtyRoot
                 }
             }
-            pdfBody+=contextHeader
+            pdfBody+=contextHeader+"\n\n"
         }
 
         val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)
