@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "769470702897",
+    "project_id": "lavos-4c8c8",
+    "storage_bucket": "lavos-4c8c8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:769470702897:android:a5c47c33d7275435433c10",
+        "android_client_info": {
+          "package_name": "com.lavos"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "769470702897-d4dlqm6gk9vs40t4odckbv0tvhtlcmsm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-uhNJ01SYTs54N_3Djs6P5ybC9eUuCtM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "769470702897-d4dlqm6gk9vs40t4odckbv0tvhtlcmsm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

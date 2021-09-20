@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/_5sdp">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/_5sdp"
+        app:cardBackgroundColor="@android:color/white"
+        app:cardCornerRadius="@dimen/_4sdp"
+        app:cardElevation="@dimen/_2sdp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="@dimen/_10sdp"
+            android:paddingLeft="@dimen/_10sdp"
+            android:paddingRight="@dimen/_5sdp">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/iv_thumbnail"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_120sdp"
+                app:srcCompat="@drawable/ic_image" />
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_category"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/iv_thumbnail"
+                android:text="Category"
+                android:textColor="@color/black"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:textSize="@dimen/_14sdp"
+                android:textStyle="bold"/>
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_desc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dummy_text"
+                android:layout_marginTop="@dimen/_5sdp"
+                android:textSize="@dimen/_12sdp"
+                android:layout_below="@+id/tv_category"/>
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_video_duration_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/video_duration"
+                android:layout_marginTop="@dimen/_5sdp"
+                android:textSize="@dimen/_12sdp"
+                android:layout_below="@+id/tv_desc"
+                android:textColor="@color/black"/>
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_video_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="01:22"
+                android:layout_marginTop="@dimen/_5sdp"
+                android:layout_marginLeft="@dimen/_5sdp"
+                android:textSize="@dimen/_12sdp"
+                android:layout_below="@+id/tv_desc"
+                android:textColor="@color/login_txt_color"
+                android:layout_toRightOf="@+id/tv_video_duration_header"/>
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/iv_update_note"
+                android:layout_width="@dimen/_30sdp"
+                android:layout_height="@dimen/_30sdp"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:layout_below="@+id/tv_video_duration_header"
+                app:srcCompat="@drawable/ic_notepadup"/>
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/iv_download"
+                android:layout_width="@dimen/_30sdp"
+                android:layout_height="@dimen/_30sdp"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:layout_below="@+id/tv_video_duration_header"
+                app:srcCompat="@drawable/ic_download_circular_button"
+                android:layout_alignParentRight="true"/>
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_file_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@+id/iv_thumbnail"
+                android:layout_marginLeft="@dimen/_7sdp"
+                android:text="abc.mp4"
+                android:textColor="@color/black_de"
+                android:layout_marginTop="@dimen/_5sdp"
+                android:textSize="@dimen/_12sdp"
+                android:layout_below="@+id/tv_desc"
+                android:textStyle="bold"
+                android:visibility="gone"/>
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_size_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@+id/iv_thumbnail"
+                android:layout_marginLeft="@dimen/_7sdp"
+                android:text="@string/size"
+                android:textColor="@color/black"
+                android:layout_marginTop="@dimen/_5sdp"
+                android:textSize="@dimen/_12sdp"
+                android:layout_below="@+id/tv_file_name"
+                android:visibility="gone"/>
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_size"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@+id/tv_size_header"
+                android:layout_marginLeft="@dimen/_3sdp"
+                android:text="10MB"
+                android:layout_marginTop="@dimen/_5sdp"
+                android:textSize="@dimen/_12sdp"
+                android:layout_below="@+id/tv_file_name"
+                android:textStyle="bold"
+                android:visibility="gone"/>
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_update_note"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@+id/iv_thumbnail"
+                android:layout_marginLeft="@dimen/_7sdp"
+                android:text="@string/update_note"
+                android:textColor="@color/colorPrimary"
+                android:layout_marginTop="@dimen/_7sdp"
+                android:textSize="@dimen/_13sdp"
+                android:layout_below="@+id/tv_size_header"
+                android:drawableLeft="@drawable/ic_edit_icon"
+                android:drawablePadding="@dimen/_5sdp"
+                android:visibility="gone"/>
+
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
+</LinearLayout>
