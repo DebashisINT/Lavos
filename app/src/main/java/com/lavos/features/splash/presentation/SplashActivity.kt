@@ -51,6 +51,7 @@ import kotlin.system.exitProcess
  * Created by Pratishruti on 26-10-2017.
  */
 //test
+// test1
 class SplashActivity : BaseActivity(), GpsStatusDetector.GpsStatusDetectorCallBack {
 
     private var isLoginLoaded: Boolean = false
