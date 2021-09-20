@@ -99,17 +99,15 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
             pdfBody = pdfBody + "\n\n-----------------------------------------------------------------------------\n\n"+
                     "Date: " + it1.order_date + "Order#: " + it1.order_id +""
                  var qtty_list = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderQtyOrderIDWise(it1.order_id!!)
-                 qtty_list?.forEach { it->
-                      //  qty_Order=  qty_Order + it.qtty_list.toInt()
-                       /* for (i in 0..qtty_list!!.size - 1) {
-                            qty_Order = qty_Order + qtty_list.get(i).toString().toInt()
-                        }*/
+                      for (i in 0..qtty_list!!.size - 1) {
+                           qty_Order = qty_Order + qtty_list.get(i).toString().toInt()
+                       }
 
             }
             pdfBody = pdfBody +
                     "  QTY: " + qty_Order + "\n\n"
 
-        }
+
 
 
         val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)
@@ -301,10 +299,57 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
                 }
 
                 R.id.ll_frag_new_order_detalis_share->{
-                    onShareClick()
+                    //onShareClick()
+                    onShareClickNew()
                 }
             }
         }
+    }
+
+
+    fun onShareClickNew(){
+        var heading = "ORDER SUMMARY"
+        var pdfBody: String = "\n\n"
+
+        pdfBody=pdfBody+"\n\n"+"Order Date"+"       "+"           Order ID"+"       "+"                 QTY"+"\n"
+
+        for(i in 0..rv_data!!.size-1){
+            var qty_Order: Int = 0
+            var qtty_list = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderQtyOrderIDWise(rv_data!!.get(i).order_id)
+            for (j in 0..qtty_list!!.size - 1) {
+                qty_Order = qty_Order + qtty_list.get(j).toString().toInt()
+            }
+            var content="\n\n"+rv_data.get(i).order_date+"        "+rv_data.get(i).order_id+"           "+qty_Order.toString()+"\n"+
+                    "\n____________________________________________________________"
+            pdfBody=pdfBody+content
+        }
+
+
+        val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)
+
+        val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderDtls" +
+                "_" + Pref.user_id+AppUtils.getCurrentDateTime().toString() + ".pdf", image, heading, 3.7f)
+
+
+
+
+        if (!TextUtils.isEmpty(path)) {
+            try {
+                val shareIntent = Intent(Intent.ACTION_SEND)
+                val fileUrl = Uri.parse(path)
+
+                val file = File(fileUrl.path)
+                val uri = Uri.fromFile(file)
+                shareIntent.type = "image/png"
+                shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+                startActivity(Intent.createChooser(shareIntent, "Share pdf using"));
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        } else
+            (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
+
+
     }
 
 

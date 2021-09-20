@@ -301,8 +301,8 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
                     for (j in 0..qtty_list!!.size - 1) {
                         qty_Order = qty_Order + qtty_list.get(j).toString().toInt()
                     }
-                    var content= "\n\n"+"Order ID  : "+viewDataListPDF!!.get(0).order_id+"\n"+"Qty           : "+qty_Order.toString()+"\n"+"Name      : "+viewDataListPDF!!.get(i).shop_name+"\n"+"Address  :"+viewDataListPDF!!.get(i).shop_addr+"\n"+
-                            "\n__________________________"
+                    var content= "\n\n"+"Order ID  : "+viewDataListPDF!!.get(i).order_id+"          Order Date : "+viewDataListPDF!!.get(i).order_date+"\n"+"Qty           : "+qty_Order.toString()+"\n"+"Name      : "+viewDataListPDF!!.get(i).shop_name+"\n"+"Address  :"+viewDataListPDF!!.get(i).shop_addr+"\n"+
+                            "\n____________________________________________________________"
                     pdfBody=pdfBody+content
                 }
 
