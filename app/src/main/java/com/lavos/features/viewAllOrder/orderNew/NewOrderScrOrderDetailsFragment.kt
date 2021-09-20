@@ -96,15 +96,24 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
 
     data class OrderIDDateStatus(var order_date:String,var isUploaded:Boolean)
     data class OrderIDDateViewStatus(var order_id:String,var order_date:String,var isUploaded:Boolean)
+    var qty_list:ArrayList<String> = ArrayList()
     var rv_data:ArrayList<OrderIDDateViewStatus> = ArrayList()
 
     private fun getOrderList(){
+        qty_list.clear()
         var objOrderDistList=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderDistinct(shop_id)
-        try{for(i in 0..objOrderDistList!!.size-1){
+        try{
+            for(i in 0..objOrderDistList!!.size-1){
+
+            var qtty_list=    AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderQtyOrderIDWise(objOrderDistList.get(i))
+
             var objDateUploadList=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getOrderIdDateStatus(objOrderDistList!!.get(i))
             var obj:OrderIDDateViewStatus = OrderIDDateViewStatus(objOrderDistList.get(i),objDateUploadList!!.order_date,objDateUploadList.isUploaded)
+
+            qty_list.add("")
             rv_data.add(obj)
-        }}catch (ex:Exception){ex.printStackTrace()}
+        }
+        }catch (ex:Exception){ex.printStackTrace()}
 
 
         adapterNewOrdScrOrdList=AdapterNewOrdScrOrdList(mContext,rv_data,object : NewOrdScrShowDetaisOnCLick{

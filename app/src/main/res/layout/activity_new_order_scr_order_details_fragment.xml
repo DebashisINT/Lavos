@@ -168,7 +168,7 @@
                 android:id="@+id/tv_date"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="1.1"
                 android:gravity="center"
                 android:text="Date"
                 android:textColor="@color/white"
@@ -191,13 +191,12 @@
                 android:id="@+id/tv_duration"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="1.2"
                 android:gravity="center"
                 android:text="QTY"
                 android:textColor="@color/white"
                 android:textSize="@dimen/_11sdp"
-                android:textStyle="bold"
-                android:visibility="gone"/>
+                android:textStyle="bold" />
 
             <com.lavos.widgets.AppCustomTextView
                 android:id="@+id/tv_view"

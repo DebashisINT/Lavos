@@ -35,6 +35,9 @@ interface NewOrderScrOrderDao {
     @Query("Select DISTINCT order_id from "+ AppConstant.NEW_ORDER_ENTRY +" where shop_id=:shop_id order by order_date desc ")
     fun getShopOrderDistinct(shop_id:String): List<String>
 
+    @Query("Select  qty from "+ AppConstant.NEW_ORDER_ENTRY +" where  order_id=:order_id ")
+    fun getShopOrderQtyOrderIDWise(order_id:String): List<String>
+
     @Query("Select DISTINCT product_id  from "+ AppConstant.NEW_ORDER_ENTRY +" where order_id=:order_id ")
     fun getProductCodeDistinctByOrderID(order_id:String): List<String>
 
