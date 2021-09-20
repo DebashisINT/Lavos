@@ -332,7 +332,7 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
         val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)
 
         val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderDtls" +
-                "_" + Pref.user_id+AppUtils.getCurrentDateTime().toString() + ".pdf", image, heading, 3.7f)
+                "_" + Pref.user_id+AppUtils.getCurrentDateTime().toString().replace(" ","R").replace(":","_") + ".pdf", image, heading, 3.7f)
 
 
 
