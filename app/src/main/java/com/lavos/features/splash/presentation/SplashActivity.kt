@@ -50,7 +50,7 @@ import kotlin.system.exitProcess
 /**
  * Created by Pratishruti on 26-10-2017.
  */
-
+//test
 class SplashActivity : BaseActivity(), GpsStatusDetector.GpsStatusDetectorCallBack {
 
     private var isLoginLoaded: Boolean = false
