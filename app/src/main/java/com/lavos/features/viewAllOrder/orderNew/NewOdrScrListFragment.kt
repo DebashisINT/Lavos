@@ -309,9 +309,9 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
                 val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)
 
                 val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderDtls_" +
-                        "_" + Pref.user_id+AppUtils.getCurrentDateTime() + ".pdf", image, heading, 3.7f)
+                        "_" + Pref.user_id+AppUtils.getCurrentDateTime().toString() + ".pdf", image, heading, 3.7f)
 
-                if (!TextUtils.isEmpty(path)) {
+                /*if (!TextUtils.isEmpty(path)) {
                     try {
                         val shareIntent = Intent(Intent.ACTION_SEND)
                         val fileUrl = Uri.parse(path)
@@ -325,7 +325,7 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
                         e.printStackTrace()
                     }
                 } else
-                    (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
+                    (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")*/
 
 
             }
