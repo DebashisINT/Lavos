@@ -59,10 +59,32 @@
         android:layout_marginTop="@dimen/_10sdp"
         android:visibility="gone"/>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_frag_new_odr_scr_list"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_frag_new_odr_scr_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            android:layout_weight="1"/>
+
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_frag_view_new_ord_scr_list_share"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/_40sdp"
+            android:layout_gravity="end|bottom"
+            android:layout_marginBottom="@dimen/_10sdp"
+            android:backgroundTint="@color/color_custom_green"
+            android:src="@drawable/ic_share"
+            android:tint="@color/white"
+            app:borderWidth="0dp" />
+
+
+    </FrameLayout>
+
+
 
 </LinearLayout>

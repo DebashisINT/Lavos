@@ -18,4 +18,8 @@ public class CustomStatic {
 
     public static Boolean IsNewOrdDeleteConfirmOkClick=false;
 
+
+    public static String headingg = "";
+    public static String pdfBodyy = "";
+
 }
