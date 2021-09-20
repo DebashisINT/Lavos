@@ -2,6 +2,7 @@ package com.lavos.features.viewAllOrder.orderNew
 
 import android.app.Dialog
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.media.Image
@@ -41,6 +42,7 @@ import com.lavos.features.viewAllOrder.model.NewOrderSaveApiModel
 import com.lavos.features.viewAllOrder.presentation.NewOrderCartAdapterNew
 import com.lavos.widgets.AppCustomTextView
 import com.elvishew.xlog.XLog
+import com.lavos.app.utils.FTStorageUtils
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_new_order_scr_cart.*
@@ -168,6 +170,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
     }
 
     private fun showCartDetails() {
+        sharePdf()
         newOrderCartAdapterNew = NewOrderCartAdapterNew(mContext, cartOrder!!, object : NewOrderorderCount {
             override fun getOrderCount(orderCount: Int) {
                 (mContext as DashboardActivity).tv_cart_count.text = orderCount.toString()
@@ -177,6 +180,8 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         })
         rv_order.adapter = newOrderCartAdapterNew
     }
+
+
 
     override fun onResume() {
         super.onResume()
@@ -323,5 +328,39 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
 
         (mContext as DashboardActivity).loadFragment(FragType.NewOrderScrOrderDetailsFragment, false, NewOrderScrActiFragment.shop_id!! )
     }
+
+
+    fun sharePdf(){
+        var heading = "ORDER DETAILS"
+        var pdfBody: String = "\n\n"
+
+        pdfBody=pdfBody+"Party : "+AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(NewOrderScrOrderDetailsFragment.shop_id).shopName!!+ "     "+ " Phone : "+shop_phone.toString()+"\n\n"
+        pdfBody=pdfBody+"Order ID : "+CustomStatic.IsFromViewNewOdrScrOrderID+ "     "+" Date : "+AppUtils.convertToCommonFormat(CustomStatic.IsFromViewNewOdrScrOrderDate)+"\n\n\n"
+
+        for(i in 0..cartOrder!!.size-1){
+            var rootObjj=cartOrder!!.get(i)
+            var contextHeader="Product Name : "+rootObjj.product_name!!+"       "+" Gender : "+rootObjj.gender+"\n"
+            var colorObjj=cartOrder!!.get(i).color_list
+            for(j in 0..colorObjj!!.size!!-1){
+                var colorRoot="Color : "+colorObjj.get(j).color_name+"\n"
+                contextHeader+=colorRoot
+                var sizeQtyObjj=colorObjj.get(j).order_list
+                for(k in 0..sizeQtyObjj!!.size-1){
+                    var sizeQtyRoot="       Size : "+sizeQtyObjj.get(k).size+"              Qty : "+sizeQtyObjj.get(k).qty+"\n"
+                    contextHeader+=sizeQtyRoot
+                }
+            }
+            pdfBody+=contextHeader
+        }
+
+        val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)
+
+        val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderDetalis" +
+                "_" + Pref.user_id+AppUtils.getCurrentDateTime().toString().replace(" ","R").replace(":","_") + ".pdf", image, heading, 3.7f)
+
+
+
+    }
+
 
 }
