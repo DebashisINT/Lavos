@@ -83,7 +83,7 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
     }
 
 
-    fun onShareClick() {
+  /*  fun onShareClick() {
         var qty_Order: Int = 0
         val heading = "ORDER SUMMARY"
 
@@ -132,7 +132,7 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
             (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
 
 
-    }
+    }*/
 
     private fun initView(view: View?) {
         mRv_orderDetails = view!!.findViewById(R.id.rv_new_order_list)
@@ -311,9 +311,9 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
         var heading = "ORDER SUMMARY"
         var pdfBody: String = "\n\n"
 
-        pdfBody=pdfBody+"Name : "+mAddShopDataObj?.shopName.toString()+"\n\n"
+        pdfBody=pdfBody+"Name    : "+mAddShopDataObj?.shopName.toString()+"\n\n"
         pdfBody=pdfBody+"Address : "+mAddShopDataObj?.address.toString()+"\n\n"
-        pdfBody=pdfBody+"Phone : "+mAddShopDataObj?.ownerContactNumber.toString()+"\n\n"
+        pdfBody=pdfBody+"Phone   : "+mAddShopDataObj?.ownerContactNumber.toString()+"\n\n"
 
         pdfBody=pdfBody+"\n\n"+"Order Date"+"       "+"           Order ID"+"       "+"                 QTY"+"\n"
 
@@ -331,7 +331,7 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
 
         val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)
 
-        val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderDtls" +
+        val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderDetails" +
                 "_" + Pref.user_id+AppUtils.getCurrentDateTime().toString() + ".pdf", image, heading, 3.7f)
 
 
