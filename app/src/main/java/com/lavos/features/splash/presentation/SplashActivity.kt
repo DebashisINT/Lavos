@@ -159,10 +159,37 @@ class SplashActivity : BaseActivity(), GpsStatusDetector.GpsStatusDetectorCallBa
         var permissionLists : Array<String> ?= null
 
         permissionLists = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-            arrayOf<String>(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            arrayOf<String>(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
         else
             arrayOf<String>(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
 
+        permissionUtils = PermissionUtils(this, object : PermissionUtils.OnPermissionListener {
+            @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+            override fun onPermissionGranted() {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+                    accessBackLoc()
+                }else{
+                    Pref.isLocationPermissionGranted = true
+                    checkGPSProvider()
+                }
+            }
+
+            override fun onPermissionNotGranted() {
+                //AppUtils.showButtonSnackBar(this@SplashActivity, rl_splash_main, getString(R.string.error_loc_permission_request_msg))
+                DisplayAlert.showSnackMessage(this@SplashActivity, alert_splash_snack_bar, getString(R.string.accept_permission))
+                Handler().postDelayed(Runnable {
+                    finish()
+                    exitProcess(0)
+                }, 3000)
+            }
+
+        }, permissionLists)
+    }
+
+    private fun accessBackLoc(){
+        var permissionLists : Array<String> ?= null
+
+        permissionLists = arrayOf<String>( Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         permissionUtils = PermissionUtils(this, object : PermissionUtils.OnPermissionListener {
             @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
             override fun onPermissionGranted() {

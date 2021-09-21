@@ -23,6 +23,7 @@ import com.lavos.app.domain.AddShopDBModelEntity
 import com.lavos.app.types.FragType
 import com.lavos.app.utils.AppUtils
 import com.lavos.app.utils.FTStorageUtils
+import com.lavos.app.widgets.MovableFloatingActionButton
 import com.lavos.base.presentation.BaseFragment
 import com.lavos.features.dashboard.presentation.DashboardActivity
 import com.lavos.features.stockCompetetorStock.CompetetorStockFragment
@@ -49,7 +50,8 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
 
     private var adapterNewOrdScrOrdList: AdapterNewOrdScrOrdList? = null
 
-    private lateinit var share_Icon: LinearLayout
+    //private lateinit var share_Icon: LinearLayout
+    private lateinit var share: MovableFloatingActionButton
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -135,6 +137,12 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
     }*/
 
     private fun initView(view: View?) {
+        share=view!!.findViewById(R.id.add_new_order_share)
+
+        share.setCustomClickListener {
+            onShareClickNew()
+        }
+
         mRv_orderDetails = view!!.findViewById(R.id.rv_new_order_list)
         mRv_orderDetails.layoutManager = LinearLayoutManager(mContext)
         ll_Add = view!!.findViewById(R.id.ll_frag_new_order_detalis_add)
@@ -143,14 +151,14 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
         myshop_name_TV = view!!.findViewById(R.id.myshop_name_TV)
         myshop_addr_TV = view!!.findViewById(R.id.myshop_address_TV)
         myshop_contact_TV = view!!.findViewById(R.id.tv_contact_number)
-        share_Icon = view!!.findViewById(R.id.ll_frag_new_order_detalis_share)
+        //share_Icon = view!!.findViewById(R.id.ll_frag_new_order_detalis_share)
 
 
         myshop_name_TV.text = mAddShopDataObj?.shopName
         myshop_addr_TV.text = mAddShopDataObj?.address
         myshop_contact_TV.text = "Owner Contact Number: " + mAddShopDataObj?.ownerContactNumber.toString()
 
-        share_Icon.setOnClickListener(this)
+        //share_Icon.setOnClickListener(this)
 
         getOrderList()
     }
@@ -323,7 +331,7 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
             for (j in 0..qtty_list!!.size - 1) {
                 qty_Order = qty_Order + qtty_list.get(j).toString().toInt()
             }
-            var content="\n\n"+rv_data.get(i).order_date+"        "+rv_data.get(i).order_id+"           "+qty_Order.toString()+"\n"+
+            var content="\n\n"+AppUtils.convertToCommonFormat(rv_data.get(i).order_date)+"        "+rv_data.get(i).order_id+"           "+qty_Order.toString()+"\n"+
                     "\n____________________________________________________________"
             pdfBody=pdfBody+content
         }

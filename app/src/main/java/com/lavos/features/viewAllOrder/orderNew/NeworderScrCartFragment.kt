@@ -2,11 +2,14 @@ package com.lavos.features.viewAllOrder.orderNew
 
 import android.app.Dialog
 import android.content.Context
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.text.TextUtils
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -27,6 +30,7 @@ import com.lavos.app.types.FragType
 import com.lavos.app.uiaction.IntentActionable
 import com.lavos.app.utils.AppUtils
 import com.lavos.app.utils.FTStorageUtils
+import com.lavos.app.widgets.MovableFloatingActionButton
 import com.lavos.base.presentation.BaseActivity
 import com.lavos.base.presentation.BaseFragment
 import com.lavos.features.dashboard.presentation.DashboardActivity
@@ -42,6 +46,8 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_new_order_scr_cart.*
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
+import java.io.File
+import java.lang.Exception
 
 class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
 
@@ -56,7 +62,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
     private lateinit var tv_phone:TextView
     private lateinit var ll_odrDtlsRoot:LinearLayout
     private var shop_phone:String=""
-
+    private lateinit var share: MovableFloatingActionButton
     private lateinit var mContext: Context
 
     private lateinit var btnSaveDB: Button
@@ -85,7 +91,16 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         return view
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        //fab_frag_new_order_share.setOnClickListener(this)
+    }
+
     private fun initView(view: View?) {
+        share=view!!.findViewById(R.id.fab_frag_new_order_share)
+        share.setCustomClickListener {
+            sharePdf()
+        }
         rv_order = view!!.findViewById(R.id.rv_frag_new_order_cart)
 
         tv_name = view!!.findViewById(R.id.tv_frag_new_order_scr_cart_name)
@@ -106,11 +121,13 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         tv_phone.setOnClickListener(this)
 
         if( CustomStatic.IsFromViewNewOdrScr==true){
+            share.visibility=View.VISIBLE
             ll_odrDtlsRoot.visibility=View.VISIBLE
             btnSaveDB.visibility=View.GONE
             tv_name.text=AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(NewOrderScrOrderDetailsFragment.shop_id).shopName!!
             shop_phone=AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(NewOrderScrOrderDetailsFragment.shop_id).ownerContactNumber!!
         }else{
+            share.visibility=View.GONE
             ll_odrDtlsRoot.visibility=View.GONE
             btnSaveDB.visibility=View.VISIBLE
         }
@@ -164,7 +181,6 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
     }
 
     private fun showCartDetails() {
-        sharePdf()
         newOrderCartAdapterNew = NewOrderCartAdapterNew(mContext, cartOrder!!, object : NewOrderorderCount {
             override fun getOrderCount(orderCount: Int) {
                 (mContext as DashboardActivity).tv_cart_count.text = orderCount.toString()
@@ -194,6 +210,9 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
                 }
                 R.id.tv_frag_new_order_scr_cart_phone -> {
                     IntentActionable.initiatePhoneCall(mContext, shop_phone)
+                }
+                R.id.fab_frag_new_order_share ->{
+                    sharePdf()
                 }
             }
         }
@@ -329,7 +348,8 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         var pdfBody: String = "\n\n"
 
         pdfBody=pdfBody+"Party      : "+AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(NewOrderScrOrderDetailsFragment.shop_id).shopName!!+ "                                  "+ "Phone : "+shop_phone.toString()+"\n\n"
-        pdfBody=pdfBody+"Order ID : "+CustomStatic.IsFromViewNewOdrScrOrderID+ "     "+"                         Date : "+AppUtils.convertToCommonFormat(CustomStatic.IsFromViewNewOdrScrOrderDate)+"\n\n\n"
+        pdfBody=pdfBody+"Order ID : "+CustomStatic.IsFromViewNewOdrScrOrderID+ "     "+
+                "                                             Date : "+AppUtils.convertToCommonFormat(CustomStatic.IsFromViewNewOdrScrOrderDate)+"\n\n\n"
 
 
         for(i in 0..cartOrder!!.size-1){
@@ -339,37 +359,52 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
             }*/
             var rootObjj=cartOrder!!.get(i)
 
-            var contextHeader="____________________________________\n"+"Product Name : "+rootObjj.product_name!!+"       "+" Gender : "+rootObjj.gender+"\n\n"
+            var contextHeader="\n"+"___________________________________________________________"+"\n\n"+"Product Name : "+rootObjj.product_name!!+"       "+" Gender : "+rootObjj.gender+"\n"
 
             //var contextHeader="Product Name : "+rootObjj.product_name!!+"       "+" Gender : " +rootObjj.gender+"\n"
 
             var colorObjj=cartOrder!!.get(i).color_list
             for(j in 0..colorObjj!!.size!!-1){
-                var colorRoot="Color              : "+colorObjj.get(j).color_name+"\n"
+                var colorRoot="\nColor : "+colorObjj.get(j).color_name+"\n"
                 contextHeader+=colorRoot
                 var sizeQtyObjj=colorObjj.get(j).order_list
                 for(k in 0..sizeQtyObjj!!.size-1){
                     var spaceCount=sizeQtyObjj.get(k).size.length
                     var spacee=""
-                    for(l in 0..(20-spaceCount-1)){
-                        spacee+=" "
+                    for(p in 0..(20-spaceCount)-1){
+                        spacee+="."
                     }
-                    var tt=spacee.length
-                    var sizeQtyRoot="       Size : "+sizeQtyObjj.get(k).size+spacee+"Qty : "+sizeQtyObjj.get(k).qty+"\n"
 
+
+                    var sizeQtyRoot="       Size : "+sizeQtyObjj.get(k).size+"  "+spacee+"  "+"Qty : "+sizeQtyObjj.get(k).qty.repeat(1)+"\n"
                     contextHeader+=sizeQtyRoot
                 }
             }
-            pdfBody+=contextHeader+"\n\n"
+            pdfBody+=contextHeader+"\n"
         }
 
         val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)
 
-        val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderDetalis" +
+        val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderSingleDetalis" +
                 "_" + Pref.user_id + AppUtils.getCurrentDateTime().toString().replace(" ", "R").replace(":", "_") + ".pdf", image, heading, 3.7f)
 
 
 
+        if (!TextUtils.isEmpty(path)) {
+            try {
+                val shareIntent = Intent(Intent.ACTION_SEND)
+                val fileUrl = Uri.parse(path)
+
+                val file = File(fileUrl.path)
+                val uri = Uri.fromFile(file)
+                shareIntent.type = "image/png"
+                shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+                startActivity(Intent.createChooser(shareIntent, "Share pdf using"));
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        } else
+            (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
     }
 
 

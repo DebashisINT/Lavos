@@ -141,12 +141,45 @@
 
 
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_frag_new_order_cart"
+
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_frag_new_order_cart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.lavos.app.widgets.MovableFloatingActionButton
+                android:id="@+id/fab_frag_new_order_share"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:fabSize="normal"
+                android:tint="@color/white"
+                android:src="@drawable/ic_share"
+                android:backgroundTint="@color/color_custom_green"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:layout_margin="@dimen/_10sdp" />
+
+        </RelativeLayout>
+
+
+
+
+    </FrameLayout>
+
+
+
+
+
 
 
     <Button

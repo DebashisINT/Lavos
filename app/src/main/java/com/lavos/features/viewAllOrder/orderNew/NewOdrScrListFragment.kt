@@ -33,6 +33,7 @@ import com.github.jhonnyx2012.horizontalpicker.HorizontalPicker
 import com.lavos.app.Pref
 import com.lavos.app.utils.FTStorageUtils
 import com.lavos.app.utils.Toaster
+import com.lavos.app.widgets.MovableFloatingActionButton
 import kotlinx.android.synthetic.main.fragment_new_odr_scr_list.*
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
@@ -51,7 +52,7 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
     private var viewDataList: ArrayList<ViewDataNewOdrScrDetails> = ArrayList()
     private var viewDataListPDF: ArrayList<ViewDataNewOdrScrDetails> = ArrayList()
     private var newOdrScrListAdapter: NewOdrScrListAdapter? = null
-
+    private lateinit var share: MovableFloatingActionButton
 
 
     private lateinit var picker: HorizontalPicker
@@ -88,11 +89,15 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        fab_frag_view_new_ord_scr_list_share.setOnClickListener(this)
+        //fab_frag_view_new_ord_scr_list_share.setOnClickListener(this)
     }
 
     private fun initView(view: View) {
         //fabShare=view!!.findViewById(R.id.fab_frag_view_new_ord_scr_list_share)
+        share=view!!.findViewById(R.id.fab_frag_view_new_ord_scr_list_share)
+        share.setCustomClickListener {
+            sharePdf()
+        }
 
         date_CV = view!!.findViewById(R.id.date_CV)
         if (CustomStatic.IsOrderFromTotalOrder) {
@@ -331,5 +336,63 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
 
             }
         }
+    }
+
+
+
+    fun sharePdf(){
+        var odr_shop_list: List<ViewDataNewOdrScr> = emptyList()
+        if (CustomStatic.IsOrderFromTotalOrder) {
+            odr_shop_list = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getDistinctOrderShopAllDateFiltered(selectedDate)!!
+        } else {
+            odr_shop_list = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getDistinctOrderShopAll()!!
+        }
+        viewDataListPDF.clear()
+        try {
+            for (i in 0..odr_shop_list!!.size - 1) {
+                var shopName = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopDetail(odr_shop_list.get(i).shop_id).shopName
+                var shopAddr = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopDetail(odr_shop_list.get(i).shop_id).address
+                var obj = ViewDataNewOdrScrDetails(odr_shop_list.get(i).order_id, odr_shop_list.get(i).shop_id, odr_shop_list.get(i).order_date, shopName, shopAddr)
+                viewDataListPDF.add(obj)
+            }
+
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
+
+        var heading = "ORDER SUMMARY"
+        var pdfBody: String = "\n\n"
+        for (i in 0..viewDataListPDF!!.size - 1) {
+            var qty_Order: Int = 0
+            var qtty_list = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderQtyOrderIDWise(viewDataListPDF!!.get(i).order_id)
+            for (j in 0..qtty_list!!.size - 1) {
+                qty_Order = qty_Order + qtty_list.get(j).toString().toInt()
+            }
+            var content= "\n\n"+"Order ID  : "+viewDataListPDF!!.get(i).order_id+"          Order Date : "+AppUtils.convertToCommonFormat(viewDataListPDF!!.get(i).order_date)+"\n"+"Qty           : "+qty_Order.toString()+"\n"+"Name      : "+viewDataListPDF!!.get(i).shop_name+"\n"+"Address  :"+viewDataListPDF!!.get(i).shop_addr+"\n"+
+                    "\n____________________________________________________________________________________________________"
+            pdfBody=pdfBody+content
+        }
+
+
+        val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)
+
+        val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderDetalis" +
+                "_" + Pref.user_id+AppUtils.getCurrentDateTime().toString().replace(" ","R").replace(":","_") + ".pdf", image, heading, 3.7f)
+
+        if (!TextUtils.isEmpty(path)) {
+            try {
+                val shareIntent = Intent(Intent.ACTION_SEND)
+                val fileUrl = Uri.parse(path)
+
+                val file = File(fileUrl.path)
+                val uri = Uri.fromFile(file)
+                shareIntent.type = "image/png"
+                shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+                startActivity(Intent.createChooser(shareIntent, "Share pdf using"));
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        } else
+            (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
     }
 }

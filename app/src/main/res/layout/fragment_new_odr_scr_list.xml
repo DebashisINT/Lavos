@@ -70,15 +70,14 @@
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:layout_weight="1"/>
 
-        <LinearLayout
+        <RelativeLayout
             android:id="@+id/ll_frag_new_order_detalis_share"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_alignParentBottom="true"
-            android:layout_gravity="end|bottom"
-            android:layout_margin="@dimen/_20sdp">
+            android:layout_gravity="end|bottom">
 
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
+            <com.lavos.app.widgets.MovableFloatingActionButton
                 android:id="@+id/fab_frag_view_new_ord_scr_list_share"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -86,9 +85,12 @@
                 android:tint="@color/white"
                 android:backgroundTint="@color/color_custom_green"
                 android:src="@drawable/ic_share"
-                app:fabSize="normal" />
+                app:fabSize="normal"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:layout_margin="@dimen/_30sdp"/>
 
-        </LinearLayout>
+        </RelativeLayout>
 
 
 <!--        <com.google.android.material.floatingactionbutton.FloatingActionButton-->
