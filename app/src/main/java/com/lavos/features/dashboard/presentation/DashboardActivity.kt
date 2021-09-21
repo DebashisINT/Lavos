@@ -3074,7 +3074,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
         try {
             val shareIntent = Intent(Intent.ACTION_SEND)
 //        val phototUri = Uri.parse(localAbsoluteFilePath)
-            val fileUrl = Uri.parse(File(Environment.getExternalStorageDirectory(), "xlavoslogsample/log").path);
+            //val fileUrl = Uri.parse(File(Environment.getExternalStorageDirectory(), "xlavoslogsample/log").path);
+            val fileUrl = Uri.parse(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "xlavoslogsample/log").path);
 
             val file = File(fileUrl.path)
             if (!file.exists()) {
