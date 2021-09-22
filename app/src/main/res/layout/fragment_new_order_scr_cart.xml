@@ -179,9 +179,6 @@
 
 
 
-
-
-
     <Button
         android:id="@+id/btn_new_order_save_db"
         android:layout_width="match_parent"

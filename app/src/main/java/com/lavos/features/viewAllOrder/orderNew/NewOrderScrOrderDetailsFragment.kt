@@ -149,7 +149,7 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
         ll_Add.setOnClickListener(this)
 
         myshop_name_TV = view!!.findViewById(R.id.myshop_name_TV)
-        myshop_addr_TV = view!!.findViewById(R.id.myshop_address_TV)
+        myshop_addr_TV = view!!.findViewById(R.id.myshop_address_TV_ord)
         myshop_contact_TV = view!!.findViewById(R.id.tv_contact_number)
         //share_Icon = view!!.findViewById(R.id.ll_frag_new_order_detalis_share)
 
