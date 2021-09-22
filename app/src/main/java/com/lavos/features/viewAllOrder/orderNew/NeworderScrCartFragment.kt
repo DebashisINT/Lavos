@@ -372,7 +372,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
                     var spaceCount=sizeQtyObjj.get(k).size.length
                     var spacee=""
                     for(p in 0..(20-spaceCount)-1){
-                        spacee+="."
+                        spacee+=" "
                     }
 
 

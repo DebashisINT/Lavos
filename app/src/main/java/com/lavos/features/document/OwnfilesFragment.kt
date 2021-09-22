@@ -592,7 +592,8 @@ class OwnfilesFragment : BaseFragment() {
 
             progress_wheel.spin()
 
-            PRDownloader.download(downloadUrl, Environment.getExternalStorageDirectory().toString() + File.separator, fileName)
+             PRDownloader.download(downloadUrl, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + File.separator, fileName)
+//            PRDownloader.download(downloadUrl, Environment.getExternalStorageDirectory().toString() + File.separator, fileName)
                     .build()
                     .setOnProgressListener {
                         Log.e("Document List", "Attachment Download Progress======> $it")
@@ -601,7 +602,11 @@ class OwnfilesFragment : BaseFragment() {
                         override fun onDownloadComplete() {
 
                             doAsync {
-                                AppDatabase.getDBInstance()?.documentListDao()?.updateAttachment(Environment.getExternalStorageDirectory().toString() + File.separator + fileName, document.list_id!!)
+                              /*  AppDatabase.getDBInstance()?.documentListDao()?.updateAttachment(Environment.getExternalStorageDirectory().toString() +
+                                        File.separator + fileName, document.list_id!!)*/
+
+                                AppDatabase.getDBInstance()?.documentListDao()?.updateAttachment(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() +
+                                        File.separator + fileName, document.list_id!!)
 
                                 uiThread {
                                     progress_wheel.stopSpinning()

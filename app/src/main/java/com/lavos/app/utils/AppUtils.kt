@@ -198,8 +198,9 @@ class AppUtils {
         fun createImageFile(): File {
             // Create an image file name
             val imageFileName = "fieldtrackingsystem" +  /*Calendar.getInstance(Locale.ENGLISH).time*/ java.util.UUID.randomUUID()
-            val storageDir = File(Environment.getExternalStorageDirectory().toString()
-                    + File.separator + "fieldtrackingsystem" + File.separator)
+//            val storageDir = File(Environment.getExternalStorageDirectory().toString()
+//                    + File.separator + "fieldtrackingsystem" + File.separator)
+            val storageDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + File.separator + "fieldtrackingsystem" + File.separator)
             storageDir.mkdirs()
 
             // Save a file: path for use with ACTION_VIEW intents
@@ -1780,7 +1781,8 @@ class AppUtils {
         }
 
         fun getHiddenAppFolder(context: Context): String {
-            val destinationFolder = Environment.getExternalStorageDirectory().path + File.separator + context.resources.getString(R.string.app_name)
+//            val destinationFolder = Environment.getExternalStorageDirectory().path + File.separator + context.resources.getString(R.string.app_name)
+            val destinationFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path + File.separator + context.resources.getString(R.string.app_name)
             val destinationFolderFile = File(destinationFolder)
             if (!destinationFolderFile.exists())
                 destinationFolderFile.mkdir()

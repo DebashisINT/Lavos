@@ -282,7 +282,10 @@ public class FileUtils {
                 final String type = split[0];
 
                 if ("primary".equalsIgnoreCase(type)) {
-                    return Environment.getExternalStorageDirectory() + "/" + split[1];
+//                    return Environment.getExternalStorageDirectory() + "/" + split[1];
+
+                    return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/" + split[1];
+
                 }
 
                 // TODO handle non-primary volumes
@@ -604,7 +607,8 @@ public class FileUtils {
 
     public static File getTempFile(Context context) {
         //it will return /sdcard/image.tmp
-        final File path = new File(Environment.getExternalStorageDirectory(), context.getPackageName());
+//        final File path = new File(Environment.getExternalStorageDirectory(), context.getPackageName());
+        final File path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), context.getPackageName());
         if (!path.exists()) {
             path.mkdir();
         }

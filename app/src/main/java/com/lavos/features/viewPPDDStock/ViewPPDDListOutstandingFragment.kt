@@ -1616,7 +1616,10 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
         val bytes = ByteArrayOutputStream()
         bm!!.compress(Bitmap.CompressFormat.JPEG, 90, bytes)
 
-        var destination = File(Environment.getExternalStorageDirectory(),
+        /*var destination = File(Environment.getExternalStorageDirectory(),
+                System.currentTimeMillis().toString() + ".jpg")*/
+
+        var destination = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
                 System.currentTimeMillis().toString() + ".jpg")
         val camera_image_path = destination?.absolutePath
         val fo: FileOutputStream

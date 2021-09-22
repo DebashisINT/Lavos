@@ -96,9 +96,11 @@ public class NewFileUtils {
                 // This is for checking Main Memory
                 if ("primary".equalsIgnoreCase(type)) {
                     if (split.length > 1) {
-                        return Environment.getExternalStorageDirectory() + "/" + split[1];
+//                        return Environment.getExternalStorageDirectory() + "/" + split[1];
+                        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/" + split[1];
                     } else {
-                        return Environment.getExternalStorageDirectory() + "/";
+                        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/";
+//                        return Environment.getExternalStorageDirectory() + "/";
                     }
                     // This is for checking SD Card
                 } else {
@@ -110,7 +112,8 @@ public class NewFileUtils {
             else if (isDownloadsDocument(uri)) {
                 String fileName = getFilePath(context, uri);
                 if (fileName != null) {
-                    return Environment.getExternalStorageDirectory().toString() + "/Download/" + fileName;
+                    return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/Download/" + fileName;
+//                    return Environment.getExternalStorageDirectory().toString() + "/Download/" + fileName;
                 }
 
                 final String id = DocumentsContract.getDocumentId(uri);
@@ -199,7 +202,8 @@ public class NewFileUtils {
     }
 
     public static File makeEmptyFileIntoExternalStorageWithTitle(String title) {
-        String root = Environment.getExternalStorageDirectory().getAbsolutePath();
+//        String root = Environment.getExternalStorageDirectory().getAbsolutePath();
+        String root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
         return new File(root, title);
     }
 

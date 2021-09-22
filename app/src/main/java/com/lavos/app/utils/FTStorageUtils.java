@@ -86,7 +86,8 @@ public class FTStorageUtils {
     public static String getFolderPath(Context context) {
         if (checkSDCardAvailable()) {
             try {
-                File sdPath = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + APP_FOLDERNAME);
+//                File sdPath = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + APP_FOLDERNAME);
+                File sdPath = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() + File.separator + APP_FOLDERNAME);
                 if (!sdPath.exists()) {
                     sdPath.mkdirs();
                     folderPath = sdPath.getAbsolutePath();
@@ -96,7 +97,8 @@ public class FTStorageUtils {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            folderPath = Environment.getExternalStorageDirectory().getPath() + File.separator + APP_FOLDERNAME;
+//            folderPath = Environment.getExternalStorageDirectory().getPath() + File.separator + APP_FOLDERNAME;
+            folderPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator + APP_FOLDERNAME;
         } else {
             try {
                 File internalDir = new File(context.getFilesDir(), APP_FOLDERNAME);
