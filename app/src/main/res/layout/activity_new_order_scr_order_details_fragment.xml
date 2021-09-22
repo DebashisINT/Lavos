@@ -7,7 +7,7 @@
     android:orientation="vertical">
 
     <LinearLayout
-        android:id="@+id/shop_list_LL"
+        android:id="@+id/shop_list_LL_new_ord"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="@dimen/_5sdp"
@@ -18,7 +18,7 @@
         android:orientation="vertical">
 
         <RelativeLayout
-            android:id="@+id/shop_detail_RL"
+            android:id="@+id/shop_detail_RL_new_ord"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
@@ -47,7 +47,7 @@
                 android:visibility="visible" />
 
             <RelativeLayout
-                android:id="@+id/shop_details_rl"
+                android:id="@+id/shop_details_rl_new_ord"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
@@ -55,7 +55,7 @@
                 android:layout_toRightOf="@id/shop_IV">
 
                 <RelativeLayout
-                    android:id="@+id/sync_RL"
+                    android:id="@+id/sync_RL_new_ord"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
@@ -73,10 +73,10 @@
                 </RelativeLayout>
 
                 <com.lavos.widgets.AppCustomTextView
-                    android:id="@+id/myshop_address_TV"
+                    android:id="@+id/myshop_address_TV_ord"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/sync_RL"
+                    android:layout_below="@id/sync_RL_new_ord"
                     android:layout_marginBottom="@dimen/_3sdp"
                     android:singleLine="true"
                     android:textColor="@color/light_gray"
@@ -87,7 +87,7 @@
                     android:id="@+id/tv_contact_number"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/myshop_address_TV"
+                    android:layout_below="@id/myshop_address_TV_ord"
                     android:layout_marginBottom="@dimen/_3sdp"
                     android:singleLine="true"
                     android:textColor="@color/light_gray"
@@ -152,7 +152,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/shop_list_LL"
+        android:layout_below="@+id/shop_list_LL_new_ord"
         android:orientation="vertical">
 
         <LinearLayout
