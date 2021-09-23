@@ -370,12 +370,10 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
                 var sizeQtyObjj=colorObjj.get(j).order_list
                 for(k in 0..sizeQtyObjj!!.size-1){
                     var spaceCount=sizeQtyObjj.get(k).size.length
-                    var spacee=""
-                    for(p in 0..(20-spaceCount)-1){
+                    var spacee=" "
+                    for(p in 0..(20-spaceCount)){
                         spacee+=" "
                     }
-
-
                     var sizeQtyRoot="       Size : "+sizeQtyObjj.get(k).size+"  "+spacee+"  "+"Qty : "+sizeQtyObjj.get(k).qty.repeat(1)+"\n"
                     contextHeader+=sizeQtyRoot
                 }
