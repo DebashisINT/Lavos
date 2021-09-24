@@ -321,7 +321,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         val dialogHeader = simpleDialog.findViewById(R.id.dialog_message_header_TV_new) as AppCustomTextView
 
         dialog_yes_no_headerTV.text = "Congrats!"
-        dialogHeader.text = AppUtils.hiFirstNameText() + " , Your order has been placed successfully. Order No is "+ ordID.toString()+"."
+        dialogHeader.text = AppUtils.hiFirstNameText()+"!" + " , Your order has been placed successfully. Order No is "+ ordID.toString()+"."
 
 
         val dialogYes = simpleDialog.findViewById(R.id.tv_message_ok_new) as AppCustomTextView

@@ -59,7 +59,7 @@ class InternetStatusDialog : DialogFragment() {
             dialog_header_TV = findViewById(R.id.dialog_header_TV)
         }
 
-        dialog_header_TV.text = AppUtils.hiFirstNameText()
+        dialog_header_TV.text = AppUtils.hiFirstNameText()+"!"
         tv_net_status.text = internetStatus
 
         ok_TV.setOnClickListener {
