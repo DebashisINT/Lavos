@@ -554,7 +554,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="@drawable/selector_order_history_bg"
+        android:background="@drawable/shape_custom_border_blue_button"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center"

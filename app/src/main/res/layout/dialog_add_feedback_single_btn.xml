@@ -250,7 +250,7 @@
             </RelativeLayout>
 
         </RelativeLayout>
-
+<!--        selector_order_history_bg-->
         <com.lavos.widgets.AppCustomTextView
             android:id="@+id/ok_TV"
             android:layout_width="match_parent"
@@ -258,7 +258,7 @@
             android:text="@string/confirm_revisit"
             android:textSize="@dimen/_13sdp"
             android:gravity="center"
-            android:background="@drawable/selector_order_history_bg"
+            android:background="@drawable/shape_custom_border_blue_button"
             android:textColor="@drawable/selector_text_clor_blue_white"
             android:clickable="true"
             android:focusable="true"

@@ -320,6 +320,7 @@
                 android:background="@drawable/selector_rectengular_blue_btn_bg"
                 android:gravity="center"
                 android:padding="@dimen/_7sdp"
+                android:backgroundTint="#f8424e"
                 android:text="@string/cancel"
                 android:textColor="@color/white"
                 android:textSize="@dimen/_11sdp"
@@ -337,6 +338,7 @@
                 android:background="@drawable/selector_rectengular_blue_btn_bg"
                 android:gravity="center"
                 android:padding="@dimen/_7sdp"
+                android:backgroundTint="#57a518"
                 android:text="@string/confirm_order"
                 android:textColor="@color/white"
                 android:textSize="@dimen/_11sdp" />

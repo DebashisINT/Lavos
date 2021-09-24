@@ -61,12 +61,12 @@
                     android:textSize="@dimen/_13sdp"/>
 
             </LinearLayout>
-
+<!--            selector_order_history_bg-->
             <com.lavos.widgets.AppCustomTextView
                 android:id="@+id/tv_save_shop_stock"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/selector_order_history_bg"
+                android:background="@drawable/shape_custom_border_blue_button"
                 android:gravity="center"
                 android:padding="@dimen/_10sdp"
                 android:text="Save"
