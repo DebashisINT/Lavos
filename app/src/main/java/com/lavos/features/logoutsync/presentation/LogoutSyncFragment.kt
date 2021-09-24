@@ -5715,7 +5715,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                 logoutYesClick()
         }else{
 
-            CommonDialog.getInstance(AppUtils.hiFirstNameText(), getString(R.string.confirm_logout), getString(R.string.cancel), getString(R.string.ok), object : CommonDialogClickListener {
+            CommonDialog.getInstance(AppUtils.hiFirstNameText()+"!", getString(R.string.confirm_logout), getString(R.string.cancel), getString(R.string.ok), object : CommonDialogClickListener {
                 override fun onLeftClick() {
                     (mContext as DashboardActivity).onBackPressed()
                 }
@@ -5745,7 +5745,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
     private fun showLogoutLocReasonDialog() {
         val body = "You applicable out time is: ${Pref.approvedOutTime}. You are doing early logout. Please write below the reason."
-        reasonDialog = ReasonDialog.getInstance(AppUtils.hiFirstNameText(), body, reason) {
+        reasonDialog = ReasonDialog.getInstance(AppUtils.hiFirstNameText()+"!", body, reason) {
             if (!AppUtils.isOnline(mContext))
                 Toaster.msgShort(mContext, getString(R.string.no_internet))
             else {

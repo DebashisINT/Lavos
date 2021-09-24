@@ -501,7 +501,7 @@ class MicroLearningListFragment : BaseFragment() {
     }
 
     private fun showUpdateNoteDialog(it: MicroLearningDataModel) {
-        dialog = UpdateNoteDialog.getInstance(AppUtils.hiFirstNameText(), getString(R.string.cancel), getString(R.string.ok), false,
+        dialog = UpdateNoteDialog.getInstance(AppUtils.hiFirstNameText()+"!", getString(R.string.cancel), getString(R.string.ok), false,
                 false, false, it.note, object : UpdateNoteDialog.OnButtonClickListener {
             override fun onLeftClick() {
             }
