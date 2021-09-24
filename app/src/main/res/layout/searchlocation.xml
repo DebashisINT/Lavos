@@ -79,7 +79,7 @@
         android:layout_marginRight="@dimen/_30sdp"
         android:layout_marginTop="@dimen/_20sdp"
         android:layout_marginBottom="@dimen/_15sdp"
-        android:background="@drawable/selector_blue_botton_bg"
+        android:background="@drawable/shape_custom_border_blue_button"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center"

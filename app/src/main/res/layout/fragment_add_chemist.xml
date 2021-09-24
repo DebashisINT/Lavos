@@ -555,6 +555,8 @@
 
             </RelativeLayout>
 
+<!--            selector_blue_botton_bg-->
+
 
             <com.lavos.widgets.AppCustomTextView
                 android:id="@+id/tv_save"
@@ -563,7 +565,7 @@
                 android:layout_marginLeft="@dimen/_80sdp"
                 android:layout_marginRight="@dimen/_80sdp"
                 android:layout_marginTop="@dimen/_20sdp"
-                android:background="@drawable/selector_blue_botton_bg"
+                android:background="@drawable/shape_custom_border_blue_button"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"

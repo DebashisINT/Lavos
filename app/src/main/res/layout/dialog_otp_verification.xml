@@ -232,6 +232,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
+                android:backgroundTint="#f8424e "
                 android:text="@string/cancel"
                 android:textColor="@drawable/selector_text_clor_blue_white"
                 android:textSize="@dimen/_13sdp" />
@@ -243,6 +244,7 @@
                 android:layout_weight="1"
                 android:background="@drawable/selector_order_history_bg"
                 android:clickable="true"
+                android:backgroundTint="#57a518"
                 android:focusable="true"
                 android:gravity="center"
                 android:text="@string/ok"

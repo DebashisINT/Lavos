@@ -28,7 +28,7 @@
             android:layout_gravity="center_horizontal"
             android:gravity="center"/>
     </LinearLayout>
-
+<!--    selector_blue_botton_bg-->
     <com.lavos.widgets.AppCustomTextView
         android:id="@+id/tv_enable_gps"
         android:layout_width="match_parent"
@@ -36,7 +36,7 @@
         android:layout_marginLeft="@dimen/_80sdp"
         android:layout_marginRight="@dimen/_80sdp"
         android:layout_marginBottom="@dimen/_20sdp"
-        android:background="@drawable/selector_blue_botton_bg"
+        android:background="@drawable/shape_custom_border_blue_button"
         android:clickable="true"
         android:layout_alignParentBottom="true"
         android:focusable="true"

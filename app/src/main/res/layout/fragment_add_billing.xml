@@ -212,7 +212,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="@drawable/selector_billing_submit_bg"
+        android:background="@drawable/shape_custom_border_blue_button"
         android:gravity="center_horizontal"
         android:padding="@dimen/_10sdp"
         android:text="@string/Submit"

@@ -80,6 +80,8 @@
             android:layout_height="@dimen/_35sdp"
             android:orientation="horizontal">
 
+<!--            android:background="@drawable/selector_order_history_bg"-->
+
             <com.lavos.widgets.AppCustomTextView
                 android:id="@+id/tv_dialog_submit"
                 android:layout_width="match_parent"
@@ -89,7 +91,7 @@
                 android:textSize="@dimen/_13sdp"
                 android:gravity="center"
                 android:layout_gravity="center"
-                android:background="@drawable/selector_order_history_bg"
+                android:background="@drawable/shape_custom_border_blue_button"
                 android:textColor="@drawable/selector_text_clor_blue_white"
                 android:clickable="true"
                 android:focusable="true" />
