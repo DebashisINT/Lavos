@@ -18,6 +18,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.elvishew.xlog.XLog
 import com.lavos.CustomStatic
@@ -47,7 +48,6 @@ import kotlinx.android.synthetic.main.fragment_new_order_scr_cart.*
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import java.io.File
-import java.lang.Exception
 
 class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
 
@@ -211,7 +211,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
                 R.id.tv_frag_new_order_scr_cart_phone -> {
                     IntentActionable.initiatePhoneCall(mContext, shop_phone)
                 }
-                R.id.fab_frag_new_order_share ->{
+                R.id.fab_frag_new_order_share -> {
                     sharePdf()
                 }
             }
@@ -392,9 +392,9 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
             try {
                 val shareIntent = Intent(Intent.ACTION_SEND)
                 val fileUrl = Uri.parse(path)
-
                 val file = File(fileUrl.path)
-                val uri = Uri.fromFile(file)
+                val uri: Uri = FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
+//                val uri = Uri.fromFile(file)
                 shareIntent.type = "image/png"
                 shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
                 startActivity(Intent.createChooser(shareIntent, "Share pdf using"));

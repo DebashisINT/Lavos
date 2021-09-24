@@ -3082,8 +3082,9 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 return
             }
 
-            val uri = Uri.fromFile(file)
+//            val uri = Uri.fromFile(file)
 //        shareIntent.data = fileUrl
+            val uri: Uri = FileProvider.getUriForFile(mContext, mContext!!.applicationContext.packageName.toString() + ".provider", file)
             shareIntent.type = "image/png"
             shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
             startActivity(Intent.createChooser(shareIntent, "Share log using"));

@@ -146,6 +146,8 @@ import kotlin.collections.ArrayList
  */
 class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
 
+
+
     override fun onLocationChanged(location: Location) {
         Pref.latitude = location?.latitude.toString()
         Pref.longitude = location?.longitude.toString()
@@ -197,6 +199,8 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
     private lateinit var tvappCustomAnydeskInfo: AppCustomTextView
     private lateinit var tvappCustomAnydesk: AppCustomTextView
     private lateinit var tvappCustomSharelog: AppCustomTextView
+
+    private lateinit var mContext: Context
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -3211,7 +3215,8 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                 return
             }
 
-            val uri = Uri.fromFile(file)
+//            val uri = Uri.fromFile(file)
+            val uri: Uri = FileProvider.getUriForFile(mContext, mContext!!.applicationContext.packageName.toString() + ".provider", file)
 //        shareIntent.data = fileUrl
             shareIntent.type = "image/png"
             shareIntent.putExtra(Intent.EXTRA_STREAM, uri)

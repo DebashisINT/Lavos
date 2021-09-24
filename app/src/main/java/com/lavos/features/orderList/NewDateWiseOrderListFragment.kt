@@ -21,6 +21,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
+import androidx.core.content.FileProvider
 import com.elvishew.xlog.XLog
 import com.github.jhonnyx2012.horizontalpicker.DatePickerListener
 import com.github.jhonnyx2012.horizontalpicker.HorizontalPicker
@@ -842,7 +843,9 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                     val fileUrl = Uri.parse(path)
 
                     val file = File(fileUrl.path)
-                    val uri = Uri.fromFile(file)
+//                    val uri = Uri.fromFile(file)
+                    val uri: Uri = FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
+
                     shareIntent.type = "image/png"
                     shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
                     startActivity(Intent.createChooser(shareIntent, "Share pdf using"));

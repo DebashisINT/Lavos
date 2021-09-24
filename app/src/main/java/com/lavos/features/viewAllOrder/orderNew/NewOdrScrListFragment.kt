@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
 
 import com.lavos.CustomStatic
@@ -323,7 +324,9 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
                         val fileUrl = Uri.parse(path)
 
                         val file = File(fileUrl.path)
-                        val uri = Uri.fromFile(file)
+//                        val uri = Uri.fromFile(file)
+                        val uri: Uri = FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
+
                         shareIntent.type = "image/png"
                         shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
                         startActivity(Intent.createChooser(shareIntent, "Share pdf using"));
@@ -385,7 +388,8 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
                 val fileUrl = Uri.parse(path)
 
                 val file = File(fileUrl.path)
-                val uri = Uri.fromFile(file)
+//                val uri = Uri.fromFile(file)
+                val uri: Uri = FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
                 shareIntent.type = "image/png"
                 shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
                 startActivity(Intent.createChooser(shareIntent, "Share pdf using"));

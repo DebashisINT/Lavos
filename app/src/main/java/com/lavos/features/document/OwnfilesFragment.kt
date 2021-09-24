@@ -17,6 +17,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.lavos.R
@@ -755,7 +756,8 @@ class OwnfilesFragment : BaseFragment() {
             return
         }
 
-        val uri = Uri.fromFile(file)
+//        val uri = Uri.fromFile(file)
+        val uri: Uri = FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
         intent.putExtra(Intent.EXTRA_STREAM, uri)
         intent.type = mimeType
         startActivity(Intent.createChooser(intent, "Share document via..."))
