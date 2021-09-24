@@ -20,7 +20,7 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/add_shop_bg_color"
+            android:background="@color/color_silver"
             android:clickable="true"
             android:orientation="vertical">
 
@@ -41,7 +41,7 @@
                     android:id="@+id/layer_image_vw_IMG"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/_150sdp"
-                    android:background="#ffffff"
+                    android:background="#E8E6E6"
                     android:scaleType="fitXY" />
 
                 <LinearLayout
@@ -87,6 +87,7 @@
                 android:layout_marginRight="@dimen/_10sdp"
                 android:layout_marginTop="@dimen/_135sdp"
                 android:background="@drawable/nearby_shop_list_bg"
+                android:backgroundTint="@color/color_silver"
                 android:orientation="vertical"
                 android:paddingBottom="@dimen/_10sdp"
                 android:paddingLeft="@dimen/_10sdp"
@@ -3311,7 +3312,7 @@
                     android:gravity="center"
                     android:layout_marginTop="@dimen/_5sdp"
                     android:orientation="horizontal"
-                    android:background="@drawable/selector_blue_botton_bg"
+                    android:background="@drawable/shape_custom_border_blue_button"
                     android:paddingLeft="@dimen/_10sdp">
 
                     <androidx.appcompat.widget.AppCompatImageView

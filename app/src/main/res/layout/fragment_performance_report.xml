@@ -5,7 +5,7 @@
     android:id="@+id/rl_performance_report_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/smoke_white">
+    android:background="@color/color_silver">
 
     <com.lavos.widgets.AppCustomTextView
         android:id="@+id/tv_pick_date_range"
