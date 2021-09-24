@@ -56,6 +56,9 @@ import com.lavos.mappackage.SendBrod
 import com.lavos.widgets.AppCustomEditText
 import com.lavos.widgets.AppCustomTextView
 import com.elvishew.xlog.XLog
+import com.squareup.picasso.Cache
+import com.squareup.picasso.MemoryPolicy
+import com.squareup.picasso.NetworkPolicy
 import com.squareup.picasso.Picasso
 import com.themechangeapp.pickimage.PermissionHelper
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -248,13 +251,31 @@ class ProtoRegistrationFragment:BaseFragment(),View.OnClickListener {
 
 
                 val faceImg = simpleDialogg.findViewById(R.id.iv_face_img) as ImageView
+                faceImg.setImageDrawable(null)
+                faceImg.setBackgroundDrawable(null)
+                faceImg.invalidate();
+                faceImg.setImageBitmap(null);
                 val faceName = simpleDialogg.findViewById(R.id.face_name) as AppCustomTextView
                 faceName.text = name
 
-                        Picasso.get()
+
+
+                val picasso = Picasso.Builder(mContext)
+                        .memoryCache(Cache.NONE)
+                        .indicatorsEnabled(true)
+                        .loggingEnabled(true) //add other settings as needed
+                        .build()
+                //Picasso.setSingletonInstance(picasso)
+                picasso.load(Uri.parse(img_link))
+                        .memoryPolicy(MemoryPolicy.NO_CACHE)
+                        .networkPolicy(NetworkPolicy.NO_CACHE)
+                        .resize(500, 500)
+                        .into(faceImg)
+
+                      /*  Picasso.get()
                                 .load(img_link)
                                 .resize(500, 500)
-                                .into(faceImg)
+                                .into(faceImg)*/
                 progress_wheel.stopSpinning()
 
                 simpleDialogg.show()

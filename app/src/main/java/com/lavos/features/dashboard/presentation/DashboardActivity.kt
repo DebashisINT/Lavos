@@ -1283,7 +1283,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
 
 
         if (dialog == null || !dialog?.isVisible!!) {
-            dialog = CommonDialog.getInstance(AppUtils.hiFirstNameText(), getString(R.string.attendance_msg_bdy), /*getString(R.string.cancel),
+            dialog = CommonDialog.getInstance(AppUtils.hiFirstNameText()+"!", getString(R.string.attendance_msg_bdy), /*getString(R.string.cancel),
                     getString(R.string.ok),*/ true, object : CommonDialogClickListener {
                 override fun onLeftClick() {
                 }
