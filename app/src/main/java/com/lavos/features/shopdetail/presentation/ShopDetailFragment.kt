@@ -1413,7 +1413,7 @@ class ShopDetailFragment : BaseFragment(), View.OnClickListener {
                 else
                     "Order entry"
 
-                CommonDialogTripleBtn.getInstance(AppUtils.hiFirstNameText(), "Select what would you like to do?", orderText, "Opening stock",
+                CommonDialogTripleBtn.getInstance(AppUtils.hiFirstNameText()+"!", "Select what would you like to do?", orderText, "Opening stock",
                         false, "Collection entry", object : CommonTripleDialogClickListener {
                     override fun onLeftClick() {
                         if (Pref.isQuotationPopupShow)
@@ -1498,7 +1498,7 @@ class ShopDetailFragment : BaseFragment(), View.OnClickListener {
                 else
                     "Order entry"
 
-                CommonDialog.getInstanceNew(AppUtils.hiFirstNameText(), "Select what would you like to do?", orderText, "Opening stock", false, object : CommonDialogClickListener {
+                CommonDialog.getInstanceNew(AppUtils.hiFirstNameText()+"!", "Select what would you like to do?", orderText, "Opening stock", false, object : CommonDialogClickListener {
                     override fun onLeftClick() {
                         if (Pref.isQuotationPopupShow)
                             (mContext as DashboardActivity).loadFragment(FragType.QuotationListFragment, true, addShopData.shop_id)
@@ -1572,7 +1572,7 @@ class ShopDetailFragment : BaseFragment(), View.OnClickListener {
                 }).show((mContext as DashboardActivity).supportFragmentManager, "")
             }
 
-            2 -> CommonDialog.getInstanceNew(AppUtils.hiFirstNameText(), "Select what would you like to do?", "Collection entry", "Opening stock", false, object : CommonDialogClickListener {
+            2 -> CommonDialog.getInstanceNew(AppUtils.hiFirstNameText()+"!", "Select what would you like to do?", "Collection entry", "Opening stock", false, object : CommonDialogClickListener {
                 override fun onLeftClick() {
                     (mContext as DashboardActivity).loadFragment(FragType.CollectionDetailsFragment, true, addShopData)
                     //(mContext as DashboardActivity).showSnackMessage(getString(R.string.functionality_disabled))
@@ -1632,7 +1632,8 @@ class ShopDetailFragment : BaseFragment(), View.OnClickListener {
                 }
             }).show((mContext as DashboardActivity).supportFragmentManager, "")
 
-            3 -> CommonDialogSingleBtn.getInstanceNew(AppUtils.hiFirstNameText(), "Select what would you like to do?", "Opening stock", object : OnDialogClickListener {
+            3 -> CommonDialogSingleBtn.getInstanceNew(AppUtils.hiFirstNameText()+"!", "Select what would you like to do?", "Opening stock", object : OnDialogClickListener {
+
                 override fun onOkClick() {
                     (mContext as DashboardActivity).loadFragment(FragType.StockListFragment, true, addShopData)
                     //(mContext as DashboardActivity).showSnackMessage(getString(R.string.functionality_disabled))
@@ -1694,7 +1695,7 @@ class ShopDetailFragment : BaseFragment(), View.OnClickListener {
                 else
                     "Order entry"
 
-                CommonDialog.getInstanceNew(AppUtils.hiFirstNameText(), "Select what would you like to do?", orderText, "Collection entry", false, object : CommonDialogClickListener {
+                CommonDialog.getInstanceNew(AppUtils.hiFirstNameText()+"!", "Select what would you like to do?", orderText, "Collection entry", false, object : CommonDialogClickListener {
                     override fun onLeftClick() {
                         if (Pref.isQuotationPopupShow)
                             (mContext as DashboardActivity).loadFragment(FragType.QuotationListFragment, true, addShopData.shop_id)
@@ -1774,7 +1775,7 @@ class ShopDetailFragment : BaseFragment(), View.OnClickListener {
                 else
                     "Order entry"
 
-                CommonDialogSingleBtn.getInstanceNew(AppUtils.hiFirstNameText(), "Select what would you like to do?", orderText, object : OnDialogClickListener {
+                CommonDialogSingleBtn.getInstanceNew(AppUtils.hiFirstNameText()+"!", "Select what would you like to do?", orderText, object : OnDialogClickListener {
                     override fun onOkClick() {
                         if (Pref.isQuotationPopupShow)
                             (mContext as DashboardActivity).loadFragment(FragType.QuotationListFragment, true, addShopData.shop_id)
@@ -1840,7 +1841,7 @@ class ShopDetailFragment : BaseFragment(), View.OnClickListener {
                 }).show((mContext as DashboardActivity).supportFragmentManager, "CommonDialogSingleBtn")
             }
 
-            6 -> CommonDialogSingleBtn.getInstanceNew(AppUtils.hiFirstNameText(), "Select what would you like to do?", "Collection entry", object : OnDialogClickListener {
+            6 -> CommonDialogSingleBtn.getInstanceNew(AppUtils.hiFirstNameText()+"!", "Select what would you like to do?", "Collection entry", object : OnDialogClickListener {
                 override fun onOkClick() {
                     (mContext as DashboardActivity).loadFragment(FragType.CollectionDetailsFragment, true, addShopData)
                     //(mContext as DashboardActivity).showSnackMessage(getString(R.string.functionality_disabled))

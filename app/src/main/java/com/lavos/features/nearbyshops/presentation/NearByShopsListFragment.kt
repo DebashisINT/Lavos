@@ -889,7 +889,7 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
 
             override fun onUpdatePartyStatusClick(position: Int) {
                 floating_fab.close(true)
-                UpdatePartyStatusDialog.getInstance(AppUtils.hiFirstNameText(), getString(R.string.cancel),
+                UpdatePartyStatusDialog.getInstance(AppUtils.hiFirstNameText()+"!", getString(R.string.cancel),
                         getString(R.string.confirm), false, true, false, list[position].party_status_id, object : UpdatePartyStatusDialog.OnButtonClickListener {
                     override fun onLeftClick() {
                     }
@@ -905,7 +905,7 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
 
             override fun onUpdateBankDetailsClick(position: Int) {
                 floating_fab.close(true)
-                UpdateBankDetailsDialog.getInstance(AppUtils.hiFirstNameText(), getString(R.string.cancel),
+                UpdateBankDetailsDialog.getInstance(AppUtils.hiFirstNameText()"!", getString(R.string.cancel),
                         getString(R.string.confirm), false, true, false, list[position], object : UpdateBankDetailsDialog.OnButtonClickListener {
                     override fun onLeftClick() {
                     }

@@ -603,7 +603,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                     list?.forEach {
                         val notification = NotificationUtils(getString(R.string.app_name), "", "", "")
                         val shop = AppDatabase.getDBInstance()?.addShopEntryDao()?.getShopByIdN(it.shopid)
-                        val body = "${AppUtils.hiFirstNameText()}, your visit to " + it.shop_name + " whose contact no. is: " + shop?.ownerContactNumber + " & address is " +
+                        val body = "${AppUtils.hiFirstNameText()+"!"}, your visit to " + it.shop_name + " whose contact no. is: " + shop?.ownerContactNumber + " & address is " +
                                 shop?.address +" due today as per next visit date. Thanks."
                         notification.sendRevisitDueNotification(this, body)
                     }
@@ -2338,7 +2338,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 if (AppUtils.convertDateTimeWithMeredianToLong(AppUtils.getCurrentTimeWithMeredian()) >= AppUtils.convertDateTimeWithMeredianToLong(inTime)
                         && AppUtils.convertDateTimeWithMeredianToLong(AppUtils.getCurrentTimeWithMeredian()) <= AppUtils.convertDateTimeWithMeredianToLong(outTime)) {*/
                 if (Pref.isAddAttendence)
-                    (mContext as DashboardActivity).showSnackMessage("${AppUtils.hiFirstNameText()}. Attendance already marked for the day.")
+                    (mContext as DashboardActivity).showSnackMessage("${AppUtils.hiFirstNameText()+"!"}. Attendance already marked for the day.")
                 else {
                     /*if (!TextUtils.isEmpty(Pref.current_latitude) && !TextUtils.isEmpty(Pref.current_longitude)) {
                         if (Pref.isHomeLocAvailable) {
@@ -6344,7 +6344,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                     val userId = shopId.substring(0, shopId.indexOf("_"))
                     if (userId != Pref.user_id) {
                         //showSnackMessage("Scanned QR is not your ${Pref.shopText}. Revisit not possible. Thanks")
-                        CommonDialogSingleBtn.getInstance(AppUtils.hiFirstNameText(), "Scanned QR is not your ${Pref.shopText}. Revisit not possible. Thanks",
+                        CommonDialogSingleBtn.getInstance(AppUtils.hiFirstNameText()+"!", "Scanned QR is not your ${Pref.shopText}. Revisit not possible. Thanks",
                                 "Ok", object : OnDialogClickListener {
                             override fun onOkClick() {
                             }
@@ -6358,7 +6358,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
 
                     if (distance * 1000 > Pref.gpsAccuracy.toDouble()) {
                         //showSnackMessage("Hi, you are not at the nearby location. Be there and try to scan for Revisit.")
-                        CommonDialogSingleBtn.getInstance(AppUtils.hiFirstNameText(), "Hi, you are not at the nearby location. Please be there & scan QR to revisit for today.",
+                        CommonDialogSingleBtn.getInstance(AppUtils.hiFirstNameText()+"!", "Hi, you are not at the nearby location. Please be there & scan QR to revisit for today.",
                                 "Ok", object : OnDialogClickListener {
                             override fun onOkClick() {
                             }
@@ -6546,7 +6546,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             return
         }
 
-        CommonDialog.getInstance(AppUtils.hiFirstNameText(), "Click Ok to clear the cart and back to the list to start again.", getString(R.string.cancel), getString(R.string.ok), object : CommonDialogClickListener {
+        CommonDialog.getInstance(AppUtils.hiFirstNameText()+"!", "Click Ok to clear the cart and back to the list to start again.", getString(R.string.cancel), getString(R.string.ok), object : CommonDialogClickListener {
             override fun onLeftClick() {
             }
 
@@ -6571,7 +6571,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
     }
 
     private fun performLogout() {
-        CommonDialog.getInstance(AppUtils.hiFirstNameText(), getString(R.string.confirm_logout), getString(R.string.cancel), getString(R.string.ok), object : CommonDialogClickListener {
+        CommonDialog.getInstance(AppUtils.hiFirstNameText()+"!", getString(R.string.confirm_logout), getString(R.string.cancel), getString(R.string.ok), object : CommonDialogClickListener {
             override fun onLeftClick() {
 
             }
@@ -9489,7 +9489,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             "Wish to Revisit the selected ${Pref.shopText} ${teamShop.shop_name}(${teamShop.shop_contact}) now?"
         }
 
-        CommonDialog.getInstance(AppUtils.hiFirstNameText(), popupBody, "NO", "YES", object : CommonDialogClickListener {
+        CommonDialog.getInstance(AppUtils.hiFirstNameText()+"!", popupBody, "NO", "YES", object : CommonDialogClickListener {
             override fun onLeftClick() {
                 //cancelNotification(shopId)
             }
@@ -9618,7 +9618,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             "Wish to Revisit the selected ${Pref.shopText} ${teamShop.shop_name}(${teamShop.shop_contact}) now?"
         }
 
-        CommonDialog.getInstance(AppUtils.hiFirstNameText(), popupBody, "NO", "YES", object : CommonDialogClickListener {
+        CommonDialog.getInstance(AppUtils.hiFirstNameText()+"!", popupBody, "NO", "YES", object : CommonDialogClickListener {
             override fun onLeftClick() {
                 //cancelNotification(shopId)
             }
@@ -10419,7 +10419,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                     idealLocAlertDialog = null
                 }
 
-                idealLocAlertDialog = CommonDialogSingleBtn.getInstance(AppUtils.hiFirstNameText(), "It seeems that you are at the same nearby locations from $startTime to $endTime. Thanks.", getString(R.string.ok), object : OnDialogClickListener {
+            idealLocAlertDialog = CommonDialogSingleBtn.getInstance(AppUtils.hiFirstNameText()+"!", "It seeems that you are at the same nearby locations from $startTime to $endTime. Thanks.", getString(R.string.ok), object : OnDialogClickListener {
                     override fun onOkClick() {
                         if (isOrderDialogShow)
                             showOrderCollectionAlert(isOrderAdded, isCollectionAdded)
@@ -10566,7 +10566,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
 
     private fun showHomeLocReasonDialog() {
         reasonDialog = null
-        reasonDialog = ReasonDialog.getInstance(AppUtils.hiFirstNameText(), "You have been detected nearby home location", reason) {
+        reasonDialog = ReasonDialog.getInstance(AppUtils.hiFirstNameText()+"!", "You have been detected nearby home location", reason) {
             if (!AppUtils.isOnline(this))
                 Toaster.msgShort(this, getString(R.string.no_internet))
             else {
@@ -10636,7 +10636,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                     forceLogoutDialog = null
                 }
 
-                forceLogoutDialog = CommonDialogSingleBtn.getInstance(AppUtils.hiFirstNameText(), "Final logout time of the day is ${Pref.approvedOutTime}. Click on Ok to " +
+                forceLogoutDialog = CommonDialogSingleBtn.getInstance(AppUtils.hiFirstNameText()+"!", "Final logout time of the day is ${Pref.approvedOutTime}. Click on Ok to " +
                         "logout now & complete the automated data sync. Thanks.", getString(R.string.ok), object : OnDialogClickListener {
 
                     override fun onOkClick() {

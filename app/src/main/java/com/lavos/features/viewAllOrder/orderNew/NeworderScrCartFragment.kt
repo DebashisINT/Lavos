@@ -327,7 +327,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         val dialogYes = simpleDialog.findViewById(R.id.tv_message_ok_new) as AppCustomTextView
         dialogYes.setOnClickListener({ view ->
             simpleDialog.cancel()
-            voiceAttendanceMsg(AppUtils.hiFirstNameText() + " , Your order has been placed successfully.")
+            voiceAttendanceMsg(AppUtils.hiFirstNameText()+"!" + " , Your order has been placed successfully.")
         })
         simpleDialog.show()
     }

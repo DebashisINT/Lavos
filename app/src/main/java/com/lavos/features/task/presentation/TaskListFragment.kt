@@ -219,7 +219,7 @@ class TaskListFragment : BaseFragment(), View.OnClickListener {
     }
 
     private fun showDeleterAlert(task: TaskEntity) {
-        CommonDialog.getInstance(AppUtils.hiFirstNameText(), "Do you really want to delete this Task?", getString(R.string.no), getString(R.string.yes), object : CommonDialogClickListener {
+        CommonDialog.getInstance(AppUtils.hiFirstNameText()+"!", "Do you really want to delete this Task?", getString(R.string.no), getString(R.string.yes), object : CommonDialogClickListener {
             override fun onLeftClick() {
             }
 
@@ -361,7 +361,7 @@ class TaskListFragment : BaseFragment(), View.OnClickListener {
     }
 
     private fun showStatusAlert(task: TaskEntity) {
-        CommonDialog.getInstance(AppUtils.hiFirstNameText(), "Do you really want to change this Task's status?", getString(R.string.no), getString(R.string.yes), object : CommonDialogClickListener {
+        CommonDialog.getInstance(AppUtils.hiFirstNameText()+"!", "Do you really want to change this Task's status?", getString(R.string.no), getString(R.string.yes), object : CommonDialogClickListener {
             override fun onLeftClick() {
             }
 
