@@ -92,7 +92,8 @@ class AdapterUserList (var mContext: Context,var customerList:ArrayList<UserList
                     catch (ex:java.lang.Exception){
 
                     }
-                    click_for_photo_reg_tv.setTextColor(resources.getColor(R.color.dark_gray))
+//                    click_for_photo_reg_tv.setTextColor(resources.getColor(R.color.dark_gray))
+                    click_for_photo_reg_tv.setTextColor(resources.getColor(R.color.color_custom_green))
                 }else{
                     sync_status_failed_iv.visibility=View.VISIBLE
                     sync_status_iv.visibility=View.GONE
@@ -104,7 +105,8 @@ class AdapterUserList (var mContext: Context,var customerList:ArrayList<UserList
                     //sync_delete_iv.isEnabled=false
                     click_for_photo_reg_tv.isEnabled=true
                     click_for_photo_reg_tv.text="Click for Registration"
-                    click_for_photo_reg_tv.setTextColor(resources.getColor(R.color.blue))
+                    click_for_photo_reg_tv.setTextColor(resources.getColor(R.color.color_custom_red))
+//                    click_for_photo_reg_tv.setTextColor(resources.getColor(R.color.blue))
                 }
 
 
