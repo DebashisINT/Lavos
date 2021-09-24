@@ -4,7 +4,7 @@
     android:layout_height="wrap_content">
 
     <LinearLayout
-        android:background="@color/attendance_top_bar_color"
+        android:background="@drawable/custom_toolbar_back"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"

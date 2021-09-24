@@ -4,7 +4,8 @@
     android:layout_height="match_parent"
     xmlns:wheel="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="@dimen/_5sdp">
+    android:padding="@dimen/_5sdp"
+    android:background="@color/color_silver">
 
 
     <com.lavos.widgets.AppCustomEditText

@@ -5,7 +5,8 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:paddingLeft="@dimen/_10sdp"
-    android:paddingRight="@dimen/_10sdp">
+    android:paddingRight="@dimen/_10sdp"
+    android:background="@drawable/shape_cursor_two">
 
     <RelativeLayout
         android:layout_width="0dp"
