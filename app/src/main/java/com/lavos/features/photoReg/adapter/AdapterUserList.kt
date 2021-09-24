@@ -8,6 +8,7 @@ import android.widget.Filter
 import android.widget.Filterable
 import androidx.recyclerview.widget.RecyclerView
 import com.lavos.R
+import com.lavos.app.Pref
 import com.lavos.app.domain.AddShopDBModelEntity
 import com.lavos.features.chat.model.ChatListDataModel
 import com.lavos.features.myjobs.model.CustomerDataModel
@@ -107,7 +108,8 @@ class AdapterUserList (var mContext: Context,var customerList:ArrayList<UserList
                 }
 
 
-                if(mList?.get(adapterPosition)?.IsPhotoDeleteShow!!){
+                //if(mList?.get(adapterPosition)?.IsPhotoDeleteShow!!){
+                if(Pref.IsPhotoDeleteShow){
                     sync_delete_iv_red.visibility=View.VISIBLE
                 }else{
                     sync_delete_iv_red.visibility=View.GONE

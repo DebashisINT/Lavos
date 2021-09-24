@@ -306,6 +306,7 @@ object Pref : PreferenceHolder() {
     var visit_distributor_date_time: String by bindToPreferenceField("", "visit_distributor_date_time")
 
     var IsActivateNewOrderScreenwithSize: Boolean by bindToPreferenceField(false, "IsActivateNewOrderScreenwithSize")
+    var IsPhotoDeleteShow: Boolean by bindToPreferenceField(false, "IsPhotoDeleteShow")
 
 
 
