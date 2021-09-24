@@ -2196,7 +2196,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             if (isForceLogout)
                 return
 
-            var header = AppUtils.hiFirstNameText()
+            var header = AppUtils.hiFirstNameText()+"!"
             var body = ""
 
             if (!isOrderAdded && !isCollectionAdded) {
@@ -2548,7 +2548,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                             simpleDialog.setContentView(R.layout.dialog_message)
                             val dialogHeader = simpleDialog.findViewById(R.id.dialog_message_header_TV) as AppCustomTextView
                             val dialog_yes_no_headerTV = simpleDialog.findViewById(R.id.dialog_message_headerTV) as AppCustomTextView
-                            dialog_yes_no_headerTV.text = AppUtils.hiFirstNameText()
+                            dialog_yes_no_headerTV.text = AppUtils.hiFirstNameText()+"!"
                             dialogHeader.text = "Please start your day..."
                             val dialogYes = simpleDialog.findViewById(R.id.tv_message_ok) as AppCustomTextView
                             dialogYes.setOnClickListener({ view ->
@@ -6621,7 +6621,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
     private fun showLogoutLocReasonDialog() {
         reasonDialog = null
         val body = "You applicable out time is: ${Pref.approvedOutTime}. You are doing early logout. Please write below the reason."
-        reasonDialog = ReasonDialog.getInstance(AppUtils.hiFirstNameText(), body, reason) {
+        reasonDialog = ReasonDialog.getInstance(AppUtils.hiFirstNameText()+"!", body, reason) {
             if (!AppUtils.isOnline(this))
                 Toaster.msgShort(this, getString(R.string.no_internet))
             else {

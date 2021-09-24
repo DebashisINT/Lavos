@@ -88,7 +88,7 @@ class AddRemarksSignDialog : DialogFragment(), View.OnClickListener {
             tl_remarks = findViewById(R.id.tl_remarks)
         }
 
-        dialog_header_TV.text = AppUtils.hiFirstNameText()
+        dialog_header_TV.text = AppUtils.hiFirstNameText()+"!"
 
         if (!TextUtils.isEmpty(feedback))
             et_remarks.setText(feedback)

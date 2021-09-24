@@ -51,7 +51,7 @@ class AccuracyIssueDialog : DialogFragment() {
 //        new_address_EDT=v.findViewById(R.id.new_address_EDT)
         dialog_header_TV = v.findViewById(R.id.dialog_header_TV)
 
-        dialog_header_TV.text = AppUtils.hiFirstNameText()
+        dialog_header_TV.text = AppUtils.hiFirstNameText()+"!"
 
         if ((mContext as DashboardActivity).getCurrentFragType() != FragType.AddShopFragment) {
             cancel_TV.visibility = View.GONE

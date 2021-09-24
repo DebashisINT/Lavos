@@ -100,7 +100,7 @@ class OTPVerificationDialog : DialogFragment(), View.OnClickListener {
         et_otp_6 = v.findViewById(R.id.et_otp_6)
         tv_timer = v.findViewById(R.id.tv_timer)
 
-        dialogHeader.text = AppUtils.hiFirstNameText()
+        dialogHeader.text = AppUtils.hiFirstNameText()+"!"
 
         dialogCancel.setOnClickListener(this)
         dialogOk.setOnClickListener(this)
