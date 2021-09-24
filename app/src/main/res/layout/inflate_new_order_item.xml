@@ -21,7 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="@dimen/_5sdp"
-            android:background="@drawable/top_rounded_corner_gray_bg"
+            android:background="@drawable/shape_cursor_two"
             android:padding="@dimen/_5sdp">
 
             <com.lavos.widgets.AppCustomTextView

@@ -189,6 +189,8 @@ class DashboardFragment : BaseFragment(), View.OnClickListener, HBRecorderListen
     private lateinit var DDVisit_TV: AppCustomTextView
     private lateinit var DDVisitdate_TV: AppCustomTextView
 
+    private lateinit var DDVisit_Rl: RelativeLayout
+
   
 
 
@@ -547,6 +549,7 @@ class DashboardFragment : BaseFragment(), View.OnClickListener, HBRecorderListen
         end_TV = view.findViewById(R.id.end_TV)
 
         DDVisit_TV =  view.findViewById(R.id.DDVisit_TV)
+        DDVisit_Rl =  view.findViewById(R.id.DDVisitRL)
         DDVisitdate_TV =  view.findViewById(R.id.DDVisitdate_TV)
 
         StartRL = view.findViewById(R.id.StartRL)
@@ -970,9 +973,11 @@ class DashboardFragment : BaseFragment(), View.OnClickListener, HBRecorderListen
         if (Pref.IsShowMarkDistVisitOnDshbrd) {
             DDVisit_TV.visibility = View.VISIBLE
             DDVisitdate_TV.visibility = View.VISIBLE
+            DDVisit_Rl.visibility = View.VISIBLE
         } else {
             DDVisit_TV.visibility = View.GONE
             DDVisitdate_TV.visibility = View.GONE
+            DDVisit_Rl.visibility = View.GONE
         }
 
         if(Pref.IsShowDayStart){
@@ -4162,9 +4167,11 @@ class DashboardFragment : BaseFragment(), View.OnClickListener, HBRecorderListen
         if (Pref.IsShowMarkDistVisitOnDshbrd) {
             DDVisit_TV.visibility = View.VISIBLE
             DDVisitdate_TV.visibility = View.VISIBLE
+            DDVisit_Rl.visibility = View.VISIBLE
         } else {
             DDVisit_TV.visibility = View.GONE
             DDVisitdate_TV.visibility = View.GONE
+            DDVisit_Rl.visibility = View.GONE
         }
 
         if(Pref.IsShowDayStart){
