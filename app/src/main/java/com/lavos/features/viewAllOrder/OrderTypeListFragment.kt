@@ -1383,7 +1383,7 @@ class OrderTypeListFragment : BaseFragment(), View.OnClickListener {
 
     private fun showCongratsAlert(shopId: String, orderId: String) {
         val shop = AppDatabase.getDBInstance()?.addShopEntryDao()?.getShopByIdN(shopId)
-        val body = "${AppUtils.hiFirstNameText()}. Your order for " + shop?.shopName + " has been placed successfully. Order No. is $orderId"
+        val body = "${AppUtils.hiFirstNameText()+"!"}. Your order for " + shop?.shopName + " has been placed successfully. Order No. is $orderId"
         CommonDialogSingleBtn.getInstance("Congrats!", body, "OK", object : OnDialogClickListener {
             override fun onOkClick() {
                 (mContext as DashboardActivity).onBackPressed()
