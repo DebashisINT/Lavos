@@ -288,7 +288,9 @@ public class FaceStartActivity extends AppCompatActivity {
     }
 
     File saveBitmapIntoSDCardImage(Context context, Bitmap finalBitmap) {
-        String root = Environment.getExternalStorageDirectory().toString();
+        //String root = Environment.getExternalStorageDirectory().toString();
+        //27-09-2021
+        String root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString();
         File myDir = new File(mCurrentPhotoPath);
         myDir.mkdirs();
         String fname = fflliinnmm + ".jpg";

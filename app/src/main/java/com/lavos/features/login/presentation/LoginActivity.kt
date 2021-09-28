@@ -36,6 +36,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.NotificationManagerCompat
 import com.elvishew.xlog.XLog
+import com.lavos.CustomStatic
 import com.lavos.R
 import com.lavos.app.*
 import com.lavos.app.AlarmReceiver.Companion.setAlarm
@@ -5641,6 +5642,16 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
 
                                     if (list_gender != null && list_gender.isNotEmpty()) {
                                         doAsync {
+
+
+                                            for(l in 0..list_gender.size-1){
+                                                if(list_gender.get(l).gender_id==1){
+                                                    Pref.new_ord_gender_male=list_gender.get(l).gender.toString().toUpperCase()
+                                                }
+                                                if(list_gender.get(l).gender_id==2){
+                                                    Pref.new_ord_gender_female=list_gender.get(l).gender.toString().toUpperCase()
+                                                }
+                                            }
 
                                             AppDatabase.getDBInstance()?.newOrderGenderDao()?.insertAll(list_gender)
                                             AppDatabase.getDBInstance()?.newOrderGenderDao()?.updateGendertoUpperCase()

@@ -11,6 +11,9 @@ class NewOrderGenderEntity {
     @ColumnInfo(name = "id")
     var id: Int = 0
 
+    @ColumnInfo(name = "gender_id")
+    var gender_id: Int = 0
+
     @ColumnInfo(name = "gender")
     var gender: String? = null
 }

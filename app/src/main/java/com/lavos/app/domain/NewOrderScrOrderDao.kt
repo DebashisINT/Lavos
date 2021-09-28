@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.lavos.app.AppConstant
+import com.lavos.app.Pref
 import com.lavos.features.viewAllOrder.model.ProductOrder
 import com.lavos.features.viewAllOrder.orderNew.NewOdrScrListFragment
 import com.lavos.features.viewAllOrder.orderNew.NewOrderScrOrderDetailsFragment
@@ -48,13 +49,15 @@ interface NewOrderScrOrderDao {
     fun getSizeQtyByProductColorID(order_id:String,product_id:String,color_id:String): List<ProductOrder>
 
     //@Query("Select size,qty  from "+ AppConstant.NEW_ORDER_ENTRY +" where product_id=:product_id and color_id=:color_id and order_id=:order_id and gender='Male' ")
-    @Query("Select size,qty  from "+ AppConstant.NEW_ORDER_ENTRY +" where product_id=:product_id and color_id=:color_id and order_id=:order_id and gender='MALE' ")
-    fun getSizeQtyByProductColorIDMale(order_id:String,product_id:String,color_id:String): List<ProductOrder>
+    //@Query("Select size,qty  from "+ AppConstant.NEW_ORDER_ENTRY +" where product_id=:product_id and color_id=:color_id and order_id=:order_id and gender='MALE' ")
+    @Query("Select size,qty  from "+ AppConstant.NEW_ORDER_ENTRY +" where product_id=:product_id and color_id=:color_id and order_id=:order_id and gender=:gender")
+    fun getSizeQtyByProductColorIDMale(order_id:String,product_id:String,color_id:String,gender:String): List<ProductOrder>
 
 
     //@Query("Select size,qty  from "+ AppConstant.NEW_ORDER_ENTRY +" where product_id=:product_id and color_id=:color_id and order_id=:order_id and gender='Female' ")
-    @Query("Select size,qty  from "+ AppConstant.NEW_ORDER_ENTRY +" where product_id=:product_id and color_id=:color_id and order_id=:order_id and gender='FEMALE' ")
-    fun getSizeQtyByProductColorIDFemale(order_id:String,product_id:String,color_id:String): List<ProductOrder>
+    //@Query("Select size,qty  from "+ AppConstant.NEW_ORDER_ENTRY +" where product_id=:product_id and color_id=:color_id and order_id=:order_id and gender='FEMALE' ")
+    @Query("Select size,qty  from "+ AppConstant.NEW_ORDER_ENTRY +" where product_id=:product_id and color_id=:color_id and order_id=:order_id and gender=:gender ")
+    fun getSizeQtyByProductColorIDFemale(order_id:String,product_id:String,color_id:String,gender:String): List<ProductOrder>
 
 
 

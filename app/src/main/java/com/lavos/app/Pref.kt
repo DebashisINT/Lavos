@@ -309,6 +309,7 @@ object Pref : PreferenceHolder() {
     var IsPhotoDeleteShow: Boolean by bindToPreferenceField(false, "IsPhotoDeleteShow")
 
 
-
+    var new_ord_gender_male: String by bindToPreferenceField("", "new_ord_gender_male")
+    var new_ord_gender_female: String by bindToPreferenceField("", "new_ord_gender_female")
 
 }

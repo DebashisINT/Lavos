@@ -230,13 +230,16 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
 
                 var colorIDListForProduct = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getColorIDDistinctByOrderID(orderIdList.get(i), productIDList.get(j))
                 for (k in 0..colorIDListForProduct!!.size - 1) {
-                    var sizeQtyListMale = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getSizeQtyByProductColorIDMale(orderIdList!!.get(i), productIDList!!.get(j), colorIDListForProduct!!.get(k))
-                    var sizeQtyListFeMale = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getSizeQtyByProductColorIDFemale(orderIdList!!.get(i), productIDList!!.get(j), colorIDListForProduct!!.get(k))
+                    var sizeQtyListMale = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getSizeQtyByProductColorIDMale(orderIdList!!.get(i), productIDList!!.get(j), colorIDListForProduct!!.get(k),
+                    Pref.new_ord_gender_male)
+                    var sizeQtyListFeMale = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getSizeQtyByProductColorIDFemale(orderIdList!!.get(i), productIDList!!.get(j), colorIDListForProduct!!.get(k),
+                            Pref.new_ord_gender_female)
                     if (sizeQtyListMale!!.size > 0) {
                         newOrderCartModel1!!.product_id = productIDList!!.get(j)
                         newOrderCartModel1!!.product_name = AppDatabase.getDBInstance()?.newOrderProductDao()?.getNewOrderProductName(productIDList!!.get(j))!!
 
-                        newOrderCartModel1!!.gender = "MALE"
+                        //newOrderCartModel1!!.gender = "MALE"
+                        newOrderCartModel1!!.gender = Pref.new_ord_gender_male
 
                         var colorSel = AppDatabase.getDBInstance()?.newOrderColorDao()?.getNewOrderColorName(colorIDListForProduct.get(k))
                         var colorList: ColorList = ColorList(colorSel!!, colorIDListForProduct.get(k), sizeQtyListMale as ArrayList<ProductOrder>)
@@ -247,7 +250,8 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
                         newOrderCartModel2!!.product_id = productIDList!!.get(j)
                         newOrderCartModel2!!.product_name = AppDatabase.getDBInstance()?.newOrderProductDao()?.getNewOrderProductName(productIDList!!.get(j))!!
 
-                        newOrderCartModel2!!.gender = "FEMALE"
+                        //newOrderCartModel2!!.gender = "FEMALE"
+                        newOrderCartModel2!!.gender = Pref.new_ord_gender_female
 
                         var colorSel = AppDatabase.getDBInstance()?.newOrderColorDao()?.getNewOrderColorName(colorIDListForProduct.get(k))
                         var colorList: ColorList = ColorList(colorSel!!, colorIDListForProduct.get(k), sizeQtyListFeMale as ArrayList<ProductOrder>)

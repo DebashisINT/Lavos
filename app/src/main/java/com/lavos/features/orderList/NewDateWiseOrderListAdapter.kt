@@ -125,7 +125,7 @@ class NewDateWiseOrderListAdapter(context: Context, userLocationDataEntity: Arra
                 if (list_ != null && list_.isNotEmpty()) {
 
                     //itemView.tv_billing.setBackgroundResource(R.drawable.selector_view_bills_bg)
-                    itemView.tv_billing.setBackgroundResource(R.drawable.shape_cursor_two)
+                    itemView.tv_billing.setBackgroundResource(R.drawable.shape_custom_border_blue_button)
                     itemView.tv_billing.setText(R.string.view_bill)
 
                     itemView.tv_billing.setOnClickListener {
@@ -135,7 +135,7 @@ class NewDateWiseOrderListAdapter(context: Context, userLocationDataEntity: Arra
                 } else {
 
                     //itemView.tv_billing.setBackgroundResource(R.drawable.selector_update_bills_bg)
-                    itemView.tv_billing.setBackgroundResource(R.drawable.shape_cursor_two)
+                    itemView.tv_billing.setBackgroundResource(R.drawable.shape_custom_border_blue_button)
                     itemView.tv_billing.text = Pref.updateBillingText
 
                     itemView.tv_billing.setOnClickListener {

@@ -138,10 +138,6 @@
 
     </androidx.cardview.widget.CardView>
 
-
-
-
-
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -176,9 +172,6 @@
 
 
     </FrameLayout>
-
-
-
 
     <Button
         android:id="@+id/btn_new_order_save_db"

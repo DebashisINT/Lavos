@@ -2,7 +2,6 @@ package com.lavos.app
 
 import android.content.Context
 import android.os.Environment
-import android.os.Environment.getExternalStorageDirectory
 import android.os.StrictMode
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication

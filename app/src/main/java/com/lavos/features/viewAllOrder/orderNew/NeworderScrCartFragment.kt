@@ -349,7 +349,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
 
         pdfBody=pdfBody+"Party      : "+AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(NewOrderScrOrderDetailsFragment.shop_id).shopName!!+ "                                  "+ "Phone : "+shop_phone.toString()+"\n\n"
         pdfBody=pdfBody+"Order ID : "+CustomStatic.IsFromViewNewOdrScrOrderID+ "     "+
-                "                                             Date : "+AppUtils.convertToCommonFormat(CustomStatic.IsFromViewNewOdrScrOrderDate)+"\n\n\n"
+                "                                    Date : "+AppUtils.convertToCommonFormat(CustomStatic.IsFromViewNewOdrScrOrderDate)+"\n\n\n"
 
 
         for(i in 0..cartOrder!!.size-1){
@@ -365,7 +365,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
 
             var colorObjj=cartOrder!!.get(i).color_list
             for(j in 0..colorObjj!!.size!!-1){
-                var colorRoot="\nColor : "+colorObjj.get(j).color_name+"\n"
+                var colorRoot="\nColor : "+colorObjj.get(j).color_name+"\n\n"
                 contextHeader+=colorRoot
                 var sizeQtyObjj=colorObjj.get(j).order_list
                 for(k in 0..sizeQtyObjj!!.size-1){

@@ -9,12 +9,6 @@ import android.widget.Filterable
 import androidx.recyclerview.widget.RecyclerView
 import com.lavos.R
 import com.lavos.app.Pref
-import com.lavos.app.domain.AddShopDBModelEntity
-import com.lavos.features.chat.model.ChatListDataModel
-import com.lavos.features.myjobs.model.CustomerDataModel
-import com.lavos.features.nearbyshops.model.NewOrderModel
-import com.lavos.features.nearbyshops.presentation.NearByShopsListAdapter
-import com.lavos.features.nearbyshops.presentation.NearByShopsListClickListener
 import com.lavos.features.photoReg.model.UserListResponseModel
 import kotlinx.android.synthetic.main.row_user_list_face_regis.view.*
 
@@ -178,7 +172,4 @@ class AdapterUserList (var mContext: Context,var customerList:ArrayList<UserList
 
         notifyDataSetChanged()
     }
-
-
-
 }
