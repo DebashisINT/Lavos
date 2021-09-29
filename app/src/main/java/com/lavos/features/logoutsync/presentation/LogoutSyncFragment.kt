@@ -484,13 +484,74 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         }
     }
 
-
+    data class NewOrderRoomDataLogoutPurpose(var order_id: String, var shop_id: String,var order_date:String)
     //08-09-2021
     private fun syncNewOrderScr(){
         try{
             var newOrderRoomDataList:ArrayList<NeworderScrCartFragment.NewOrderRoomData> = ArrayList()
             var unsyncList=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getUnSyncOrderAll()
-            if(unsyncList != null && unsyncList.isNotEmpty() && unsyncList.size!=0){
+/////////////////////////////////
+
+            var unsyncListDistOrderID=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getUnSyncOrderAllUniqOrderID()
+            var newOrderSaveApiModel: NewOrderSaveApiModel=NewOrderSaveApiModel()
+            if(unsyncListDistOrderID != null && unsyncListDistOrderID.isNotEmpty() && unsyncListDistOrderID.size!=0){
+
+                newOrderSaveApiModel.user_id=Pref.user_id
+                newOrderSaveApiModel.session_token=Pref.session_token
+                newOrderSaveApiModel.order_id=unsyncListDistOrderID.get(0).order_id
+                newOrderSaveApiModel.shop_id=unsyncListDistOrderID.get(0).shop_id
+                newOrderSaveApiModel.order_date=unsyncListDistOrderID.get(0).order_date
+
+
+                var unsyncListttt=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getUnSyncOrderAllByOrdID(unsyncListDistOrderID!!.get(0).order_id)
+                var newOrderRoomDataListttt:ArrayList<NeworderScrCartFragment.NewOrderRoomData> = ArrayList()
+
+                for(l in 0..unsyncListttt!!.size-1){
+                    var newOrderRoomDataa= NeworderScrCartFragment.NewOrderRoomData(unsyncListttt!!.get(l).order_id!!,
+                            unsyncListttt!!.get(l).product_id!!,
+                            unsyncListttt!!.get(l).product_name!!, unsyncList!!.get(l).gender!!,
+                            unsyncListttt!!.get(l).color_id!!, unsyncList!!.get(l).color_name!!,
+                            unsyncListttt!!.get(l).size!!,
+                            unsyncListttt!!.get(l).qty!!)
+                    newOrderRoomDataListttt.add(newOrderRoomDataa)
+                }
+                newOrderSaveApiModel.product_list=newOrderRoomDataListttt
+
+
+                val repository = AddOrderRepoProvider.provideAddOrderRepository()
+                BaseActivity.compositeDisposable.add(
+                        repository.addOrderNewOrderScr(newOrderSaveApiModel)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe({ result ->
+                                    XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : RESPONSE " + result.status)
+                                    if (result.status == NetworkConstant.SUCCESS){
+
+                                        doAsync {
+
+                                            AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.syncNewOrder(newOrderSaveApiModel.order_id.toString())
+
+                                            uiThread {
+                                                syncNewOrderScr()
+                                            }
+                                        }
+                                    }
+                                },{error ->
+                                    if (error == null) {
+                                        XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR " )
+                                    } else {
+                                        XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR " + error.localizedMessage)
+                                        error.printStackTrace()
+                                    }
+                                    checkToCallActivity()
+                                })
+                )
+            } else{
+                checkToCallActivity()
+            }
+
+
+            /*if(unsyncList != null && unsyncList.isNotEmpty() && unsyncList.size!=0){
 
                 var newOrderRoomData= NeworderScrCartFragment.NewOrderRoomData(unsyncList.get(0).order_id!!,
                         unsyncList.get(0).product_id!!,
@@ -539,9 +600,10 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 })
                 )
 
-            }else{
-                checkToCallActivity()
             }
+            else{
+                checkToCallActivity()
+            }*/
         }catch (ex:Exception){
             ex.printStackTrace()
             checkToCallActivity()

@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.lavos.app.AppConstant
 import com.lavos.app.Pref
+import com.lavos.features.logoutsync.presentation.LogoutSyncFragment
 import com.lavos.features.viewAllOrder.model.ProductOrder
 import com.lavos.features.viewAllOrder.orderNew.NewOdrScrListFragment
 import com.lavos.features.viewAllOrder.orderNew.NewOrderScrOrderDetailsFragment
@@ -31,6 +32,12 @@ interface NewOrderScrOrderDao {
 
     @Query("Select * from "+ AppConstant.NEW_ORDER_ENTRY +" where isUploaded=0 ")
     fun getUnSyncOrderAll(): List<NewOrderScrOrderEntity>
+
+    @Query("Select * from "+ AppConstant.NEW_ORDER_ENTRY +" where isUploaded=0 and order_id=:order_id")
+    fun getUnSyncOrderAllByOrdID(order_id:String): List<NewOrderScrOrderEntity>
+
+    @Query("Select DISTINCT order_id,shop_id,order_date from "+ AppConstant.NEW_ORDER_ENTRY +" where isUploaded=0 ")
+    fun getUnSyncOrderAllUniqOrderID(): List<LogoutSyncFragment.NewOrderRoomDataLogoutPurpose>
 
 
     @Query("Select DISTINCT order_id from "+ AppConstant.NEW_ORDER_ENTRY +" where shop_id=:shop_id order by order_date desc ")

@@ -30,13 +30,13 @@ class NetworkConstant {
         //var ADD_SHOP_BASE_URL = "http://fts.indusnettechnologies.com:8094/" //demo live
 
 
-        //var BASE_URL = "http://fts.indusnettechnologies.com:7020/API/" //lavos live
-        //var ADD_SHOP_BASE_URL = "http://fts.indusnettechnologies.com:7020/" //lavos live
+        var BASE_URL = "http://fts.indusnettechnologies.com:7020/API/" //lavos live
+        var ADD_SHOP_BASE_URL = "http://fts.indusnettechnologies.com:7020/" //lavos live
 
 
 
-        var BASE_URL = "http://3.7.30.86:82/API/"
-        var ADD_SHOP_BASE_URL = "http://3.7.30.86:82/"
+        //var BASE_URL = "http://3.7.30.86:82/API/"
+        //var ADD_SHOP_BASE_URL = "http://3.7.30.86:82/"
 
 
         //LIVE

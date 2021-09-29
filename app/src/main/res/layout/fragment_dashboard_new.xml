@@ -599,7 +599,7 @@
                             android:layout_width="@dimen/_70sdp"
                             android:layout_height="@dimen/_50sdp"
                             android:layout_centerHorizontal="true"
-                            android:background="@drawable/rounded_corner_yellow_bg"
+                            android:background="@drawable/rounded_corner_dayend_bg"
                             android:gravity="center"
                             android:paddingLeft="@dimen/_10sdp"
                             android:paddingTop="@dimen/_10sdp"
