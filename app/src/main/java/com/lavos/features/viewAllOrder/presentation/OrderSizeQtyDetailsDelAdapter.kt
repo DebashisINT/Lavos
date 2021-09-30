@@ -44,6 +44,7 @@ class OrderSizeQtyDetailsDelAdapter (var context: Context, var size_qty_list:Arr
 //                holder.iv_del.setOnClickListener{listner.sizeQtyListOnClick(size_qty_list.get(position),position)}
             }
             else{
+                size_qty_list.get(position).isCheckedStatus=false
 //                holder.iv_del.setOnclic
 //                Toaster.msgShort(context,"No Checkbox Selected For Deleted")
             }
