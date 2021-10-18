@@ -206,6 +206,7 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+        mContext = this@LoginActivity
         println("xyz - login oncreate started" + AppUtils.getCurrentDateTime());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             initPermissionCheck()
