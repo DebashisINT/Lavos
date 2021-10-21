@@ -33,7 +33,6 @@ interface AddOrderApi {
     fun addNewOrderWithImage(@Query("data") addOrder: String, @Part logo_img_data: MultipartBody.Part?): Observable<BaseResponse>
 
 
-
     @POST("OrderWithProductAttribute/OrderWithProductAttribute")
     fun addOrderNewOrderScr(@Body addOrder: NewOrderSaveApiModel): Observable<BaseResponse>
 

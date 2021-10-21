@@ -83,7 +83,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/_10sdp"
-            android:text="Attach Documnent:"
+            android:text="Attach Document:"
             android:textColor="@color/colorPrimary"
             android:textSize="@dimen/_15sdp"
             android:layout_marginLeft="@dimen/_3sdp"/>

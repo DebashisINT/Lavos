@@ -518,6 +518,46 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                 newOrderSaveApiModel.product_list=newOrderRoomDataListttt
 
 
+
+                /////
+                val addOrder = AddOrderInputParamsModel()
+                addOrder.collection = ""
+                addOrder.description = ""
+                addOrder.order_amount = "0"
+                addOrder.order_date = AppUtils.getCurrentISODateTime()
+                addOrder.order_id = newOrderSaveApiModel.order_id
+                addOrder.shop_id = newOrderSaveApiModel.shop_id!!
+                addOrder.session_token = Pref.session_token
+                addOrder.user_id = Pref.user_id
+                addOrder.latitude = Pref.latitude
+                addOrder.longitude = Pref.longitude
+
+                addOrder.patient_name = ""
+                addOrder.patient_address = ""
+                addOrder.patient_no = ""
+                addOrder.remarks = ""
+
+                if (!TextUtils.isEmpty(Pref.latitude) && !TextUtils.isEmpty(Pref.longitude))
+                    addOrder.address = LocationWizard.getLocationName(mContext, Pref.latitude!!.toDouble(), Pref.longitude!!.toDouble())
+                else
+                    addOrder.address = ""
+
+                val productList = ArrayList<AddOrderInputProductList>()
+                for(i in 0..newOrderRoomDataListttt.size-1){
+                    val product = AddOrderInputProductList()
+                    product.id=newOrderRoomDataListttt.get(i).product_id!!
+                    product.product_name=newOrderRoomDataListttt.get(i).product_name!!
+                    product.qty=newOrderRoomDataListttt.get(i).qty!!
+                    product.rate="0"
+                    product.total_price="0"
+                    productList.add(product)
+                }
+
+                addOrder.product_list=productList
+
+                ///////
+
+
                 val repository = AddOrderRepoProvider.provideAddOrderRepository()
                 BaseActivity.compositeDisposable.add(
                         repository.addOrderNewOrderScr(newOrderSaveApiModel)
@@ -532,7 +572,8 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                             AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.syncNewOrder(newOrderSaveApiModel.order_id.toString())
 
                                             uiThread {
-                                                syncNewOrderScr()
+                                                updateSecondaryOrderApi(addOrder)
+                                                //syncNewOrderScr()
                                             }
                                         }
                                     }
@@ -609,6 +650,34 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             checkToCallActivity()
         }
     }
+
+
+    ////*
+    private fun updateSecondaryOrderApi(addOrder:AddOrderInputParamsModel){
+        val repository = AddOrderRepoProvider.provideAddOrderRepository()
+        BaseActivity.compositeDisposable.add(
+                repository.addNewOrder(addOrder)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe({ result ->
+                            val orderList = result as BaseResponse
+                            if (orderList.status == NetworkConstant.SUCCESS) {
+                                syncNewOrderScr()
+                            }
+                            //(mContext as DashboardActivity).showSnackMessage("Order added successfully")
+
+                        }, { error ->
+                            error.printStackTrace()
+                            //(mContext as DashboardActivity).showSnackMessage("Something went wrong.")
+                            //(mContext as DashboardActivity).showSnackMessage("Order added successfully")
+                            XLog.d("LogoutSync OrderWithProductAttribute/updateSecondaryOrderApi : ERROR "+ error.toString())
+                            syncNewOrderScr()
+                        })
+        )
+    }
+
+
+
 
 
 

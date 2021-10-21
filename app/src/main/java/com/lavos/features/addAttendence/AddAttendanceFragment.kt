@@ -1277,7 +1277,7 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
            // callAddAttendanceApi(addAttendenceModel)
         } else {
             progress_wheel.stopSpinning()
-            (mContext as DashboardActivity).showSnackMessage("You must be either in Distribuer or Outlet point to mark your attendance")
+            (mContext as DashboardActivity).showSnackMessage("You must be either in Distributor or Outlet point to mark your attendance")
         }
 
     }
