@@ -2902,11 +2902,29 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
             override fun onPermissionGranted() {
                 getIMEI()
 
-                Handler().postDelayed(Runnable {
+                if(Build.VERSION.SDK_INT>=30){
+                    if (!Environment.isExternalStorageManager()){
+                        fileManagePermii()
+                    }else{
+                        Handler().postDelayed(Runnable {
+                            if (!Settings.canDrawOverlays(this@LoginActivity)) {
+                                getOverlayPermission()
+                            }
+                        }, 1000)
+                    }
+                }else{
+                    Handler().postDelayed(Runnable {
+                        if (!Settings.canDrawOverlays(this@LoginActivity)) {
+                            getOverlayPermission()
+                        }
+                    }, 1000)
+                }
+
+        /*        Handler().postDelayed(Runnable {
                     if (!Settings.canDrawOverlays(this@LoginActivity)) {
                         getOverlayPermission()
                     }
-                }, 1000)
+                }, 1000)*/
             }
 
             override fun onPermissionNotGranted() {
@@ -2919,6 +2937,28 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
             }
 
         }, arrayOf<String>(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE, Manifest.permission.RECORD_AUDIO))
+    }
+
+
+    fun fileManagePermii(){
+        /*try {
+            val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+            intent.addCategory("android.intent.category.DEFAULT")
+            intent.data = Uri.parse(String.format("package:%s", applicationContext.packageName))
+            startActivityForResult(intent, 777)
+        } catch (e: java.lang.Exception) {
+            val intent = Intent()
+            intent.action = Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
+            startActivityForResult(intent, 777)
+        }*/
+
+
+        val intent = Intent()
+        intent.action = Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
+        val uri = Uri.fromParts("package", this.packageName, null)
+        intent.data = uri
+        //startActivity(intent)
+        startActivityForResult(intent,777)
     }
 
     private fun getLastLocation() {
@@ -5829,6 +5869,13 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        println("login "+resultCode.toString());
+        if(requestCode ==777){
+            println("login 777");
+            if (!Settings.canDrawOverlays(this@LoginActivity)) {
+                getOverlayPermission()
+            }
+        }
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == DRAW_OVER_OTHER_APP_PERMISSION) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -5877,6 +5924,11 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                 val file = File(resultUri.path!!)
 
                 uploadSelfie(file)
+            }else if(requestCode ==777){
+                println("login 777");
+                if (!Settings.canDrawOverlays(this@LoginActivity)) {
+                    getOverlayPermission()
+                }
             }
         }
     }

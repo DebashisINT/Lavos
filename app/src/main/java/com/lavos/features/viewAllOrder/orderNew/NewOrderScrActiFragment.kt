@@ -219,7 +219,6 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
 
     override fun onAttach(activity: Activity) {
         super.onAttach(activity)
-        var asd = "asd"
     }
 
 
@@ -479,6 +478,7 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
     fun updateCartQty() {
         (mContext as DashboardActivity).tv_cart_count.text = final_order_list.size.toString()
         (mContext as DashboardActivity).tv_cart_count.visibility = View.VISIBLE
+        CustomStatic.NewOrderTotalCartItem=final_order_list.size
     }
 
 

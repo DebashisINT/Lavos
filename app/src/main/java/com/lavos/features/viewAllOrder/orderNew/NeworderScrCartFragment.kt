@@ -32,6 +32,7 @@ import com.lavos.app.types.FragType
 import com.lavos.app.uiaction.IntentActionable
 import com.lavos.app.utils.AppUtils
 import com.lavos.app.utils.FTStorageUtils
+import com.lavos.app.utils.Toaster
 import com.lavos.app.widgets.MovableFloatingActionButton
 import com.lavos.base.BaseResponse
 import com.lavos.base.presentation.BaseActivity

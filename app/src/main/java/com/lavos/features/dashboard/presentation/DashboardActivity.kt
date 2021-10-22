@@ -2256,7 +2256,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
         when (p0!!.id) {
 
             R.id.activity_dashboard_lnr_lyt_slide_view ->{
-                Toast.makeText(this,"asdasf",Toast.LENGTH_LONG).show()
+                //Toast.makeText(this,"asdasf",Toast.LENGTH_LONG).show()
             }
 
             R.id.home_RL -> {
@@ -6489,7 +6489,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
         else if (getFragment() != null && getFragment() is NewOrderScrOrderDetailsFragment) {
             loadFragment(FragType.DashboardFragment, false, DashboardType.Home)
         }
-        else if (getFragment() != null && getFragment() is NewOrderScrActiFragment  && CustomStatic.NewOrderTotalCartItem>0) {
+        else if (getFragment() != null && getFragment() is NewOrderScrActiFragment && CustomStatic.NewOrderTotalCartItem>0) {
             val simpleDialog = Dialog(mContext)
             simpleDialog.setCancelable(false)
             simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -6503,12 +6503,13 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             dialogYes.setOnClickListener({ view ->
                 simpleDialog.cancel()
                 CustomStatic.NewOrderTotalCartItem=0
-                onBackPressed()
+                super.onBackPressed();
             })
             dialogNo.setOnClickListener({ view ->
                 simpleDialog.cancel()
             })
             simpleDialog.show()
+
         }
         else {
             super.onBackPressed()
@@ -6536,10 +6537,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 getFragment() is UpdateShopStockFragment -> (getFragment() as UpdateShopStockFragment).update()
                 getFragment() is CompetetorStockFragment -> (getFragment() as CompetetorStockFragment).update()
 
-                getFragment() is NewOrderScrActiFragment -> {
-
-                    (getFragment() as NewOrderScrActiFragment).updateCartQty()
-                }
+                getFragment() is NewOrderScrActiFragment -> (getFragment() as NewOrderScrActiFragment).updateCartQty()
 
 
                         getFragment() is MicroLearningListFragment -> {

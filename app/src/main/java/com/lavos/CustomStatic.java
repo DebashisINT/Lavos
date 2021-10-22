@@ -24,5 +24,4 @@ public class CustomStatic {
 
 
     public static Integer NewOrderTotalCartItem=0;
-
 }
