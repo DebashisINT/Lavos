@@ -211,6 +211,7 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
         (mContext as DashboardActivity).tv_cart_count.text = final_order_list.size.toString()
         (mContext as DashboardActivity).tv_cart_count.visibility = View.VISIBLE
         CustomStatic.NewOrderTotalCartItem=final_order_list.size
+        println("new_ord onresume");
     }
 
     fun updateCartNumber() {

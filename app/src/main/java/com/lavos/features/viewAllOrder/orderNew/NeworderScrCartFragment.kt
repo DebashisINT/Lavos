@@ -204,8 +204,24 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         if (v != null) {
             when (v.id) {
                 R.id.btn_new_order_save_db -> {
-                    if (cartOrder!!.size > 0)
+                    if (cartOrder!!.size > 0){
                         showCheckAlert()
+                    }else{
+                        val simpleDialog = Dialog(mContext)
+                        simpleDialog.setCancelable(false)
+                        simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                        simpleDialog.setContentView(R.layout.dialog_message)
+                        val dialogHeader = simpleDialog.findViewById(R.id.dialog_message_header_TV) as AppCustomTextView
+                        val dialog_yes_no_headerTV = simpleDialog.findViewById(R.id.dialog_message_headerTV) as AppCustomTextView
+                        dialog_yes_no_headerTV.text = AppUtils.hiFirstNameText()+"!"
+                        dialogHeader.text = "Please add products into cart."
+                        val dialogYes = simpleDialog.findViewById(R.id.tv_message_ok) as AppCustomTextView
+                        dialogYes.setOnClickListener({ view ->
+                            simpleDialog.cancel()
+                        })
+                        simpleDialog.show()
+                    }
+
                     //saveToDB()
                 }
                 R.id.iv_frag_new_order_scr_cart_phone -> {

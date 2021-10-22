@@ -313,6 +313,7 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
             when (v.id) {
                 R.id.ll_frag_new_order_detalis_add -> {
                     if(Pref.isAddAttendence){
+                        println("new_ord");
                         (mContext as DashboardActivity).loadFragment(FragType.NewOrderScrActiFragment, true, shop_id)
                     }else{
                         (mContext as DashboardActivity).checkToShowAddAttendanceAlert()

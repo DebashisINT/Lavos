@@ -6504,6 +6504,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 simpleDialog.cancel()
                 CustomStatic.NewOrderTotalCartItem=0
                 super.onBackPressed();
+                //(mContext as DashboardActivity).loadFragment(FragType.NewOrderScrOrderDetailsFragment, false, NewOrderScrOrderDetailsFragment.shop_id)
             })
             dialogNo.setOnClickListener({ view ->
                 simpleDialog.cancel()
