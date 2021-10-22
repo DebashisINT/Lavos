@@ -74,7 +74,6 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
     private lateinit var ll_size_icon: LinearLayout
 
 
-
     override fun onAttach(context: Context) {
         super.onAttach(context)
         mContext = context
@@ -136,7 +135,7 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
             GenderListDialog.newInstance(gender_list as ArrayList<NewOrderGenderEntity>) {
                 isGenderSel = true
                 genderSpinner.text = it.gender
-
+                productSpinner.text = "Select Product"
                 product_list = emptyList()
                 product_list = AppDatabase.getDBInstance()?.newOrderProductDao()?.getProductListGenderWise(it.gender.toString()) as List<NewOrderProductEntity>
             }.show((mContext as DashboardActivity).supportFragmentManager, "")
@@ -211,6 +210,7 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
         super.onResume()
         (mContext as DashboardActivity).tv_cart_count.text = final_order_list.size.toString()
         (mContext as DashboardActivity).tv_cart_count.visibility = View.VISIBLE
+        CustomStatic.NewOrderTotalCartItem=final_order_list.size
     }
 
     fun updateCartNumber() {
@@ -383,16 +383,20 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
 
 
                             isSame = false
-                            genderSpinner.text = "Select Gender"
-                            productSpinner.text = "Select Product"
+                            genderSpinner.text=genderSpinner.text.toString()
+                            productSpinner.text = productSpinner.text.toString()
+                            //genderSpinner.text = "Select Gender"
+                            //productSpinner.text = "Select Product"
                             colorSpinner.text = "Select  Color"
                             rv_size.adapter = null
 
-                            isGenderSel = false
-                            isProductSel = false
+                            //isGenderSel = false
+                            //isProductSel = false
 
                             (mContext as DashboardActivity).tv_cart_count.text = final_order_list.size.toString()
                             (mContext as DashboardActivity).tv_cart_count.visibility = View.VISIBLE
+
+                            CustomStatic.NewOrderTotalCartItem=final_order_list.size
 
                             /*Added Product Voice 13-09-2021*/
                             val simpleDialog = Dialog(mContext)
@@ -422,7 +426,8 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
 
                 }
                 R.id.ll_new_order_scr_gender -> {
-                    productSpinner.text = "Select Product"
+                    productSpinner.text = productSpinner.text.toString()
+                    //productSpinner.text = "Select Product"
                     colorSpinner.text = "Select  Color"
                     rv_size.adapter = null
                     ll_root.removeAllViews()

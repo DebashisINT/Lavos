@@ -18,6 +18,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.elvishew.xlog.XLog

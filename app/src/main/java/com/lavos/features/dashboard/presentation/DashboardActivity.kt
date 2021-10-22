@@ -6489,6 +6489,27 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
         else if (getFragment() != null && getFragment() is NewOrderScrOrderDetailsFragment) {
             loadFragment(FragType.DashboardFragment, false, DashboardType.Home)
         }
+        else if (getFragment() != null && getFragment() is NewOrderScrActiFragment  && CustomStatic.NewOrderTotalCartItem>0) {
+            val simpleDialog = Dialog(mContext)
+            simpleDialog.setCancelable(false)
+            simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            simpleDialog.setContentView(R.layout.dialog_yes_no)
+            val dialogHeader = simpleDialog.findViewById(R.id.dialog_cancel_order_header_TV) as AppCustomTextView
+            val dialog_yes_no_headerTV = simpleDialog.findViewById(R.id.dialog_yes_no_headerTV) as AppCustomTextView
+            dialog_yes_no_headerTV.text = "Hi "+Pref.user_name!!+"!"
+            dialogHeader.text = "Click Yes to clear the cart and back to the list to start again."
+            val dialogYes = simpleDialog.findViewById(R.id.tv_dialog_yes_no_yes) as AppCustomTextView
+            val dialogNo = simpleDialog.findViewById(R.id.tv_dialog_yes_no_no) as AppCustomTextView
+            dialogYes.setOnClickListener({ view ->
+                simpleDialog.cancel()
+                CustomStatic.NewOrderTotalCartItem=0
+                onBackPressed()
+            })
+            dialogNo.setOnClickListener({ view ->
+                simpleDialog.cancel()
+            })
+            simpleDialog.show()
+        }
         else {
             super.onBackPressed()
 
@@ -6515,7 +6536,11 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 getFragment() is UpdateShopStockFragment -> (getFragment() as UpdateShopStockFragment).update()
                 getFragment() is CompetetorStockFragment -> (getFragment() as CompetetorStockFragment).update()
 
-                getFragment() is NewOrderScrActiFragment -> (getFragment() as NewOrderScrActiFragment).updateCartQty()
+                getFragment() is NewOrderScrActiFragment -> {
+
+                    (getFragment() as NewOrderScrActiFragment).updateCartQty()
+                }
+
 
                         getFragment() is MicroLearningListFragment -> {
                     val intent = Intent(this, FileOpeningTimeIntentService::class.java)

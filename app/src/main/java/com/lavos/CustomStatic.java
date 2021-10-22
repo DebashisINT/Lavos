@@ -23,4 +23,6 @@ public class CustomStatic {
     public static String pdfBodyy = "";
 
 
+    public static Integer NewOrderTotalCartItem=0;
+
 }

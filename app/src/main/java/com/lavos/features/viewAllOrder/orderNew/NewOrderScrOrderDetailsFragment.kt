@@ -74,6 +74,7 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
 
     }
 
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
         val view = inflater.inflate(R.layout.activity_new_order_scr_order_details_fragment, container, false)
@@ -139,6 +140,7 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
     }*/
 
     private fun initView(view: View?) {
+        CustomStatic.NewOrderTotalCartItem=0
         //Toaster.msgShort(mContext,shop_id)
         share=view!!.findViewById(R.id.add_new_order_share)
 
