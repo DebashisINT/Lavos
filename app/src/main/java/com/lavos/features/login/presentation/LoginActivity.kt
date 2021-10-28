@@ -2902,7 +2902,7 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
             override fun onPermissionGranted() {
                 getIMEI()
 
-                if(Build.VERSION.SDK_INT>=30){
+                /*if(Build.VERSION.SDK_INT>=30){
                     if (!Environment.isExternalStorageManager()){
                         fileManagePermii()
                     }else{
@@ -2918,13 +2918,13 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                             getOverlayPermission()
                         }
                     }, 1000)
-                }
+                }*/
 
-        /*        Handler().postDelayed(Runnable {
+               Handler().postDelayed(Runnable {
                     if (!Settings.canDrawOverlays(this@LoginActivity)) {
                         getOverlayPermission()
                     }
-                }, 1000)*/
+                }, 1000)
             }
 
             override fun onPermissionNotGranted() {
@@ -2953,12 +2953,11 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
         }*/
 
 
-        val intent = Intent()
-        intent.action = Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
-        val uri = Uri.fromParts("package", this.packageName, null)
-        intent.data = uri
-        //startActivity(intent)
-        startActivityForResult(intent,777)
+//        val intent = Intent()
+//        intent.action = Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
+//        val uri = Uri.fromParts("package", this.packageName, null)
+//        intent.data = uri
+//        startActivityForResult(intent,777)
     }
 
     private fun getLastLocation() {

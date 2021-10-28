@@ -24,9 +24,9 @@ android {
     defaultConfig {
         applicationId "com.lavos"
         minSdkVersion 24
-        targetSdkVersion 30
-        versionCode 84
-        versionName "3.9.5"
+        targetSdkVersion 29
+        versionCode 85
+        versionName "3.9.6"
         //versionName "2.3.0"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
