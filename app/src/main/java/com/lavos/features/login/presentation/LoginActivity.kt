@@ -4,17 +4,16 @@ package com.lavos.features.login.presentation
 import android.Manifest
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
-import android.app.Activity
-import android.app.AlarmManager
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.ColorDrawable
 import android.location.Criteria
 import android.location.Location
 import android.location.LocationListener
@@ -6063,5 +6062,19 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
             e.printStackTrace()
         }
         return destination
+    }
+
+    fun openDialogPopup(text:String){
+        val simpleDialog = Dialog(mContext)
+        simpleDialog.setCancelable(false)
+        simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        simpleDialog.setContentView(R.layout.dialog_ok)
+        val dialogHeader = simpleDialog.findViewById(R.id.dialog_yes_header_TV) as AppCustomTextView
+        dialogHeader.text = text
+        val dialogYes = simpleDialog.findViewById(R.id.tv_dialog_yes) as AppCustomTextView
+        dialogYes.setOnClickListener({ view ->
+            simpleDialog.cancel()
+        })
+        simpleDialog.show()
     }
 }
