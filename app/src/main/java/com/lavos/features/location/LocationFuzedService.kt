@@ -12,6 +12,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
+import android.location.GnssStatus
 import android.location.GpsStatus
 import android.location.Location
 import android.location.LocationManager
@@ -70,6 +71,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import org.json.JSONArray
 import org.json.JSONObject
+import timber.log.Timber
 import java.io.*
 import java.lang.Math.abs
 import java.text.SimpleDateFormat
@@ -184,7 +186,7 @@ class LocationFuzedService : Service(), GoogleApiClient.ConnectionCallbacks, Goo
         this.sendBroadcast(i)
     }
 
-    @SuppressLint("InvalidWakeLockTag")
+    /*@SuppressLint("InvalidWakeLockTag")
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
@@ -355,6 +357,206 @@ class LocationFuzedService : Service(), GoogleApiClient.ConnectionCallbacks, Goo
             e.printStackTrace()
             return START_STICKY
         }
+    }*/
+
+    @SuppressLint("InvalidWakeLockTag")
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Timber.d("service_tag onStartCommand")
+        super.onStartCommand(intent, flags, startId)
+//        XLog.d("onStartCommand" + " , " + " Time :" + AppUtils.getCurrentDateTime())
+        Timber.d("onStartCommand" + " , " + " Time :" + AppUtils.getCurrentDateTime())
+        println("loc_ex  onStartCommand" );
+
+//        val value = intent?.getStringExtra("MyService.data")
+//        if (value!=null && value == "UPDATE_FENCE") {
+//            XLog.d("UPDATE_FENCE")
+//            removeGeofence()
+//            populateandAddGeofences()
+//        }
+
+
+        var mgr = getSystemService(Context.POWER_SERVICE) as PowerManager;
+        mWakeLock = mgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyWakeLock") as PowerManager.WakeLock;
+        mWakeLock.acquire()
+
+        System.gc()
+
+
+        if (intent == null) {
+            // do nothing and return
+            return START_STICKY
+        }
+        try {
+            var notificationIntent = Intent(this, DashboardActivity::class.java)
+            notificationIntent.action = AppConstant.MAIN_ACTION
+            notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+
+
+            //var pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
+            // FLAG_IMMUTABLE update
+            var pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
+
+
+            var icon = BitmapFactory.decodeResource(resources, R.drawable.ic_add)
+
+            /*var notification = NotificationCompat.Builder(this)
+                    .setContentTitle("Tracking System Activated")
+                    .setTicker("")
+                    .setContentText("")
+                    .setSmallIcon(R.drawable.ic_notifications_icon)
+                    .setLargeIcon(
+                            Bitmap.createScaledBitmap(icon, 128, 128, false))
+                    .setContentIntent(pendingIntent)
+                    .setOngoing(true)
+                    .build()
+            startForeground(AppConstant.FOREGROUND_SERVICE,
+                    notification)*/
+
+
+            val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            val notificationTitle = "${AppUtils.hiFirstNameText()}, thanks for using FSM App."
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channelId = AppUtils.notificationChannelId
+
+                val channelName = AppUtils.notificationChannelName
+                val importance = NotificationManager.IMPORTANCE_HIGH
+                val notificationChannel = NotificationChannel(channelId, channelName, importance)
+                notificationChannel.enableLights(true)
+                notificationChannel.lightColor = applicationContext.getColor(R.color.colorPrimary)
+                notificationChannel.enableVibration(true)
+                notificationChannel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                notificationManager.createNotificationChannel(notificationChannel)
+
+                val notification = NotificationCompat.Builder(this)
+                    .setContentTitle(notificationTitle)
+                    .setTicker("")
+                    .setContentText("")
+                    .setSmallIcon(R.drawable.ic_notifications_icon)
+                    .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
+                    .setContentIntent(pendingIntent)
+                    .setOngoing(true)
+                    .setChannelId(channelId)
+                    .build()
+
+                //notificationManager.notify(randInt, notificationBuilder.build());
+
+//                XLog.d("LocationFuzedService startForeground1 : Time :" + AppUtils.getCurrentDateTime())
+                Timber.d("LocationFuzedService startForeground1 : Time :" + AppUtils.getCurrentDateTime())
+                startForeground(AppConstant.FOREGROUND_SERVICE, notification)
+
+            }
+            else {
+                val notification = NotificationCompat.Builder(this)
+                    .setContentTitle(notificationTitle)
+                    .setTicker("")
+                    .setContentText("")
+                    .setSmallIcon(R.drawable.ic_notifications_icon)
+                    .setLargeIcon(
+                        Bitmap.createScaledBitmap(icon, 128, 128, false))
+                    .setContentIntent(pendingIntent)
+                    .setOngoing(true)
+                    .build()
+
+                //notificationManager.notify(randInt, notificationBuilder.build())
+                // XLog.d("LocationFuzedService startForeground2 : Time :" + AppUtils.getCurrentDateTime())
+                Timber.d("LocationFuzedService startForeground2 : Time :" + AppUtils.getCurrentDateTime())
+                startForeground(AppConstant.FOREGROUND_SERVICE, notification)
+            }
+
+            gpsReceiver = GpsReceiver(object : LocationCallBack {
+                override fun onLocationTriggered(status: Boolean) {
+                    //Location state changed
+                    Timber.d("LocationFuzedService onLocationTriggered " + status + "," + " Time :" + AppUtils.getCurrentDateTime())
+                    if (gpsStatus != status) {
+                        gpsStatus = status
+//                        Log.e(TAG, "GPS STATUS: " + status)
+                        //XLog.d("GPS STATUS : " + status + "," + " Time :" + AppUtils.getCurrentDateTime())
+                        Timber.d("GPS STATUS : " + status + "," + " Time :" + AppUtils.getCurrentDateTime())
+
+
+                        if (!gpsStatus) {
+                            //XLog.d("LocationFuzedService GPS turn off : " + status + "," + " Time :" + AppUtils.getCurrentDateTime())
+                            Timber.d("LocationFuzedService GPS turn off : " + status + "," + " Time :" + AppUtils.getCurrentDateTime())
+                            sendGPSOffBroadcast()
+                            if (!FTStorageUtils.isMyServiceRunning(LocationFuzedService::class.java, this@LocationFuzedService)) {
+                                serviceStatusActionable()
+                            }
+                        } else {
+                            if (monitorNotiID != 0) {
+                                Pref.isLocFuzedBroadPlaying = false
+                                if (MonitorBroadcast.player != null) {
+                                    try{
+                                        MonitorBroadcast.player.stop()
+                                        MonitorBroadcast.player = null
+                                    }catch (ex:Exception){
+                                        //Begin 11.0 SystemEventReceiver AppV 4.1.3 Suman    03/05/2023 Monitor Broadcast update mantis 26011
+                                        ex.printStackTrace()
+                                        MonitorBroadcast.player = null
+                                        //End 11.0 SystemEventReceiver AppV 4.1.3 Suman    03/05/2023 Monitor Broadcast update mantis 26011
+                                    }
+                                    try{
+                                        MonitorBroadcast.vibrator.cancel()
+                                        MonitorBroadcast.vibrator = null
+                                    }catch (ex:Exception){
+                                        ex.printStackTrace()
+                                        //Begin 11.0 SystemEventReceiver AppV 4.1.3 Suman    03/05/2023 Monitor Broadcast update mantis 26011
+                                        MonitorBroadcast.vibrator = null
+                                        //End 11.0 SystemEventReceiver AppV 4.1.3 Suman    03/05/2023 Monitor Broadcast update mantis 26011
+                                    }
+                                }
+                                var notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                                notificationManager.cancel(monitorNotiID)
+                            }
+                        }
+
+
+
+
+                        Handler().postDelayed(Runnable {
+                            calculategpsStatus(gpsStatus)
+                        }, 1000)
+                    }
+                }
+            })
+
+            try {
+                //Register GPS Status Receiver
+                if (!TextUtils.isEmpty(Pref.user_id)){
+                    registerReceiver(gpsReceiver, IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION))
+                    println("loc_ex  gpsReceiver registered success" );
+                    Timber.d("loc_ex  gpsReceiver registered success" )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            registerGpsStatusListener()
+
+            if (mGoogleAPIClient == null) {
+
+                mGoogleAPIClient = GoogleApiClient.Builder(this)
+                    .addApi(LocationServices.API)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .build()
+
+            } else {
+                Log.e(TAG, "mGoogleAPIClient connected: $mGoogleAPIClient")
+                mGoogleAPIClient?.connect()
+            }
+
+
+            //showOrderCollectionAlert()
+
+            return START_STICKY
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return START_STICKY
+        }
     }
 
     private fun calculategpsStatus(gpsStatus: Boolean) {
@@ -507,7 +709,7 @@ class LocationFuzedService : Service(), GoogleApiClient.ConnectionCallbacks, Goo
     @SuppressLint("MissingPermission")
     override fun onConnected(@Nullable bundle: Bundle?) {
         Log.e(TAG, "onConnected: ")
-        val lastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleAPIClient)
+        val lastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleAPIClient!!)
         if (lastLocation != null && lastLocation.latitude != null && lastLocation.latitude != 0.0) {
             Pref.current_latitude = lastLocation.latitude.toString()
             Pref.current_longitude = lastLocation.longitude.toString()
@@ -523,7 +725,7 @@ class LocationFuzedService : Service(), GoogleApiClient.ConnectionCallbacks, Goo
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
         }
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleAPIClient, mLocationRequest, this) //getting error here..for casting..!
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleAPIClient!!, mLocationRequest!!, this) //getting error here..for casting..!
 
     }
 
@@ -2528,7 +2730,7 @@ class LocationFuzedService : Service(), GoogleApiClient.ConnectionCallbacks, Goo
         val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
         // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
         // addGeofences() and removeGeofences().
-        mGeofencePendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        mGeofencePendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
         return mGeofencePendingIntent
     }
 
@@ -3386,7 +3588,7 @@ class LocationFuzedService : Service(), GoogleApiClient.ConnectionCallbacks, Goo
                             results
                     )
 
-                    if (results.getOrNull(0) ?: -1f in 0..200) {
+                    if (results.getOrNull(0) ?: -1 in 0..200) {
                         observable.onNext(it)
                     } /*else {
                         val shopActivityList = AppDatabase.getDBInstance()!!.shopActivityDao().getShopForDay(it.shop_id, AppUtils.getCurrentDateForShopActi())
@@ -3556,7 +3758,7 @@ class LocationFuzedService : Service(), GoogleApiClient.ConnectionCallbacks, Goo
         /*val restartServiceIntent = Intent(applicationContext, LocationFuzedService::class.java)
         restartServiceIntent.setPackage(packageName);
 
-        val service = PendingIntent.getService(applicationContext, 10001, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT)
+        val service = PendingIntent.getService(applicationContext, 10001, restartServiceIntent, PendingIntent.FLAG_IMMUTABLE)
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, 500, service)*/
 
@@ -3572,6 +3774,14 @@ class LocationFuzedService : Service(), GoogleApiClient.ConnectionCallbacks, Goo
 
         XLog.e("onDestroy : " + "LocationFuzedService")
 //        removeGeofence()
+
+        // FLAG_IMMUTABLE update
+        try {
+            val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            locationManager.unregisterGnssStatusCallback(mGnssStatusCallback)
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
 
         try {
 
@@ -3593,6 +3803,8 @@ class LocationFuzedService : Service(), GoogleApiClient.ConnectionCallbacks, Goo
 
         super.onDestroy()
     }
+
+
 
 
     private fun removeGeofence() {
@@ -3659,11 +3871,33 @@ class LocationFuzedService : Service(), GoogleApiClient.ConnectionCallbacks, Goo
         return Pair(latNew, lonNew)
     }
 
+    lateinit var mGnssStatusCallback: GnssStatus.Callback
+
     @SuppressLint("MissingPermission")
     private fun registerGpsStatusListener() {
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        locationManager.addGpsStatusListener(this)
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+            mGnssStatusCallback = object : GnssStatus.Callback() {
+                override fun onSatelliteStatusChanged(status: GnssStatus) {
+                    super.onSatelliteStatusChanged(status)
+                }
+            }
+//            XLog.d("LocationFuzedService registerGnssStatusCallback1 : Time :" + AppUtils.getCurrentDateTime())
+            Timber.d("LocationFuzedService registerGnssStatusCallback1 : Time :" + AppUtils.getCurrentDateTime())
+            locationManager.registerGnssStatusCallback(mGnssStatusCallback!!)
+        } else {
+//            XLog.d("LocationFuzedService registerGnssStatusCallback2 : Time :" + AppUtils.getCurrentDateTime())
+            Timber.d("LocationFuzedService registerGnssStatusCallback2 : Time :" + AppUtils.getCurrentDateTime())
+            locationManager.addGpsStatusListener(this)
+        }
+
     }
+
+    /*@SuppressLint("MissingPermission")
+    private fun registerGpsStatusListener() {
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        locationManager.addGpsStatusListener(this)
+    }*/
 
     override fun onGpsStatusChanged(p0: Int) {
         when (p0) {

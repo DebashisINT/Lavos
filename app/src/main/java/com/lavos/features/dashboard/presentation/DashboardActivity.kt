@@ -288,6 +288,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
 
         })
 
+
         if (addToStack) {
             mTransaction.add(R.id.frame_layout_container, getFragInstance(mFragType, initializeObject, true)!!, mFragType.toString())
             mTransaction.addToBackStack(mFragType.toString()).commitAllowingStateLoss()

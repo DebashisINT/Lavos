@@ -822,7 +822,7 @@ fun clearData() {
                 try {
                     val intent = Intent(this@BaseActivity, ToastBroadcastReceiver::class.java)
                     //intent.setAction(MyReceiver.ACTION_ALARM_RECEIVER)
-                    val pendingIntent = PendingIntent.getBroadcast(this@BaseActivity, 1, intent, PendingIntent.FLAG_CANCEL_CURRENT)
+                    val pendingIntent = PendingIntent.getBroadcast(this@BaseActivity, 1, intent, PendingIntent.FLAG_IMMUTABLE)
                     val backupAlarmMgr = getSystemService(Context.ALARM_SERVICE) as AlarmManager
                     backupAlarmMgr.cancel(pendingIntent)
                     pendingIntent.cancel()

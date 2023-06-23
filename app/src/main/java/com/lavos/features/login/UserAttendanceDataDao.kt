@@ -26,16 +26,16 @@ interface UserAttendanceDataDao {
     fun updateLogoutTime(mUserLoginDataEntity: UserLoginDataEntity): Int
 
     @Query("update attendance set logintime=:loginTime where userId=:user_id and logindate=:loginDate")
-    fun updateLoginTime(loginTime: String, user_id: String, loginDate: String): Long
+    fun updateLoginTime(loginTime: String, user_id: String, loginDate: String)
 
     @Query("update attendance set Isonleave=:Isonleave where userId=:user_id and logindate=:loginDate")
-    fun updateIsLeave(Isonleave: String, user_id: String, loginDate: String): Long
+    fun updateIsLeave(Isonleave: String, user_id: String, loginDate: String)
 
     @Query("update attendance set logouttime=:logoutTime where userId=:user_id and logindate=:loginDate")
-    fun updateLogoutTimeN(logoutTime: String, user_id: String, loginDate: String): Long
+    fun updateLogoutTimeN(logoutTime: String, user_id: String, loginDate: String)
 
     @Query("update attendance set duration=:duration where userId=:user_id and logindate=:loginDate")
-    fun updateDuration(duration: String, user_id: String, loginDate: String): Long
+    fun updateDuration(duration: String, user_id: String, loginDate: String)
 
     @Query("Select * from attendance where userId=:user_id and logindate=:logindate")
     fun getLoginDate(user_id: String, logindate: String): List<UserLoginDataEntity>

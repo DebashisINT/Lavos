@@ -30,7 +30,7 @@ class AlarmBootReceiver : BroadcastReceiver() {
             }
             else if (!TextUtils.isEmpty(Pref.user_id)){
                 val toastIntent = Intent(context, ToastBroadcastReceiver::class.java)
-                val toastAlarmIntent = PendingIntent.getBroadcast(context, 1, toastIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+                val toastAlarmIntent = PendingIntent.getBroadcast(context, 1, toastIntent, PendingIntent.FLAG_IMMUTABLE)
                 val startTime = System.currentTimeMillis() //alarm starts immediately
                 val backupAlarmMgr = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
                 backupAlarmMgr.setInexactRepeating(AlarmManager.RTC_WAKEUP, startTime, AlarmManager.INTERVAL_HOUR, toastAlarmIntent)
@@ -41,7 +41,7 @@ class AlarmBootReceiver : BroadcastReceiver() {
                 XLog.e("=======================Boot Completed successfully ${AppUtils.getCurrentDateTime()} (AlarmBootReceiver)=======================")
 
                 val toastIntent = Intent(context, ToastBroadcastReceiver::class.java)
-                val toastAlarmIntent = PendingIntent.getBroadcast(context, 1, toastIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+                val toastAlarmIntent = PendingIntent.getBroadcast(context, 1, toastIntent, PendingIntent.FLAG_IMMUTABLE)
                 val startTime = System.currentTimeMillis() //alarm starts immediately
                 val backupAlarmMgr = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
                 backupAlarmMgr.setInexactRepeating(AlarmManager.RTC_WAKEUP, startTime, AlarmManager.INTERVAL_HOUR, toastAlarmIntent)

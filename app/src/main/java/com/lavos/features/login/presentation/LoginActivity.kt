@@ -5835,7 +5835,7 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
         val intent = Intent(context, NewAlarmReceiver::class.java)
         intent.putExtra("request_code", requestCode)
         intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
-        val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE)
 
         val calendar = Calendar.getInstance(Locale.ENGLISH)
 

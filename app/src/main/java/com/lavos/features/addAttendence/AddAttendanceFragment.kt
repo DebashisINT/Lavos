@@ -333,7 +333,7 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
        // faceDetectorSetUp()
     }
 
-    override fun onMapReady(googleMap: GoogleMap?) {
+    override fun onMapReady(googleMap: GoogleMap) {
         mGoogleMap = googleMap
         mGoogleMap?.uiSettings?.isZoomControlsEnabled = true
 

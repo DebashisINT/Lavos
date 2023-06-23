@@ -295,7 +295,7 @@ class NearByShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>,
 
                     var maxOrder = "0.00"
                     if (amountList.isNotEmpty())
-                        maxOrder = String.format("%.2f", amountList.max()?.toFloat())
+                        maxOrder = String.format("%.2f", amountList.maxOrNull()?.toFloat())
                     val str6 = SpannableString("₹ $maxOrder")
                     str6.setSpan(ForegroundColorSpan(Color.BLACK), 0, str6.length, 0)
                     builder.append(str6)
@@ -307,7 +307,7 @@ class NearByShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>,
 
                     var minOrder = "0.00"
                     if (amountList.isNotEmpty())
-                        minOrder = String.format("%.2f", amountList.min()?.toFloat())
+                        minOrder = String.format("%.2f", amountList.minOrNull()?.toFloat())
                     val str8 = SpannableString("₹ $minOrder")
                     str8.setSpan(ForegroundColorSpan(Color.BLACK), 0, str8.length, 0)
                     builder.append(str8)

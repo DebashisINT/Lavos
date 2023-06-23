@@ -24,7 +24,7 @@ interface ShopActivityDao {
     fun getShopsNotUploaded(date: String, isUploaded: Boolean): List<ShopActivityEntity>
 
     @Query("update shop_activity set isUploaded=:isUploaded where shopid=:shopId and date=:date")
-    fun updateIsUploaded(isUploaded: Boolean, shopId: String, date: String): Long
+    fun updateIsUploaded(isUploaded: Boolean, shopId: String, date: String)
 
     @Query("Select duration_spent from shop_activity where shopid=:shopId and date=:date")
     fun getTimeDurationForDayOfShop(shopId: String, date: String): String

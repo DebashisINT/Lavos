@@ -31,7 +31,7 @@ public interface TaListDao {
     void delete(TaListDBModelEntity user);
 
     @Query("update ta_list set status=:status where id=:id")
-    long updateIsVisited(String status, String id);
+    void updateIsVisited(String status, String id);
 
     /*@Query("SELECT COUNT(*) from " + TA_TABLE)
     int checkIfDataExist(String status, String id);*/

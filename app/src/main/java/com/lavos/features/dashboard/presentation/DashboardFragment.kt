@@ -4332,7 +4332,7 @@ class DashboardFragment : BaseFragment(), View.OnClickListener, HBRecorderListen
                 /*           val intent = Intent(mContext, ScreenRecService::class.java)
                            intent.action = CustomConstants.START_Screen_SERVICE
                            mContext.startService(intent)*/
-                hbRecorder!!.startScreenRecording(data, resultCode, mContext as Activity)
+                hbRecorder!!.startScreenRecording(data, resultCode)
             }
         }
     }

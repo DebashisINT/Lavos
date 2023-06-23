@@ -1,5 +1,6 @@
 package com.lavos.features.localshops
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
@@ -43,6 +44,7 @@ class NearByShopsMapFragment : BaseFragment(), View.OnClickListener, OnMapReadyC
     private lateinit var progress_wheel: ProgressWheel
     private lateinit var rl_map_main: RelativeLayout
 
+    @SuppressLint("UseRequireInsteadOfGet")
     override fun onAttach(context: Context) {
         super.onAttach(context)
         mContext = context!!
@@ -153,7 +155,7 @@ class NearByShopsMapFragment : BaseFragment(), View.OnClickListener, OnMapReadyC
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun onMapReady(googleMap: GoogleMap?) {
+    override fun onMapReady(googleMap: GoogleMap) {
         mGoogleMap = googleMap
         mGoogleMap!!.uiSettings.isZoomControlsEnabled = false
 //        mGoogleMap!!.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(22.154438, 78.755449), 4f))
@@ -209,7 +211,7 @@ class NearByShopsMapFragment : BaseFragment(), View.OnClickListener, OnMapReadyC
         markerOptions.title("My Location")
         markerOptions.snippet(locationName)
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
-        currentMarker = mGoogleMap!!.addMarker(markerOptions)
+        currentMarker = mGoogleMap!!.addMarker(markerOptions)!!
         mCurrLocationMarker.add(currentMarker)
     }
 
@@ -254,7 +256,7 @@ class NearByShopsMapFragment : BaseFragment(), View.OnClickListener, OnMapReadyC
 
 //        mGoogleMap!!.addCircle(circleOptions)
         mShopCircles.add(mGoogleMap!!.addCircle(circleOptions))
-        currentMarker = mGoogleMap!!.addMarker(markerOptions)
+        currentMarker = mGoogleMap!!.addMarker(markerOptions)!!
         mCurrLocationMarker.add(currentMarker)
 
         mGoogleMap!!.setInfoWindowAdapter(object : InfoWindowAdapter {

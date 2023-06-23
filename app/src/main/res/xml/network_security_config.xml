@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <base-config cleartextTrafficPermitted="true">
-        <trust-anchors>
-            <certificates src="system" />
-        </trust-anchors>
-    </base-config>
-</network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!--<domain includeSubdomains="true">3.7.30.86</domain>-->
+        <domain includeSubdomains="true">fts.indusnettechnologies.com</domain>
+        <!--<domain includeSubdomains="true">localhost</domain>-->
+
+
+
+     </domain-config>
+ </network-security-config>
