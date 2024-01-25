@@ -4,7 +4,7 @@
     android:id="@+id/rl_cart_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/smoke_white"
+    android:background="@color/color_silver"
     android:orientation="vertical">
 
     <RelativeLayout
@@ -172,45 +172,181 @@
             android:background="@color/light_gray" />
     </RelativeLayout>
 
+    <!--06-01-2022-->
+
+    <RelativeLayout
+        android:id="@+id/rl_lab"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/rl_phone"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:layout_marginLeft="@dimen/_10sdp"
+        android:layout_marginRight="@dimen/_10sdp"
+        android:visibility="gone">
+
+        <com.lavos.widgets.AppCustomTextView
+            android:id="@+id/tv_lab_asterisk_mark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="@dimen/_3sdp"
+            android:paddingTop="@dimen/_7sdp"
+            android:text="@string/mandatory_mark"
+            android:textColor="@color/red"
+            android:textSize="@dimen/_15sdp"
+            android:layout_alignParentRight="true"
+            android:visibility="gone"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tl_lab"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/_5sdp"
+            android:layout_marginRight="@dimen/_5sdp"
+            android:layout_toLeftOf="@+id/tv_lab_asterisk_mark"
+            android:textColorHint="@color/light_gray"
+            app:hintTextAppearance="@style/TextAppearance.App.TextInputLayout">
+
+            <com.lavos.widgets.AppCustomEditText
+                android:id="@+id/et_lab"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:hint="Hospital/Lab"
+                android:textSize="@dimen/_13sdp"
+                android:imeOptions="actionNext"
+                android:inputType="text"
+                android:maxLength="50"
+                app:theme="@style/EvoEditTextTheme"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/_1sdp"
+            android:layout_alignLeft="@+id/tl_lab"
+            android:layout_below="@id/tl_lab"
+            android:layout_marginRight="@dimen/_2sdp"
+            android:background="@color/light_gray" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rl_emailaddress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/rl_lab"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:layout_marginLeft="@dimen/_10sdp"
+        android:layout_marginRight="@dimen/_10sdp"
+        android:visibility="gone">
+
+        <com.lavos.widgets.AppCustomTextView
+            android:id="@+id/tv_emailaddress_asterisk_mark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="@dimen/_3sdp"
+            android:paddingTop="@dimen/_7sdp"
+            android:text="@string/mandatory_mark"
+            android:textColor="@color/red"
+            android:textSize="@dimen/_15sdp"
+            android:layout_alignParentRight="true"
+            android:visibility="gone"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tl_emailaddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/_5sdp"
+            android:layout_marginRight="@dimen/_5sdp"
+            android:layout_toLeftOf="@+id/tv_emailaddress_asterisk_mark"
+            android:textColorHint="@color/light_gray"
+            app:hintTextAppearance="@style/TextAppearance.App.TextInputLayout">
+
+            <com.lavos.widgets.AppCustomEditText
+                android:id="@+id/et_emailaddress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:hint="Email Address"
+                android:textSize="@dimen/_13sdp"
+                android:imeOptions="actionNext"
+                android:inputType="text"
+                android:maxLength="50"
+                app:theme="@style/EvoEditTextTheme"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/_1sdp"
+            android:layout_alignLeft="@+id/tl_emailaddress"
+            android:layout_below="@id/tl_emailaddress"
+            android:layout_marginRight="@dimen/_2sdp"
+            android:background="@color/light_gray" />
+    </RelativeLayout>
+
     <LinearLayout
         android:id="@+id/ll_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/rl_emailaddress"
         android:background="#5ea5b6"
         android:gravity="center"
-        android:layout_below="@+id/rl_phone"
         android:orientation="horizontal"
         android:padding="@dimen/_10sdp">
 
         <com.lavos.widgets.AppCustomTextView
             android:id="@+id/tv_particular"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="2"
+            android:layout_weight="1"
             android:gravity="center"
             android:text="@string/selected_product"
             android:textColor="@color/white"
             android:textSize="@dimen/_11sdp"
             android:textStyle="bold" />
 
+        <!--//1.0  AppV 4.0.6  CartFragment 0025623 discount is editable work-->
+        <com.lavos.widgets.AppCustomTextView
+            android:id="@+id/tv_frag_new_cart_discount"
+            android:layout_width="@dimen/_50sdp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Discount (\%)\n0.00"
+            android:textColor="@color/white"
+            android:textSize="@dimen/_11sdp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+
+        <com.lavos.widgets.AppCustomTextView
+            android:id="@+id/tv_mrp"
+            android:layout_width="@dimen/_50sdp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="MRP (\u20B9)\n0.00"
+            android:textColor="@color/white"
+            android:textSize="@dimen/_11sdp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+
         <com.lavos.widgets.AppCustomTextView
             android:id="@+id/tv_brand"
-            android:layout_width="0dp"
+            android:layout_width="@dimen/_50sdp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.5"
             android:gravity="center"
-            android:text="@string/product_rate"
+            android:text="Rate (\u20B9)\n0.00"
             android:textColor="@color/white"
             android:textSize="@dimen/_11sdp"
             android:textStyle="bold" />
 
+
         <com.lavos.widgets.AppCustomTextView
             android:id="@+id/tv_category"
-            android:layout_width="0dp"
+            android:layout_width="@dimen/_50sdp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.5"
             android:gravity="center"
-            android:text="@string/product_qty"
+            android:text="Qty\n0"
             android:textColor="@color/white"
             android:textSize="@dimen/_11sdp"
             android:textStyle="bold" />
@@ -225,7 +361,7 @@
             android:textColor="@color/white"
             android:textSize="@dimen/_11sdp"
             android:textStyle="bold"
-            android:visibility="gone"/>
+            android:visibility="gone" />
     </LinearLayout>
 
 
@@ -376,6 +512,63 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/ll_frag_cart_new_scheme_root"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="@dimen/_5sdp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.65">
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text=""
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/_11sdp"
+                    android:textStyle="bold" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/tv_total_scheme_qty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text=""
+                    android:layout_marginLeft="@dimen/_3sdp"
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/_11sdp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Total Scheme Value((\u20B9):"
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/_11sdp"
+                    android:textStyle="bold" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/tv_total_scheme_amount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text=""
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/_11sdp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/ll_btns"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -423,7 +616,7 @@
             android:id="@+id/rv_cart_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="@dimen/_5sdp"/>
+            android:layout_marginTop="@dimen/_5sdp" />
 
         <com.lavos.widgets.AppCustomTextView
             android:id="@+id/tv_no_data_available"

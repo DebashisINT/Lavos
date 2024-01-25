@@ -34,14 +34,33 @@
             android:layout_marginLeft="@dimen/_7sdp"
             android:layout_marginRight="@dimen/_7sdp"/>
 
+        <LinearLayout
+            android:id="@+id/ll_dialog_msg_progress_root"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/_30sdp"
+            android:gravity="center"
+            android:visibility="gone"
+            android:layout_marginTop="@dimen/_5sdp">
+
+            <com.pnikosis.materialishprogress.ProgressWheel
+                android:id="@+id/pw_dialog_msg_progress"
+                android:layout_width="@dimen/_25sdp"
+                android:layout_height="@dimen/_25sdp"
+                android:layout_gravity="center"/>
+
+        </LinearLayout>
+
         <com.lavos.widgets.AppCustomTextView
             android:id="@+id/dialog_message_header_TV"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/_40sdp"
+            android:minHeight="@dimen/_40sdp"
+            android:layout_height="wrap_content"
             android:gravity="center"
             android:text="Do you want to go back ?"
             android:textColor="@color/colorPrimary"
-            android:textSize="@dimen/_12sdp" />
+            android:textSize="@dimen/_12sdp"
+            android:layout_marginTop="@dimen/_3sdp"
+            android:padding="@dimen/_3sdp"/>
 
         <View
             android:layout_width="match_parent"
@@ -63,7 +82,7 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:layout_weight="1"
-                android:background="@drawable/selector_order_history_bg"
+                android:background="@drawable/shape_custom_border_blue_button"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"

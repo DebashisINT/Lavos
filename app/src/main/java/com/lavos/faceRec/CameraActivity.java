@@ -51,6 +51,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
 
+import com.lavos.CustomStatic;
 import com.lavos.R;
 import com.lavos.faceRec.env.ImageUtils;
 import com.lavos.faceRec.env.Logger;
@@ -112,7 +113,16 @@ public abstract class CameraActivity extends AppCompatActivity
     super.onCreate(null);
 
     Intent intent = getIntent();
-    useFacing = intent.getIntExtra(KEY_USE_FACING, CameraCharacteristics.LENS_FACING_FRONT);
+
+      if(CustomStatic.IsCameraFacingFromTeamAttd==true){
+          CustomStatic.IsCameraFacingFromTeamAttd=false;
+          useFacing = intent.getIntExtra(KEY_USE_FACING, CameraCharacteristics.LENS_FACING_BACK);
+      }else{
+          useFacing = intent.getIntExtra(KEY_USE_FACING, CameraCharacteristics.LENS_FACING_FRONT);
+      }
+
+
+    //useFacing = intent.getIntExtra(KEY_USE_FACING, CameraCharacteristics.LENS_FACING_FRONT);
     //useFacing = intent.getIntExtra(KEY_USE_FACING, CameraCharacteristics.LENS_FACING_BACK);
 
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);

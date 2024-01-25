@@ -4,7 +4,7 @@
     android:id="@+id/rl_collection_shop_list_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/smoke_white">
+    android:background="@color/color_silver">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_collection_shop_list"

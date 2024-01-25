@@ -51,6 +51,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.lavos.CustomStatic;
 import com.lavos.R;
+import com.lavos.app.Pref;
 import com.lavos.app.types.FragType;
 import com.lavos.faceRec.customview.OverlayView;
 import com.lavos.faceRec.env.BorderedText;
@@ -58,6 +59,7 @@ import com.lavos.faceRec.env.ImageUtils;
 import com.lavos.faceRec.env.Logger;
 import com.lavos.faceRec.tflite.SimilarityClassifier;
 import com.lavos.faceRec.tracking.MultiBoxTracker;
+;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.mlkit.vision.common.InputImage;
@@ -75,6 +77,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static java.sql.DriverManager.println;
+
+import timber.log.Timber;
 
 /**
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
@@ -150,6 +154,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+
     fabAdd = findViewById(R.id.fab_add);
     fabAdd.setVisibility(View.GONE);
     fabAdd.setOnClickListener(new View.OnClickListener() {
@@ -162,10 +167,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     // Real-time contour detection of multiple faces
     FaceDetectorOptions options =
             new FaceDetectorOptions.Builder()
-                    //.setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
-                    .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
-                    .setContourMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
-                    //.setContourMode(FaceDetectorOptions.CONTOUR_MODE_NONE)
+                    .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+                    //.setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
+                    //.setContourMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
+                    .setContourMode(FaceDetectorOptions.CONTOUR_MODE_NONE)
                     .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
                     .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
                     .build();
@@ -571,7 +576,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       }else{
         isTrueFace=false;
       }
-
+      isTrueFace=true;
       //System.out.println("onFacesDetected");
 
       LOGGER.i("FACE" + face.toString());
@@ -632,7 +637,27 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //          }
 
           float conf = result.getDistance();
-          if (conf>0.79f && conf < 1.0f) {
+          Float lowerLi,upperLi;
+          try{
+            lowerLi= Float.parseFloat(CustomStatic.FaceDetectionAccuracyLower);
+            upperLi= Float.parseFloat(CustomStatic.FaceDetectionAccuracyUpper);
+            if(lowerLi==0.00){
+              lowerLi= 0.40f;
+            }
+            if(upperLi==0.00){
+              upperLi=1.0f;
+            }
+          }
+          catch (Exception e){
+            e.printStackTrace();
+            lowerLi= 0.40f;
+            upperLi=1.0f;
+          }
+//          if (conf>0.78f && conf < 1.0f) {
+          Timber.d("DetectorActivity face _conf CustomStatic.FaceDetectionAccuracyLower : "+CustomStatic.FaceDetectionAccuracyLower.toString());
+          Timber.d("DetectorActivity face _conf lowerLi: "+lowerLi.toString() + " upperLi : "+upperLi.toString()+" conf: "+String.valueOf(conf));
+          if (conf>lowerLi && conf < 1.0f) {
+            //if (conf>lowerLi && conf < upperLi) {
           //if (conf >0.6f && conf < 1.0f) {  //  it will toughen the matching process which will create problem in real life
             confidence = conf;
             label = result.getTitle();
@@ -642,7 +667,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               System.out.println("onFacesDetected < 1");
 
                if(isTrueFace){
-                Toast.makeText(this,"Real Face", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this,"Real Face", Toast.LENGTH_SHORT).show();
                 CustomStatic.IsFaceRec=true;
 
                 Intent returnIntent = new Intent();

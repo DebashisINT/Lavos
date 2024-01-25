@@ -2,9 +2,7 @@ package com.lavos.features.addAttendence.api.addattendenceapi
 
 import com.lavos.app.NetworkConstant
 import com.lavos.base.BaseResponse
-import com.lavos.features.addAttendence.model.AddAttendenceInpuModel
-import com.lavos.features.addAttendence.model.LeaveListResponseModel
-import com.lavos.features.addAttendence.model.SendLeaveApprovalInputParams
+import com.lavos.features.addAttendence.model.*
 import io.reactivex.Observable
 import okhttp3.MultipartBody
 import retrofit2.Retrofit
@@ -26,7 +24,7 @@ interface AddAttendenceApi {
     fun sendLeaveApproval(@Body sendLeaveApprovalInputParams: SendLeaveApprovalInputParams): Observable<BaseResponse>
 
     @Multipart
-    @POST("DemoAttendance/AddAttendanceImage")
+    @POST("lavosAttendance/AddAttendanceImage")
     fun attendenceWithImage(@Query("data") addAttendence: String, @Part logo_img_data: MultipartBody.Part?): Observable<BaseResponse>
 
     @FormUrlEncoded
@@ -39,6 +37,14 @@ interface AddAttendenceApi {
     @POST("Leave/GetLeaveList")
     fun leaveList(@Field("session_token") session_token: String, @Field("user_id") user_id: String, @Field("from_date") from_date: String,
                        @Field("to_date") to_date: String): Observable<LeaveListResponseModel>
+
+    @FormUrlEncoded
+    @POST("UserHierarchy/UserReportToInfo")
+    fun getReportToUserIDAPI(@Field("user_id") user_id: String,@Field("session_token") session_token: String): Observable<GetReportToResponse>
+
+    @FormUrlEncoded
+    @POST("Devicetoken/UserDeviceTokenInfo")
+    fun getReportToFCMInfoAPI(@Field("user_id") user_id: String,@Field("session_token") session_token: String): Observable<GetReportToFCMResponse>
 
     /**
      * Companion object to create the GithubApiService

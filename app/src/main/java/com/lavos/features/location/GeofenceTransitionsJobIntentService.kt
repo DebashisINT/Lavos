@@ -7,7 +7,7 @@ import androidx.core.app.JobIntentService
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.text.TextUtils
 import android.util.Log
-import com.elvishew.xlog.XLog
+
 import com.lavos.R
 import com.lavos.app.AppDatabase
 import com.lavos.app.NetworkConstant
@@ -22,11 +22,13 @@ import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import timber.log.Timber
 
 
 /**
  * Created by aranya on 15/1/18.
  */
+// 1.0 GeofenceTransitionsJobIntentService AppV 4.0.6 saheli 12-01-2023 multiple contact Data added on Api called
 class GeofenceTransitionsJobIntentService : JobIntentService() {
 
 
@@ -53,44 +55,58 @@ class GeofenceTransitionsJobIntentService : JobIntentService() {
      * Services (inside a PendingIntent) when addGeofences() is called.
      */
     override fun onHandleWork(intent: Intent) {
-        XLog.d("Geofence: GeofenceTransitionsJobIntentService : ENTRY")
+        Timber.d("Geofence: GeofenceTransitionsJobIntentService : ENTRY")
         val geofencingEvent = GeofencingEvent.fromIntent(intent)
-        if (geofencingEvent!!.hasError()) {
+        try {
+            if (geofencingEvent!!.hasError()) {
 //            val errorMessage = GeofenceErrorMessages.getErrorString(this,
 //                    geofencingEvent.errorCode)
-            Log.e(TAG, "${geofencingEvent.errorCode}")
+                Log.e(TAG, "${geofencingEvent!!.errorCode}")
+                return
+            }
+        }catch (ex:Exception){
             return
         }
 
+
         // Get the transition type.
-        val geofenceTransition = geofencingEvent.geofenceTransition
+        val geofenceTransition = geofencingEvent!!.geofenceTransition
+
+        println("tag_nearby_noti geofenceTransition"+geofenceTransition)
 
         // Test that the reported transition was of interest.
         if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER || geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT || geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
-
+            println("tag_nearby_noti geofenceTransition if"+geofenceTransition)
             // Get the geofences that were triggered. A single event can trigger multiple geofences.
             val triggeringGeofences = geofencingEvent.triggeringGeofences
 
             // Get the transition details as a String.
             val geofenceTransitionDetails = getGeofenceTransitionDetails(geofenceTransition,
                     triggeringGeofences!!)
-            triggeringGeofences.forEach {
+            triggeringGeofences?.forEach {
                 //                it.requestId
                 // Send notification and log the transition details.
-                XLog.d("=====================Geofence=======================")
+                Timber.d("=====================Geofence=======================")
                 when (geofenceTransition) {
                     Geofence.GEOFENCE_TRANSITION_ENTER -> {
-                        XLog.d("Geofence: GeofenceTransitionsJobIntentService : ENTER")
+                        println("tag_nearby_noti onHandleWork if GEOFENCE_TRANSITION_ENTER")
+
+                        Timber.d("Geofence: GeofenceTransitionsJobIntentService : ENTER")
                         if (!TextUtils.isEmpty(Pref.user_id) && !Pref.isAutoLogout)
-                            sendNotification(it.requestId)
+
+                        sendNotification(it.requestId)
                     }
                     Geofence.GEOFENCE_TRANSITION_EXIT -> {
-                        XLog.d("Geofence: GeofenceTransitionsJobIntentService : EXIT")
+                        println("tag_nearby_noti onHandleWork if GEOFENCE_TRANSITION_EXIT")
+
+                        Timber.d("Geofence: GeofenceTransitionsJobIntentService : EXIT")
                         cancelNotification(it.requestId)
                         endShopDuration(it.requestId)
                     }
                     Geofence.GEOFENCE_TRANSITION_DWELL -> {
-                        XLog.d("Geofence: GeofenceTransitionsJobIntentService : DWELL")
+                        println("tag_nearby_noti onHandleWork if GEOFENCE_TRANSITION_DWELL")
+
+                        Timber.d("Geofence: GeofenceTransitionsJobIntentService : DWELL")
                         if (!TextUtils.isEmpty(Pref.user_id) && !Pref.isAutoLogout)
                             sendNotification(it.requestId)
 //                        calculateShopDuration(it.requestId)
@@ -99,12 +115,12 @@ class GeofenceTransitionsJobIntentService : JobIntentService() {
             }
 
 
-            XLog.e(TAG, geofenceTransitionDetails)
+            Timber.e(TAG, geofenceTransitionDetails)
         } else {
             // Log the error.
-            XLog.e(TAG, "Invalid Type $geofenceTransition")
+            Timber.e(TAG, "Invalid Type $geofenceTransition")
         }
-        XLog.d("Geofence: GeofenceTransitionsJobIntentService : EXIT")
+        Timber.d("Geofence: GeofenceTransitionsJobIntentService : EXIT")
     }
 
 
@@ -117,7 +133,7 @@ class GeofenceTransitionsJobIntentService : JobIntentService() {
         val shopActiList = AppDatabase.getDBInstance()!!.shopActivityDao().getShopForDay(requestId!!, AppUtils.getCurrentDateForShopActi())
         if (shopActiList.isEmpty())
             return
-        XLog.d("Geofence: FarFromShop : " + "ShopName : " + shopActiList[0].shop_name!!)
+        Timber.d("Geofence: FarFromShop : " + "ShopName : " + shopActiList[0].shop_name!!)
 
         if (!Pref.isMultipleVisitEnable) {
             if (!shopActiList[0].isDurationCalculated && !shopActiList[0].isUploaded) {
@@ -222,7 +238,7 @@ class GeofenceTransitionsJobIntentService : JobIntentService() {
                 AppDatabase.getDBInstance()!!.shopActivityDao().updateDurationAvailable(true, shopActiList[i].shopid!!, AppUtils.getCurrentDateForShopActi())
                 return
             }
-            XLog.d("Geofence: ShopDurationIncrement : " + "ShopName : " + shopActiList[i].shop_name + "," + shopActiList[i].duration_spent)
+            Timber.d("Geofence: ShopDurationIncrement : " + "ShopName : " + shopActiList[i].shop_name + "," + shopActiList[i].duration_spent)
             AppDatabase.getDBInstance()!!.shopActivityDao().updateTotalMinuteForDayOfShop(shopActiList[i].shopid!!, totalMinute, AppUtils.getCurrentDateForShopActi())
             var duration = AppUtils.getTimeFromTimeSpan(shopActiList[i].startTimeStamp, System.currentTimeMillis().toString())
             AppDatabase.getDBInstance()!!.shopActivityDao().updateTimeDurationForDayOfShop(shopActiList[i].shopid!!, duration, AppUtils.getCurrentDateForShopActi())
@@ -262,6 +278,12 @@ class GeofenceTransitionsJobIntentService : JobIntentService() {
         shopDurationData.isFirstShopVisited = shopActivity.isFirstShopVisited
         shopDurationData.distanceFromHomeLoc = shopActivity.distance_from_home_loc
         shopDurationData.next_visit_date = shopActivity.next_visit_date
+        //New shop Create issue
+        shopDurationData.isnewShop = shopActivity.isnewShop!!
+        // 1.0 GeofenceTransitionsJobIntentService  AppV 4.0.6  multiple contact Data added on Api called
+        shopDurationData.multi_contact_name = shopActivity.multi_contact_name
+        shopDurationData.multi_contact_number = shopActivity.multi_contact_number
+
         shopDataList.add(shopDurationData)
 
         if (shopDataList.isEmpty()) {
@@ -333,7 +355,7 @@ class GeofenceTransitionsJobIntentService : JobIntentService() {
             isVisited = list[0].isVisited
             shopName = list[0].shop_name!!
         }
-        XLog.d("Geofence: ENTER : ShopName : $shopName,IS_DURATION_CALCULATED : $isDurationCalculated")
+        Timber.d("Geofence: ENTER : ShopName : $shopName,IS_DURATION_CALCULATED : $isDurationCalculated")
 
         if (!Pref.isMultipleVisitEnable) {
             if (isDurationCalculated || isVisited)
@@ -348,7 +370,7 @@ class GeofenceTransitionsJobIntentService : JobIntentService() {
            }
         }
 
-        XLog.d("Geofence: NearToShop : ShopName : $shopName")
+        Timber.d("Geofence: NearToShop : ShopName : $shopName")
         // Get an instance of the Notification manager
         val notification = NotificationUtils(getString(R.string.app_name), shopName, shopId, "")
         notification.CreateNotification(this, shopId)

@@ -1,12 +1,15 @@
 package com.lavos.features.orderList
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.speech.tts.TextToSpeech
 import androidx.core.content.ContextCompat
 import androidx.appcompat.widget.AppCompatTextView
@@ -22,7 +25,8 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.core.content.FileProvider
-import com.elvishew.xlog.XLog
+import com.lavos.NumberToWords
+
 import com.github.jhonnyx2012.horizontalpicker.DatePickerListener
 import com.github.jhonnyx2012.horizontalpicker.HorizontalPicker
 import com.google.gson.Gson
@@ -64,24 +68,37 @@ import com.lavos.features.orderList.model.NewOrderListResponseModel
 import com.lavos.features.orderList.model.OrderListDataModel
 import com.lavos.features.orderList.model.OrderListResponseModel
 import com.lavos.features.shopdetail.presentation.AddCollectionDialog
+import com.lavos.features.shopdetail.presentation.AddCollectionWithOrderDialog
 import com.lavos.features.shopdetail.presentation.api.addcollection.AddCollectionRepoProvider
 import com.lavos.features.shopdetail.presentation.model.addcollection.AddCollectionInputParamsModel
 import com.lavos.features.viewAllOrder.api.addorder.AddOrderRepoProvider
 import com.lavos.features.viewAllOrder.model.AddOrderInputParamsModel
 import com.lavos.features.viewAllOrder.model.AddOrderInputProductList
 import com.lavos.widgets.AppCustomTextView
+import com.itextpdf.text.*
+import com.itextpdf.text.pdf.PdfPCell
+import com.itextpdf.text.pdf.PdfPTable
+import com.itextpdf.text.pdf.PdfWriter
+import com.itextpdf.text.pdf.draw.VerticalPositionMark
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import org.joda.time.DateTime
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import java.util.*
 import kotlin.collections.ArrayList
+import timber.log.Timber
 
 /**
  * Created by Saikat on 29-11-2018.
  */
+// 1.0 NewDateWiseOrderListFragment AppV 4.0.6 saheli 12-01-2023 multiple contact Data added on Api called
+// 2.0 NewDateWiseOrderListFragment AppV 4.0.6 saheli 20-01-2023 Pdf module updation mantis 25595
+// 3.0 NewDateWiseOrderListFragment AppV 4.0.6 saheli 20-01-2023 Pdf module Mrp & discount mantis 25601
 class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.OnClickListener {
 
     lateinit var OrderListAdapter: OrderListAdapter
@@ -98,7 +115,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
     private lateinit var progress_wheel: ProgressWheel
     private lateinit var selectedDate: String
     private lateinit var sync_all_tv: AppCustomTextView
-
+    private var collectionDialog1: AddCollectionWithOrderDialog?= null
     var i: Int = 0
     private var collectionDialog: AddCollectionDialog?= null
 
@@ -363,6 +380,38 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
         shopDurationData.in_location = shopActivity.in_loc
         shopDurationData.out_location = shopActivity.out_loc
 
+        shopDurationData.shop_revisit_uniqKey = shopActivity.shop_revisit_uniqKey!!
+
+        /*10-12-2021*/
+        shopDurationData.updated_by = Pref.user_id
+        try {
+            shopDurationData.updated_on = shopActivity.updated_on!!
+        }catch(ex:Exception){
+            shopDurationData.updated_on =""
+        }
+
+        if (!TextUtils.isEmpty(shopActivity.pros_id!!))
+            shopDurationData.pros_id = shopActivity.pros_id!!
+        else
+            shopDurationData.pros_id = ""
+
+        if (!TextUtils.isEmpty(shopActivity.agency_name!!))
+            shopDurationData.agency_name =shopActivity.agency_name!!
+        else
+            shopDurationData.agency_name = ""
+
+        if (!TextUtils.isEmpty(shopActivity.approximate_1st_billing_value))
+            shopDurationData.approximate_1st_billing_value = shopActivity.approximate_1st_billing_value!!
+        else
+            shopDurationData.approximate_1st_billing_value = ""
+
+        //New shop Create issue
+        shopDurationData.isnewShop = shopActivity.isnewShop
+
+        // 1.0 NewDateWiseOrderListFragment AppV 4.0.6  multiple contact Data added on Api called
+        shopDurationData.multi_contact_name = shopActivity.multi_contact_name
+        shopDurationData.multi_contact_number = shopActivity.multi_contact_number
+
         shopDataList.add(shopDurationData)
 
         if (shopDataList.isEmpty()) {
@@ -380,7 +429,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             progress_wheel.stopSpinning()
-                            XLog.d("ShopActivityFromAverageShop : " + "User Id" + Pref.user_id + ", Session Token" + Pref.session_token + ", SHOP_ID: " + mList[0].shopid + ", SHOP: " + mList[0].shop_name + ", RESPONSE:" + result.message)
+                            Timber.d("ShopActivityFromAverageShop : " + "User Id" + Pref.user_id + ", Session Token" + Pref.session_token + ", SHOP_ID: " + mList[0].shopid + ", SHOP: " + mList[0].shop_name + ", RESPONSE:" + result.message)
                             if (result.status == NetworkConstant.SUCCESS) {
                                 AppDatabase.getDBInstance()!!.shopActivityDao().updateisUploaded(true, shopId, selectedDate)
                                 OrderListAdapter.updateList(AppDatabase.getDBInstance()!!.shopActivityDao().getTotalShopVisitedForADay(selectedDate))
@@ -392,7 +441,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                         }, { error ->
                             error.printStackTrace()
                             progress_wheel.stopSpinning()
-                            XLog.d("ShopActivityFromAverageShop : " + "User Id" + Pref.user_id + ", Session Token" + Pref.session_token + ", SHOP_ID: " + mList[0].shopid + ", SHOP: " + mList[0].shop_name + ", ERROR:" + error.localizedMessage)
+                            Timber.d("ShopActivityFromAverageShop : " + "User Id" + Pref.user_id + ", Session Token" + Pref.session_token + ", SHOP_ID: " + mList[0].shopid + ", SHOP: " + mList[0].shop_name + ", ERROR:" + error.localizedMessage)
                             (mContext as DashboardActivity).showSnackMessage(mContext.getString(R.string.unable_to_sync))
 
                         })
@@ -596,6 +645,9 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                                             orderDetailList.patient_name = order_details_list[i].patient_name
                                             orderDetailList.patient_address = order_details_list[i].patient_address
 
+                                            orderDetailList.Hospital = order_details_list[i].Hospital
+                                            orderDetailList.Email_Address = order_details_list[i].Email_Address
+
                                             if (order_details_list[i].product_list != null && order_details_list[i].product_list?.size!! > 0) {
                                                 for (j in order_details_list[i].product_list?.indices!!) {
                                                     val productOrderList = OrderProductListEntity()
@@ -608,6 +660,12 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                                                     productOrderList.category = order_details_list[i].product_list?.get(j)?.category
                                                     productOrderList.order_id = order_details_list[i].order_id
                                                     productOrderList.product_name = order_details_list[i].product_list?.get(j)?.product_name
+
+                                                    /*06-01-2022*/
+                                                    if (!TextUtils.isEmpty(order_details_list[i].product_list?.get(j)?.MRP)) {
+                                                        val finalMRP = String.format("%.2f", order_details_list[i].product_list?.get(j)?.MRP?.toFloat())
+                                                        productOrderList.MRP = finalMRP
+                                                    }
 
                                                     /*if (order_details_list[i].product_list?.get(j)?.rate?.contains(".")!!)
                                                         productOrderList.rate = order_details_list[i].product_list?.get(j)?.rate?.toDouble()?.toInt().toString()
@@ -754,6 +812,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
         }
     }
 
+    @SuppressLint("WrongConstant")
     private fun initAdapter() {
         /*OrderListAdapter = OrderListAdapter(mContext, orderList, object : AverageShopListClickListener {
             override fun onSyncClick(position: Int) {
@@ -804,57 +863,81 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
             override fun OnMenuClick(position: Int, view: View) {
                 initiatePopupWindow(view, position)
             }
+
+            override fun onQuestionnarieClick(shopId: String) {
+
+            }
+
+            override fun onReturnClick(position: Int) {
+
+            }
+
+            override fun onDamageClick(shop_id: String) {
+                TODO("Not yet implemented")
+            }
+
+            override fun onSurveyClick(shop_id: String) {
+
+            }
+
+            override fun onMultipleImageClick(shop: Any, position: Int) {
+
+            }
+
+            override fun onWhatsApiClick(shop_id: String) {
+                TODO("Not yet implemented")
+            }
         }, { shopId: String, orderId: String ->
             val shopType = AppDatabase.getDBInstance()?.addShopEntryDao()?.getShopType(shopId)
             senOrderEmail(shopId, orderId, shopType)
         }, {
 
-            val heading = "SALES ORDER"
-            var pdfBody = "\n\n\n\nOrder No.: " + it.order_id + "\n\nOrder Date: " + AppUtils.convertDateTimeToCommonFormat(it.date!!) +
-                    "\n\nParty Name: "
-
-            val shop = AppDatabase.getDBInstance()?.addShopEntryDao()?.getShopByIdN(it.shop_id)
-
-            pdfBody = pdfBody + shop?.shopName + "\n\nAddress: " + shop?.address + "\n\nContact No.: " + shop?.ownerContactNumber +
-                    "\n\nSales Person: " + Pref.user_name + "\n\n\n"
-
-            if (Pref.isPatientDetailsShowInOrder) {
-                pdfBody = pdfBody + "Patient Name: " + if (!TextUtils.isEmpty(it.patient_name)) it.patient_name else "N.A." + "\n\nAddress: " +
-                        if (!TextUtils.isEmpty(it.patient_address)) it.patient_address else "N.A." + "\n\nPhone: " +
-                                if (!TextUtils.isEmpty(it.patient_no)) it.patient_no else "N.A." + "\n\n\n"
-            }
-
-            val productList = AppDatabase.getDBInstance()!!.orderProductListDao().getDataAccordingToOrderId(it.order_id!!)
-            productList?.forEach {it1 ->
-                pdfBody = pdfBody + "Item: " + it1.product_name + "\nQty: " + it1.qty + "  Rate: " +
-                        getString(R.string.rupee_symbol_with_space) + it1.rate + "  Amount: " + getString(R.string.rupee_symbol_with_space) +
-                        it1.total_price + "\n\n"
-            }
-
-            pdfBody = pdfBody + "Total Amount: " + getString(R.string.rupee_symbol_with_space) + it.amount
-
-            val image = BitmapFactory.decodeResource(mContext.resources, R.mipmap.ic_launcher)
-
-            val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "FTS_" + it.order_id + ".pdf", image, heading, 2.7f)
-
-            if (!TextUtils.isEmpty(path)) {
-                try {
-                    val shareIntent = Intent(Intent.ACTION_SEND)
-                    val fileUrl = Uri.parse(path)
-
-                    val file = File(fileUrl.path)
-//                    val uri = Uri.fromFile(file)
-                    val uri: Uri = FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
-
-                    shareIntent.type = "image/png"
-                    shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
-                    startActivity(Intent.createChooser(shareIntent, "Share pdf using"));
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-            else
-                (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
+//            val heading = "SALES ORDER"
+//            var pdfBody = "\n\n\n\nOrder No.: " + it.order_id + "\n\nOrder Date: " + AppUtils.convertDateTimeToCommonFormat(it.date!!) +
+//                    "\n\nParty Name: "
+//
+//            val shop = AppDatabase.getDBInstance()?.addShopEntryDao()?.getShopByIdN(it.shop_id)
+//
+//            pdfBody = pdfBody + shop?.shopName + "\n\nAddress: " + shop?.address + "\n\nContact No.: " + shop?.ownerContactNumber +
+//                    "\n\nSales Person: " + Pref.user_name + "\n\n\n"
+//
+//            if (Pref.isPatientDetailsShowInOrder) {
+//                pdfBody = pdfBody + "Patient Name: " + if (!TextUtils.isEmpty(it.patient_name)) it.patient_name else "N.A." + "\n\nAddress: " +
+//                        if (!TextUtils.isEmpty(it.patient_address)) it.patient_address else "N.A." + "\n\nPhone: " +
+//                                if (!TextUtils.isEmpty(it.patient_no)) it.patient_no else "N.A." + "\n\n\n"
+//            }
+//
+//            val productList = AppDatabase.getDBInstance()!!.orderProductListDao().getDataAccordingToOrderId(it.order_id!!)
+//            productList?.forEach {it1 ->
+//                pdfBody = pdfBody + "Item: " + it1.product_name + "\nQty: " + it1.qty + "  Rate: " +
+//                        getString(R.string.rupee_symbol_with_space) + it1.rate + "  Amount: " + getString(R.string.rupee_symbol_with_space) +
+//                        it1.total_price + "\n\n"
+//            }
+//
+//            pdfBody = pdfBody + "Total Amount: " + getString(R.string.rupee_symbol_with_space) + it.amount
+//
+//            val image = BitmapFactory.decodeResource(mContext.resources, R.mipmap.ic_launcher)
+//
+//            val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "FTS_" + it.order_id + ".pdf", image, heading, 2.7f)
+//
+//            if (!TextUtils.isEmpty(path)) {
+//                try {
+//                    val shareIntent = Intent(Intent.ACTION_SEND)
+//                    val fileUrl = Uri.parse(path)
+//
+//                    val file = File(fileUrl.path)
+////                    val uri = Uri.fromFile(file)
+//                    val uri:Uri= FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
+//                    shareIntent.type = "image/png"
+//                    shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+//                    startActivity(Intent.createChooser(shareIntent, "Share pdf using"));
+//                } catch (e: Exception) {
+//                    e.printStackTrace()
+//                }
+//            }
+//            else
+//                (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
+            saveDataAsPdf(it)
         }, {
             try {
 
@@ -864,79 +947,180 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
 
                     val addShop = AppDatabase.getDBInstance()?.addShopEntryDao()?.getShopByIdN(it.shop_id)
 
-                    collectionDialog = AddCollectionDialog.getInstance(it, true, addShop?.shopName!!, AppUtils.getCurrentDateFormatInTa(it.only_date!!),
-                            it.amount!!, it.order_id!!, object : AddCollectionDialog.AddCollectionClickLisneter {
-                        override fun onClick(collection: String, date: String, paymentId: String, instrument: String, bank: String, filePath: String, feedback: String, patientName: String, patientAddress: String, patinetNo: String) {
+                    var bID = ""
+                    var bDtlList = AppDatabase.getDBInstance()!!.billingDao().getDataOrderIdWise(it.order_id.toString())
+                    if(bDtlList!= null && bDtlList.size>0){
+                        bID=bDtlList.get(0).bill_id
+                    }
 
-                            //val addShop = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(it.shop_id)
-                            if (addShop != null) {
+                    if(Pref.IsCollectionOrderWise){
+                        collectionDialog1 = AddCollectionWithOrderDialog.getInstance(it, true, addShop?.shopName!!, AppUtils.getCurrentDateFormatInTa(it.only_date!!),
+                            it.amount!!, it.order_id!!,bID, object : AddCollectionWithOrderDialog.AddCollectionClickLisneter {
+                                override fun onClick(collection: String, date: String, paymentId: String, instrument: String, bank: String, filePath: String, feedback: String, patientName: String, patientAddress: String, patinetNo: String,
+                                                     hospital: String, emailAddress: String,order_id:String) {
 
-                                //if (addShop.isUploaded) {
-                                val order = it
-                                doAsync {
+                                    //val addShop = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(it.shop_id)
+                                    if (addShop != null) {
+                                        //if (addShop.isUploaded) {
+                                        val order = it
+                                        doAsync {
 
-                                    val collectionDetails = CollectionDetailsEntity()
-                                    collectionDetails.collection = collection/*.substring(1)*/
+                                            val collectionDetails = CollectionDetailsEntity()
+                                            collectionDetails.collection = collection/*.substring(1)*/
 
-                                    val random = Random()
-                                    val m = random.nextInt(9999 - 1000) + 1000
+                                            val random = Random()
+                                            val m = random.nextInt(9999 - 1000) + 1000
 
-                                    //collectionDetails.collection_id = Pref.user_id + "_" + m /*+ "_" + System.currentTimeMillis().toString()*/
-                                    collectionDetails.collection_id = Pref.user_id + "c" + m
-                                    collectionDetails.shop_id = it.shop_id
-                                    collectionDetails.date = date //AppUtils.getCurrentDate()
-                                    collectionDetails.only_time = AppUtils.getCurrentTime()  //AppUtils.getCurrentDate()
-                                    collectionDetails.bill_id = ""
-                                    collectionDetails.order_id = it.order_id
-                                    collectionDetails.payment_id = paymentId
-                                    collectionDetails.bank = bank
-                                    collectionDetails.instrument_no = instrument
-                                    collectionDetails.file_path = filePath
-                                    collectionDetails.feedback = feedback
-                                    collectionDetails.patient_name = patientName
-                                    collectionDetails.patient_address = patientAddress
-                                    collectionDetails.patient_no = patinetNo
-                                    AppDatabase.getDBInstance()!!.collectionDetailsDao().insert(collectionDetails)
+                                            //collectionDetails.collection_id = Pref.user_id + "_" + m /*+ "_" + System.currentTimeMillis().toString()*/
+                                            collectionDetails.collection_id = Pref.user_id + "c" + m
+                                            collectionDetails.shop_id = it.shop_id
+                                            collectionDetails.date = date //AppUtils.getCurrentDate()
+                                            collectionDetails.only_time = AppUtils.getCurrentTime()  //AppUtils.getCurrentDate()
+                                            collectionDetails.bill_id = ""
+                                            collectionDetails.order_id = it.order_id
+                                            collectionDetails.payment_id = paymentId
+                                            collectionDetails.bank = bank
+                                            collectionDetails.instrument_no = instrument
+                                            collectionDetails.file_path = filePath
+                                            collectionDetails.feedback = feedback
+                                            collectionDetails.patient_name = patientName
+                                            collectionDetails.patient_address = patientAddress
+                                            collectionDetails.patient_no = patinetNo
+                                            /*06-01-2022*/
+                                            collectionDetails.Hospital = hospital
+                                            collectionDetails.Email_Address = emailAddress
 
-                                    val collectionDate = AppUtils.getCurrentDateForShopActi() + "T" + collectionDetails.only_time
+                                            collectionDetails.order_id = order_id
+                                            AppDatabase.getDBInstance()!!.collectionDetailsDao().insert(collectionDetails)
 
-                                    uiThread {
+                                            val collectionDate = AppUtils.getCurrentDateForShopActi() + "T" + collectionDetails.only_time
 
-                                        if (AppUtils.isOnline(mContext)) {
-                                            if (addShop.isUploaded) {
-                                                if (order.isUploaded) {
-                                                    addCollectionApi(collectionDetails.shop_id, collectionDetails.collection_id, "",
-                                                            "", collection, collectionDate, collectionDetails.bill_id, collectionDetails.order_id, collectionDetails)
-                                                }
-                                                else {
-                                                    syncOrderForCollection(order, collectionDetails.shop_id, collectionDetails.collection_id, "", "", collection,
+                                            uiThread {
+
+                                                if (AppUtils.isOnline(mContext)) {
+                                                    if (addShop.isUploaded) {
+                                                        if (order.isUploaded) {
+                                                            addCollectionApi(collectionDetails.shop_id, collectionDetails.collection_id, "",
+                                                                "", collection, collectionDate, collectionDetails.bill_id, collectionDetails.order_id, collectionDetails)
+                                                        } else {
+                                                            syncOrderForCollection(order, collectionDetails.shop_id, collectionDetails.collection_id, "", "", collection,
+                                                                collectionDate, collectionDetails.bill_id, collectionDetails.order_id, collectionDetails)
+                                                        }
+                                                    } else {
+                                                        syncShopForCollection(addShop, collectionDetails.shop_id, collectionDetails.collection_id, "", "", collection,
                                                             collectionDate, collectionDetails.bill_id, collectionDetails.order_id, collectionDetails)
-                                                }
-                                            } else {
-                                                syncShopForCollection(addShop, collectionDetails.shop_id, collectionDetails.collection_id, "", "", collection,
-                                                        collectionDate, collectionDetails.bill_id, collectionDetails.order_id, collectionDetails)
-                                            }
+                                                    }
 
-                                        } else {
-                                            (mContext as DashboardActivity).showSnackMessage("Collection added successfully")
-                                            voiceCollectionMsg()
+                                                } else {
+                                                    (mContext as DashboardActivity).showSnackMessage("Collection added successfully")
+                                                    voiceCollectionMsg()
+                                                }
+                                            }
                                         }
                                     }
                                 }
-                            }
-                        }
-                    })
-                    collectionDialog?.show((mContext as DashboardActivity).supportFragmentManager, "AddCollectionDialog")
+                            })
+                        collectionDialog1?.show((mContext as DashboardActivity).supportFragmentManager, "AddCollectionWithOrderDialog")
+                    }else{
+                        collectionDialog = AddCollectionDialog.getInstance(it, true, addShop?.shopName!!, AppUtils.getCurrentDateFormatInTa(it.only_date!!),
+                            it.amount!!, it.order_id!!, object : AddCollectionDialog.AddCollectionClickLisneter {
+                                override fun onClick(collection: String, date: String, paymentId: String, instrument: String, bank: String, filePath: String, feedback: String, patientName: String, patientAddress: String, patinetNo: String,
+                                                     hospital:String,emailAddress:String,order_id:String) {
+
+                                    //val addShop = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(it.shop_id)
+                                    if (addShop != null) {
+
+                                        //if (addShop.isUploaded) {
+                                        val order = it
+                                        doAsync {
+
+                                            val collectionDetails = CollectionDetailsEntity()
+                                            collectionDetails.collection = collection/*.substring(1)*/
+
+                                            val random = Random()
+                                            val m = random.nextInt(9999 - 1000) + 1000
+
+                                            //collectionDetails.collection_id = Pref.user_id + "_" + m /*+ "_" + System.currentTimeMillis().toString()*/
+                                            collectionDetails.collection_id = Pref.user_id + "c" + m
+                                            collectionDetails.shop_id = it.shop_id
+                                            collectionDetails.date = date //AppUtils.getCurrentDate()
+                                            collectionDetails.only_time = AppUtils.getCurrentTime()  //AppUtils.getCurrentDate()
+                                            collectionDetails.bill_id = ""
+                                            collectionDetails.order_id = it.order_id
+                                            collectionDetails.payment_id = paymentId
+                                            collectionDetails.bank = bank
+                                            collectionDetails.instrument_no = instrument
+                                            collectionDetails.file_path = filePath
+                                            collectionDetails.feedback = feedback
+                                            collectionDetails.patient_name = patientName
+                                            collectionDetails.patient_address = patientAddress
+                                            collectionDetails.patient_no = patinetNo
+                                            /*06-01-2022*/
+                                            collectionDetails.Hospital = hospital
+                                            collectionDetails.Email_Address = emailAddress
+
+                                            collectionDetails.order_id = order_id
+                                            AppDatabase.getDBInstance()!!.collectionDetailsDao().insert(collectionDetails)
+
+                                            val collectionDate = AppUtils.getCurrentDateForShopActi() + "T" + collectionDetails.only_time
+
+                                            uiThread {
+
+                                                if (AppUtils.isOnline(mContext)) {
+                                                    if (addShop.isUploaded) {
+                                                        if (order.isUploaded) {
+                                                            addCollectionApi(collectionDetails.shop_id, collectionDetails.collection_id, "",
+                                                                "", collection, collectionDate, collectionDetails.bill_id, collectionDetails.order_id, collectionDetails)
+                                                        }
+                                                        else {
+                                                            syncOrderForCollection(order, collectionDetails.shop_id, collectionDetails.collection_id, "", "", collection,
+                                                                collectionDate, collectionDetails.bill_id, collectionDetails.order_id, collectionDetails)
+                                                        }
+                                                    } else {
+                                                        syncShopForCollection(addShop, collectionDetails.shop_id, collectionDetails.collection_id, "", "", collection,
+                                                            collectionDate, collectionDetails.bill_id, collectionDetails.order_id, collectionDetails)
+                                                    }
+
+                                                } else {
+                                                    (mContext as DashboardActivity).showSnackMessage("Collection added successfully")
+                                                    voiceCollectionMsg()
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            })
+                        collectionDialog?.show((mContext as DashboardActivity).supportFragmentManager, "AddCollectionDialog")
+                    }
+
+
                 }
 
             } catch (e: java.lang.Exception) {
                 e.printStackTrace()
             }
-        }, {
-            if (!TextUtils.isEmpty(it.order_lat) && !TextUtils.isEmpty(it.order_long))
+        },{
+            if (!TextUtils.isEmpty(it.order_lat) && !TextUtils.isEmpty(it.order_long)) {
                 (mContext as DashboardActivity).openLocationMap(it, false)
-            else
+            }
+            else{
                 (mContext as DashboardActivity).showSnackMessage("No order location available")
+            }
+        },
+
+            {
+                if (!TextUtils.isEmpty(it.order_lat) && !TextUtils.isEmpty(it.order_long)) {
+                    val uri = "https://www.google.com/maps/?q=" + it.order_lat + "," + it.order_long
+                    val sharingIntent = Intent(Intent.ACTION_SEND)
+                    sharingIntent.let {
+                        it.type = "text/plain"
+                        it.putExtra(Intent.EXTRA_TEXT, uri)
+                        startActivity(Intent.createChooser(it, "Share via"))
+                    }
+                }
+                else{
+                    (mContext as DashboardActivity).showSnackMessage("No order location available")
+                }
         }, {
             var pdfBody = "Order No.: " + it.order_id + "\n\nOrder Date: " + AppUtils.convertDateTimeToCommonFormat(it.date!!) +
                     "\n\nParty Name: "
@@ -958,6 +1142,495 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
             if (bitmap != null)
                 QrCodeDialog.newInstance(bitmap, it.shop_id!!, shop?.shopName!!, it.order_id!!, "Create QR of Order").show((mContext as DashboardActivity).supportFragmentManager, "")
         })
+    }
+
+    private fun saveDataAsPdf(obj: OrderDetailsListEntity) {
+        /*21-04-2022 new pdf format*/
+        var document: Document = Document()
+        var fileName = "FTS"+ "_" + obj.order_id
+        fileName = fileName.replace("/", "_")
+
+        val path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() +"/lavosApp/ORDERDETALIS/"
+
+        val dir = File(path)
+        if (!dir.exists()) {
+            dir.mkdirs()
+        }
+
+        try {
+            PdfWriter.getInstance(document, FileOutputStream(path + fileName + ".pdf"))
+
+
+
+            document.open()
+
+            var font: Font = Font(Font.FontFamily.HELVETICA, 10f, Font.BOLD)
+            var fontBoldU: Font = Font(Font.FontFamily.HELVETICA, 12f, Font.UNDERLINE or Font.BOLD)
+            var font1: Font = Font(Font.FontFamily.HELVETICA, 8f, Font.NORMAL)
+            val grayFront = Font(Font.FontFamily.HELVETICA, 8f, Font.NORMAL, BaseColor.GRAY)
+            var fontSmall: Font = Font(Font.FontFamily.HELVETICA, 9f, Font.BOLD)
+
+
+
+            //image add
+            val bm: Bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+            val bitmap = Bitmap.createScaledBitmap(bm, 50, 50, true);
+            val stream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            var img: Image? = null
+            val byteArray: ByteArray = stream.toByteArray()
+            try {
+                img = Image.getInstance(byteArray)
+                img.scaleToFit(90f, 90f)
+                img.scalePercent(70f)
+                img.alignment = Image.ALIGN_LEFT
+            } catch (e: BadElementException) {
+                e.printStackTrace()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+            //document.add(img)
+
+
+            val Heading = Paragraph("SALES ORDER ", fontBoldU)
+            Heading.alignment = Element.ALIGN_CENTER
+            Heading.spacingAfter = 2f
+            //document.add(Heading)
+
+
+/////////////////////////////
+
+            val sp = Paragraph("", font)
+            sp.spacingAfter = 50f
+            document.add(sp)
+
+
+
+
+            val h = Paragraph("SALES ORDER ", fontBoldU)
+            h.alignment = Element.ALIGN_CENTER
+
+            val pHead = Paragraph()
+            pHead.add(Chunk(img, 0f, -30f))
+            pHead.add(h)
+            document.add(pHead)
+
+            /*val paraHead = Paragraph()
+            val glueHead = Chunk(VerticalPositionMark())
+            val ph1Head = Phrase()
+            val mainHead = Paragraph()
+            ph1Head.add(Chunk(img, 0f,0f))
+            ph1Head.add(glueHead) // Here I add special chunk to the same phrase.
+
+            ph1Head.add(Chunk("SALES ORDER: " + "\u20B9" + obj.amount, font))
+            paraHead.add(ph1Head)
+            document.add(paraHead)*/
+////////////////////////////////////
+
+
+
+            val x = Paragraph("", font)
+            x.spacingAfter = 20f
+            document.add(x)
+
+            val widthsOrder = floatArrayOf(0.50f, 0.50f)
+
+            var tableHeaderOrder: PdfPTable = PdfPTable(widthsOrder)
+            tableHeaderOrder.getDefaultCell().setHorizontalAlignment(Element.ALIGN_CENTER)
+            tableHeaderOrder.setWidthPercentage(100f)
+
+            var invoiceNo="."
+            var invoiceDate="."
+            try{
+                invoiceNo = AppDatabase.getDBInstance()!!.billingDao().getInvoice(obj.order_id!!)
+                if (invoiceNo==null){
+                    invoiceNo=""
+                }
+            }catch (ex:Exception){
+                invoiceNo=""
+            }
+            try{
+                invoiceDate = AppDatabase.getDBInstance()!!.billingDao().getInvoiceDate(obj.order_id!!)
+                if (invoiceDate==null){
+                    invoiceDate=""
+                }
+            }catch (ex:Exception){
+                invoiceDate=""
+            }
+
+            val cell11 = PdfPCell(Phrase("Order No       :     " + obj.order_id + "\n\n" + "Order Date    :     " + AppUtils.convertDateTimeToCommonFormat(obj.date!!), font))
+            cell11.setHorizontalAlignment(Element.ALIGN_LEFT)
+            cell11.borderColor = BaseColor.GRAY
+            tableHeaderOrder.addCell(cell11)
+
+            // 2.0 NewOrderListFragment AppV 4.0.6 Pdf module updation mantis 25595
+            val cell222 = PdfPCell(Phrase("Invoice No     :     " + invoiceNo + "\n\n" + "Invoice Date  :     " + AppUtils.getFormatedDateNew(invoiceDate,"yyyy-mm-dd", "dd-mm-yyyy"), font))
+            cell222.setHorizontalAlignment(Element.ALIGN_LEFT);
+            cell222.borderColor = BaseColor.GRAY
+            cell222.paddingBottom=10f
+            tableHeaderOrder.addCell(cell222)
+
+            document.add(tableHeaderOrder)
+
+
+            var orderNoDate: String = ""
+            var InvoicDate: String = ""
+            val tableRows = PdfPTable(widthsOrder)
+            tableRows.defaultCell.horizontalAlignment = Element.ALIGN_LEFT
+            tableRows.setWidthPercentage(100f);
+
+            var cellBodySl1 = PdfPCell(Phrase(orderNoDate + "Order Date: " + AppUtils.convertDateTimeToCommonFormat(obj.date!!), font))
+            cellBodySl1.setHorizontalAlignment(Element.ALIGN_LEFT)
+            cellBodySl1.borderColor = BaseColor.GRAY
+//            tableRows.addCell(cellBodySl1)
+
+            // 2.0 NewOrderListFragment AppV 4.0.6 Pdf module updation mantis 25595
+            var cellBody22 = PdfPCell(Phrase(InvoicDate + invoiceNo + "Invoice Date: " + AppUtils.getFormatedDateNew(invoiceDate,"yyyy-mm-dd", "dd-mm-yyyy"), font))
+            cellBody22.setHorizontalAlignment(Element.ALIGN_LEFT)
+            cellBody22.borderColor = BaseColor.GRAY
+//            tableRows.addCell(cellBody22)
+
+            document.add(tableRows)
+
+            document.add(Paragraph())
+
+
+            val xz = Paragraph("", font)
+            xz.spacingAfter = 10f
+            document.add(xz)
+
+            val HeadingPartyDetls = Paragraph("Details of Party ", fontBoldU)
+            HeadingPartyDetls.indentationLeft = 82f
+//            HeadingPartyDetls.alignment = Element.ALIGN_LEFT
+            HeadingPartyDetls.spacingAfter = 2f
+            document.add(HeadingPartyDetls)
+
+            val shop = AppDatabase.getDBInstance()?.addShopEntryDao()?.getShopByIdN(obj.shop_id)
+
+            val Parties = Paragraph("Name                    :      " + shop?.shopName, font1)
+            Parties.alignment = Element.ALIGN_LEFT
+            Parties.spacingAfter = 2f
+            document.add(Parties)
+
+            val address = Paragraph("Address                :      " + shop?.address, font1)
+            address.alignment = Element.ALIGN_LEFT
+            address.spacingAfter = 2f
+            document.add(address)
+
+
+            val Contact = Paragraph("Contact No.          :      " + shop?.ownerContactNumber, font1)
+            Contact.alignment = Element.ALIGN_LEFT
+            Contact.spacingAfter = 2f
+            document.add(Contact)
+
+
+            // 2.0 NewOrderListFragment AppV 4.0.6 Pdf module updation mantis 25595
+            val PanNo = Paragraph("PAN                     :      " + if(shop?.shopOwner_PAN == null) "" else shop?.shopOwner_PAN!!, font1)
+            PanNo.alignment = Element.ALIGN_LEFT
+            PanNo.spacingAfter = 2f
+            document.add(PanNo)
+
+            val GSTNNo = Paragraph("GSTIN                  :      " + if(shop?.gstN_Number==null) "" else shop?.gstN_Number, font1)
+            GSTNNo.alignment = Element.ALIGN_LEFT
+            GSTNNo.spacingAfter = 2f
+            document.add(GSTNNo)
+
+
+            if (Pref.isPatientDetailsShowInOrder) {
+                val PatientName = Paragraph("Patient Name        :  " + obj.patient_name, font1)
+                PatientName.alignment = Element.ALIGN_LEFT
+                PatientName.spacingAfter = 2f
+                document.add(PatientName)
+
+                val PatientAddr = Paragraph("Patient Address     :  " + obj.patient_address, font1)
+                PatientAddr.alignment = Element.ALIGN_LEFT
+                PatientAddr.spacingAfter = 2f
+                document.add(PatientAddr)
+
+                val PatientPhone = Paragraph("Patient Phone        :  " + obj.patient_no, font1)
+                PatientPhone.alignment = Element.ALIGN_LEFT
+                PatientPhone.spacingAfter = 10f
+                document.add(PatientPhone)
+
+            }
+            val xze = Paragraph("", font)
+            xze.spacingAfter = 10f
+            document.add(xze)
+
+            // table header
+            //val widths = floatArrayOf(0.55f, 0.05f, 0.2f, 0.2f)
+//            val widths = floatArrayOf(0.06f, 0.58f, 0.07f, 0.07f, 0.07f, 0.15f)
+            // mantis 25601
+            //val widths = floatArrayOf(0.06f, 0.36f, 0.07f, 0.07f, 0.07f, 0.15f,0.07f, 0.15f)
+            var widths = floatArrayOf(0.06f, 0.36f, 0.07f, 0.07f, 0.07f, 0.15f,0.07f, 0.15f)
+            if(Pref.IsViewMRPInOrder && Pref.IsDiscountInOrder){
+                widths = floatArrayOf(0.06f, 0.36f, 0.07f, 0.07f, 0.07f, 0.15f,0.07f, 0.15f)
+            }
+            else if(Pref.IsViewMRPInOrder) {
+                widths = floatArrayOf(0.06f, 0.40f, 0.11f, 0.11f, 0.07f,0.10f,0.15f)
+            }
+            else if(Pref.IsDiscountInOrder) {
+                widths = floatArrayOf(0.06f, 0.40f, 0.07f, 0.07f, 0.15f,0.10f, 0.15f)
+            }
+            else{
+                widths = floatArrayOf(0.06f, 0.40f, 0.13f, 0.13f,0.13f, 0.15f)
+            }
+
+            var tableHeader: PdfPTable = PdfPTable(widths)
+            tableHeader.getDefaultCell().setHorizontalAlignment(Element.ALIGN_LEFT)
+            tableHeader.setWidthPercentage(100f)
+
+            val cell111 = PdfPCell(Phrase("SL. ", font))
+            cell111.setHorizontalAlignment(Element.ALIGN_LEFT)
+            cell111.borderColor = BaseColor.GRAY
+            tableHeader.addCell(cell111);
+
+            val cell1 = PdfPCell(Phrase("Item Description ", font))
+            cell1.setHorizontalAlignment(Element.ALIGN_LEFT)
+            cell1.borderColor = BaseColor.GRAY
+            tableHeader.addCell(cell1);
+
+            val cell2 = PdfPCell(Phrase("Qty ", font))
+            cell2.setHorizontalAlignment(Element.ALIGN_LEFT);
+            cell2.borderColor = BaseColor.GRAY
+            tableHeader.addCell(cell2);
+
+            val cell21 = PdfPCell(Phrase("Unit ", font))
+            cell21.setHorizontalAlignment(Element.ALIGN_LEFT);
+            cell21.borderColor = BaseColor.GRAY
+            tableHeader.addCell(cell21);
+
+            // AppV 4.0.6  mantis 25601
+            if(Pref.IsViewMRPInOrder) {
+                val cellMrp = PdfPCell(Phrase("MRP ", font))
+                cellMrp.setHorizontalAlignment(Element.ALIGN_LEFT);
+                cellMrp.borderColor = BaseColor.GRAY
+                tableHeader.addCell(cellMrp);
+            }
+
+            if(Pref.IsDiscountInOrder){
+                val cellDiscount = PdfPCell(Phrase("Discount ", font))
+                cellDiscount.setHorizontalAlignment(Element.ALIGN_LEFT);
+                cellDiscount.borderColor = BaseColor.GRAY
+                tableHeader.addCell(cellDiscount);
+            }
+
+            val cell3 = PdfPCell(Phrase("Rate ", font))
+            cell3.setHorizontalAlignment(Element.ALIGN_LEFT);
+            cell3.borderColor = BaseColor.GRAY
+            tableHeader.addCell(cell3);
+
+            val cell4 = PdfPCell(Phrase("Amount ", font))
+            cell4.setHorizontalAlignment(Element.ALIGN_LEFT);
+            cell4.borderColor = BaseColor.GRAY
+            tableHeader.addCell(cell4);
+
+            document.add(tableHeader)
+
+            //table body
+            var srNo: String = ""
+            var item: String = ""
+            var qty: String = ""
+            var unit: String = ""
+            var rate: String = ""
+            var amount: String = ""
+            // AppV 4.0.6  mantis 25601
+            var mrp: String = ""
+            var discount: String = ""
+            //new code
+            var tAmt="0"
+            //
+            val productList = AppDatabase.getDBInstance()!!.orderProductListDao().getDataAccordingToOrderId(obj.order_id!!)
+
+            for (i in 0..productList.size-1) {
+                srNo = (i+1).toString() +" "
+                item = productList!!.get(i).product_name +  "       "
+                qty = productList!!.get(i).qty +" "
+                //unit = "KG" +" "
+                unit = productList!!.get(i).watt.toString()+" "
+                rate =   getString(R.string.rupee_symbol_with_space)+" "+productList !!.get(i).rate +" "
+                amount = getString(R.string.rupee_symbol_with_space)+" "+productList!!.get(i).total_price +" "
+
+                //new code
+                tAmt = (tAmt.toDouble()+productList.get(i).total_price!!.toDouble()).toString()
+                //
+                // AppV 4.0.6  mantis 25601
+                try{
+                    mrp = getString(R.string.rupee_symbol_with_space)+" "+productList!!.get(i).order_mrp+" "
+                    discount = getString(R.string.rupee_symbol_with_space)+" "+productList!!.get(i).order_discount +" "
+                }catch (ex:Exception){
+                    mrp = getString(R.string.rupee_symbol_with_space)+" "
+                    discount = getString(R.string.rupee_symbol_with_space)+" "
+                }
+
+
+
+
+                val tableRows = PdfPTable(widths)
+                tableRows.defaultCell.horizontalAlignment = Element.ALIGN_CENTER
+                tableRows.setWidthPercentage(100f);
+
+
+                var cellBodySr = PdfPCell(Phrase(srNo, font1))
+                cellBodySr.setHorizontalAlignment(Element.ALIGN_LEFT);
+                cellBodySr.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellBodySr)
+
+                var cellBodySl = PdfPCell(Phrase(item, font1))
+                cellBodySl.setHorizontalAlignment(Element.ALIGN_LEFT);
+                cellBodySl.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellBodySl)
+
+                var cellBody2 = PdfPCell(Phrase(qty, font1))
+                cellBody2.setHorizontalAlignment(Element.ALIGN_LEFT)
+                cellBody2.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellBody2)
+
+
+                var cellBody21 = PdfPCell(Phrase(unit, font1))
+                cellBody21.setHorizontalAlignment(Element.ALIGN_LEFT)
+                cellBody21.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellBody21)
+
+                // AppV 4.0.6  mantis 25601
+                if(Pref.IsViewMRPInOrder){
+                val cellMrp = PdfPCell(Phrase(mrp, font1))
+                cellMrp.setHorizontalAlignment(Element.ALIGN_LEFT);
+                cellMrp.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellMrp);
+                }
+
+                if(Pref.IsDiscountInOrder){
+                val cellDiscount = PdfPCell(Phrase(discount, font1))
+                cellDiscount.setHorizontalAlignment(Element.ALIGN_LEFT);
+                cellDiscount.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellDiscount);
+                }
+
+                var cellBody3 = PdfPCell(Phrase(rate, font1))
+                cellBody3.setHorizontalAlignment(Element.ALIGN_LEFT)
+                cellBody3.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellBody3)
+
+                var cellBody4 = PdfPCell(Phrase(amount, font1))
+                cellBody4.setHorizontalAlignment(Element.ALIGN_LEFT)
+                cellBody4.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellBody4)
+
+
+                document.add(tableRows)
+
+                document.add(Paragraph())
+            }
+            val xffx = Paragraph("", font)
+            xffx.spacingAfter = 12f
+            document.add(xffx)
+
+//            val widthsamount = floatArrayOf(0.70f,0.30f)
+//
+//            var tableamountHeader: PdfPTable = PdfPTable(widthsamount)
+//            tableamountHeader.getDefaultCell().setHorizontalAlignment(Element.ALIGN_LEFT)
+//            tableamountHeader.setWidthPercentage(100f)
+//
+//            val cellamount = PdfPCell(Phrase(convertIntoWords(obj.amount!!.toDouble(),"en","US")+"Only  "+"  "+"Total Amount: " + "\u20B9" + obj.amount, font))
+//            cellamount.setHorizontalAlignment(Element.ALIGN_LEFT)
+//            cellamount.borderColor = BaseColor.GRAY
+//            tableamountHeader.addCell(cellamount)
+
+
+//            document.add(tableamountHeader)
+
+            val para = Paragraph()
+            val glue = Chunk(VerticalPositionMark())
+            val ph1 = Phrase()
+            val main = Paragraph()
+            //ph1.add(Chunk("Rupees " + convertIntoWords(obj.amount!!.toDouble(), "en", "US")!!.toUpperCase() + " Only  ", font))
+
+            //new code begin
+            var intP = ""
+            var decPart = ""
+            var finalConcatWord = ""
+            tAmt = String.format("%.2f",tAmt.toDouble()) // 52.70
+            if(tAmt.contains(".")){
+                intP = String.format("%.2f",tAmt.toDouble()).split(".").get(0).toString() //52
+                decPart = String.format("%.2f",tAmt.toDouble()).split(".").get(1).toString() //70
+                finalConcatWord = NumberToWords.numberToWord(intP.toDouble().toInt()!!)!!.toUpperCase()+" Rupees "+
+                        NumberToWords.numberToWord(decPart.toDouble().toInt()!!)!!.toUpperCase()+" Paisa"  //52 rupees 70 paisa
+                if(NumberToWords.numberToWord(decPart.toDouble().toInt()!!)!!.toUpperCase().contains("ZERO")){
+                    ph1.add(Chunk( NumberToWords.numberToWord(intP.toDouble().toInt()!!)!!.toUpperCase() + " Only  ", fontSmall))
+                }else{
+                    ph1.add(Chunk( finalConcatWord + " Only  ", fontSmall))
+                }
+            }
+            //new code end
+
+            //ph1.add(Chunk("Rupees " + NumberToWords.numberToWord(obj.amount!!.toDouble().toInt()!!)!!.toUpperCase() + " Only  ", font))
+
+            ph1.add(glue) // Here I add special chunk to the same phrase.
+
+            ph1.add(Chunk("Total Amount: " + "\u20B9" + /*obj.amount*/ tAmt.toString(), font))
+            para.add(ph1)
+            document.add(para)
+
+//            val TotalAmountword = Paragraph("" + "\u20B9" + convertIntoWords(obj.amount!!.toDouble(),"en","US"), font)
+//            TotalAmountword.alignment = Element.ALIGN_LEFT
+//            TotalAmountword.spacingAfter = 2f
+//            document.add(TotalAmountword)
+//
+//
+//            val TotalAmount = Paragraph("Total Amount:" + "\u20B9" + obj.amount, font)
+//            TotalAmount.alignment = Element.ALIGN_RIGHT
+//            TotalAmount.spacingAfter = 2f
+//            document.add(TotalAmount)
+
+            val xfx = Paragraph("", font)
+            xfx.spacingAfter = 12f
+            document.add(xfx)
+
+
+            val widthsSalesPerson = floatArrayOf(1f)
+
+            var tablewidthsSalesPersonHeader: PdfPTable = PdfPTable(widthsSalesPerson)
+            tablewidthsSalesPersonHeader.getDefaultCell().setHorizontalAlignment(Element.ALIGN_LEFT)
+            tablewidthsSalesPersonHeader.setWidthPercentage(100f)
+
+            val cellsales = PdfPCell(Phrase("Entered by: " + Pref.user_name, font1))
+            cellsales.setHorizontalAlignment(Element.ALIGN_LEFT)
+            cellsales.borderColor = BaseColor.GRAY
+            tablewidthsSalesPersonHeader.addCell(cellsales)
+
+
+            document.add(tablewidthsSalesPersonHeader)
+
+
+
+//            val salesPerson = Paragraph("Entered by: " + Pref.user_name, font)
+//            salesPerson.alignment = Element.ALIGN_LEFT
+//            salesPerson.spacingAfter = 10f
+//            document.add(salesPerson)
+
+            document.close()
+
+            var sendingPath = path + fileName + ".pdf"
+            if (!TextUtils.isEmpty(sendingPath)) {
+                try {
+                    val shareIntent = Intent(Intent.ACTION_SEND)
+                    val fileUrl = Uri.parse(sendingPath)
+                    val file = File(fileUrl.path)
+                    val uri: Uri = FileProvider.getUriForFile(mContext, mContext.applicationContext.packageName.toString() + ".provider", file)
+                    shareIntent.type = "image/png"
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+                    startActivity(Intent.createChooser(shareIntent, "Share pdf using"))
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.something_went_wrong1))
+                }
+            }
+        }
+        catch (ex: Exception){
+            ex.printStackTrace()
+            (mContext as DashboardActivity).showSnackMessage(getString(R.string.something_went_wrong))
+        }
     }
 
     private fun voiceCollectionMsg() {
@@ -984,6 +1657,11 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
         addOrder.user_id = Pref.user_id
         addOrder.latitude = order.order_lat
         addOrder.longitude = order.order_long
+
+        if ( order.scheme_amount != null)
+            addOrder.scheme_amount = order.scheme_amount
+        else
+            addOrder.scheme_amount = ""
 
         if (order.remarks != null)
             addOrder.remarks = order.remarks
@@ -1027,6 +1705,17 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                 addOrder.address = ""
         }
 
+        /*06-01-2022*/
+        if (order.Hospital != null)
+            addOrder.Hospital = order.Hospital
+        else
+            addOrder.Hospital = ""
+
+        if (order.Email_Address != null)
+            addOrder.Email_Address = order.Email_Address
+        else
+            addOrder.Email_Address = ""
+
         val list = AppDatabase.getDBInstance()!!.orderProductListDao().getDataAccordingToShopAndOrderId(order.order_id!!, shop_id!!)
         val productList = java.util.ArrayList<AddOrderInputProductList>()
 
@@ -1037,6 +1726,16 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
             product.rate = list[i].rate
             product.total_price = list[i].total_price
             product.product_name = list[i].product_name
+            product.scheme_qty = list[i].scheme_qty
+            product.scheme_rate = list[i].scheme_rate
+            product.total_scheme_price = list[i].total_scheme_price
+
+            product.MRP = list[i].MRP
+
+            //mantis 25601
+            product.order_mrp = list[i].order_mrp
+            product.order_discount = list[i].order_discount
+
             productList.add(product)
         }
 
@@ -1183,6 +1882,29 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
         var uniqKeyObj=AppDatabase.getDBInstance()!!.shopActivityDao().getNewShopActivityKey(mAddShopDBModelEntity.shop_id!!,false)
         addShopData.shop_revisit_uniqKey=uniqKeyObj?.shop_revisit_uniqKey!!
 
+        addShopData.project_name = mAddShopDBModelEntity.project_name
+        addShopData.landline_number = mAddShopDBModelEntity.landline_number
+        addShopData.agency_name = mAddShopDBModelEntity.agency_name
+
+
+        addShopData.alternateNoForCustomer = mAddShopDBModelEntity.alternateNoForCustomer
+        addShopData.whatsappNoForCustomer = mAddShopDBModelEntity.whatsappNoForCustomer
+
+        // duplicate shop api call
+        addShopData.isShopDuplicate=mAddShopDBModelEntity.isShopDuplicate
+        addShopData.purpose=mAddShopDBModelEntity.purpose
+//start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+        try {
+            addShopData.FSSAILicNo = mAddShopDBModelEntity.FSSAILicNo
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            addShopData.FSSAILicNo = ""
+        }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+
+        addShopData.GSTN_Number=mAddShopDBModelEntity.gstN_Number
+        addShopData.ShopOwner_PAN=mAddShopDBModelEntity.shopOwner_PAN
+
         callAddShopApi(addShopData, mAddShopDBModelEntity.shopImageLocalPath, shop_id, collection_id, amount, collection,
                 currentDateForShopActi, desc, billId, mAddShopDBModelEntity.doc_degree, orderId, collectionDetails)
     }
@@ -1202,72 +1924,72 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
 
         isShopRegistrationInProcess = true
 
-        XLog.d("==============================SyncShop Input Params(Shop List)==============================")
-        XLog.d("shop id=======> " + addShop.shop_id)
+        Timber.d("==============================SyncShop Input Params(Shop List)==============================")
+        Timber.d("shop id=======> " + addShop.shop_id)
         val index = addShop.shop_id!!.indexOf("_")
-        XLog.d("decoded shop id=======> " + addShop.user_id + "_" + AppUtils.getDate(addShop.shop_id!!.substring(index + 1, addShop.shop_id!!.length).toLong()))
-        XLog.d("shop added date=======> " + addShop.added_date)
-        XLog.d("shop address=======> " + addShop.address)
-        XLog.d("assigned to dd id=======> " + addShop.assigned_to_dd_id)
-        XLog.d("assigned to pp id=======> " + addShop.assigned_to_pp_id)
-        XLog.d("date aniversery=======> " + addShop.date_aniversary)
-        XLog.d("dob=======> " + addShop.dob)
-        XLog.d("shop owner phn no=======> " + addShop.owner_contact_no)
-        XLog.d("shop owner email=======> " + addShop.owner_email)
-        XLog.d("shop owner name=======> " + addShop.owner_name)
-        XLog.d("shop pincode=======> " + addShop.pin_code)
-        XLog.d("session token=======> " + addShop.session_token)
-        XLog.d("shop lat=======> " + addShop.shop_lat)
-        XLog.d("shop long=======> " + addShop.shop_long)
-        XLog.d("shop name=======> " + addShop.shop_name)
-        XLog.d("shop type=======> " + addShop.type)
-        XLog.d("user id=======> " + addShop.user_id)
-        XLog.d("amount=======> " + addShop.amount)
-        XLog.d("area id=======> " + addShop.area_id)
-        XLog.d("model id=======> " + addShop.model_id)
-        XLog.d("primary app id=======> " + addShop.primary_app_id)
-        XLog.d("secondary app id=======> " + addShop.secondary_app_id)
-        XLog.d("lead id=======> " + addShop.lead_id)
-        XLog.d("stage id=======> " + addShop.stage_id)
-        XLog.d("funnel stage id=======> " + addShop.funnel_stage_id)
-        XLog.d("booking amount=======> " + addShop.booking_amount)
-        XLog.d("type id=======> " + addShop.type_id)
+        Timber.d("decoded shop id=======> " + addShop.user_id + "_" + AppUtils.getDate(addShop.shop_id!!.substring(index + 1, addShop.shop_id!!.length).toLong()))
+        Timber.d("shop added date=======> " + addShop.added_date)
+        Timber.d("shop address=======> " + addShop.address)
+        Timber.d("assigned to dd id=======> " + addShop.assigned_to_dd_id)
+        Timber.d("assigned to pp id=======> " + addShop.assigned_to_pp_id)
+        Timber.d("date aniversery=======> " + addShop.date_aniversary)
+        Timber.d("dob=======> " + addShop.dob)
+        Timber.d("shop owner phn no=======> " + addShop.owner_contact_no)
+        Timber.d("shop owner email=======> " + addShop.owner_email)
+        Timber.d("shop owner name=======> " + addShop.owner_name)
+        Timber.d("shop pincode=======> " + addShop.pin_code)
+        Timber.d("session token=======> " + addShop.session_token)
+        Timber.d("shop lat=======> " + addShop.shop_lat)
+        Timber.d("shop long=======> " + addShop.shop_long)
+        Timber.d("shop name=======> " + addShop.shop_name)
+        Timber.d("shop type=======> " + addShop.type)
+        Timber.d("user id=======> " + addShop.user_id)
+        Timber.d("amount=======> " + addShop.amount)
+        Timber.d("area id=======> " + addShop.area_id)
+        Timber.d("model id=======> " + addShop.model_id)
+        Timber.d("primary app id=======> " + addShop.primary_app_id)
+        Timber.d("secondary app id=======> " + addShop.secondary_app_id)
+        Timber.d("lead id=======> " + addShop.lead_id)
+        Timber.d("stage id=======> " + addShop.stage_id)
+        Timber.d("funnel stage id=======> " + addShop.funnel_stage_id)
+        Timber.d("booking amount=======> " + addShop.booking_amount)
+        Timber.d("type id=======> " + addShop.type_id)
 
         if (shop_imgPath != null)
-            XLog.d("shop image path=======> $shop_imgPath")
-        XLog.d("director name=======> " + addShop.director_name)
-        XLog.d("family member dob=======> " + addShop.family_member_dob)
-        XLog.d("key person's name=======> " + addShop.key_person_name)
-        XLog.d("phone no=======> " + addShop.phone_no)
-        XLog.d("additional dob=======> " + addShop.addtional_dob)
-        XLog.d("additional doa=======> " + addShop.addtional_doa)
-        XLog.d("doctor family member dob=======> " + addShop.doc_family_member_dob)
-        XLog.d("specialization=======> " + addShop.specialization)
-        XLog.d("average patient count per day=======> " + addShop.average_patient_per_day)
-        XLog.d("category=======> " + addShop.category)
-        XLog.d("doctor address=======> " + addShop.doc_address)
-        XLog.d("doctor pincode=======> " + addShop.doc_pincode)
-        XLog.d("chambers or hospital under same headquarter=======> " + addShop.is_chamber_same_headquarter)
-        XLog.d("chamber related remarks=======> " + addShop.is_chamber_same_headquarter_remarks)
-        XLog.d("chemist name=======> " + addShop.chemist_name)
-        XLog.d("chemist name=======> " + addShop.chemist_address)
-        XLog.d("chemist pincode=======> " + addShop.chemist_pincode)
-        XLog.d("assistant name=======> " + addShop.assistant_name)
-        XLog.d("assistant contact no=======> " + addShop.assistant_contact_no)
-        XLog.d("assistant dob=======> " + addShop.assistant_dob)
-        XLog.d("assistant date of anniversary=======> " + addShop.assistant_doa)
-        XLog.d("assistant family dob=======> " + addShop.assistant_family_dob)
-        XLog.d("entity id=======> " + addShop.entity_id)
-        XLog.d("party status id=======> " + addShop.party_status_id)
-        XLog.d("retailer id=======> " + addShop.retailer_id)
-        XLog.d("dealer id=======> " + addShop.dealer_id)
-        XLog.d("beat id=======> " + addShop.beat_id)
-        XLog.d("assigned to shop id=======> " + addShop.assigned_to_shop_id)
-        XLog.d("actual address=======> " + addShop.actual_address)
+            Timber.d("shop image path=======> $shop_imgPath")
+        Timber.d("director name=======> " + addShop.director_name)
+        Timber.d("family member dob=======> " + addShop.family_member_dob)
+        Timber.d("key person's name=======> " + addShop.key_person_name)
+        Timber.d("phone no=======> " + addShop.phone_no)
+        Timber.d("additional dob=======> " + addShop.addtional_dob)
+        Timber.d("additional doa=======> " + addShop.addtional_doa)
+        Timber.d("doctor family member dob=======> " + addShop.doc_family_member_dob)
+        Timber.d("specialization=======> " + addShop.specialization)
+        Timber.d("average patient count per day=======> " + addShop.average_patient_per_day)
+        Timber.d("category=======> " + addShop.category)
+        Timber.d("doctor address=======> " + addShop.doc_address)
+        Timber.d("doctor pincode=======> " + addShop.doc_pincode)
+        Timber.d("chambers or hospital under same headquarter=======> " + addShop.is_chamber_same_headquarter)
+        Timber.d("chamber related remarks=======> " + addShop.is_chamber_same_headquarter_remarks)
+        Timber.d("chemist name=======> " + addShop.chemist_name)
+        Timber.d("chemist name=======> " + addShop.chemist_address)
+        Timber.d("chemist pincode=======> " + addShop.chemist_pincode)
+        Timber.d("assistant name=======> " + addShop.assistant_name)
+        Timber.d("assistant contact no=======> " + addShop.assistant_contact_no)
+        Timber.d("assistant dob=======> " + addShop.assistant_dob)
+        Timber.d("assistant date of anniversary=======> " + addShop.assistant_doa)
+        Timber.d("assistant family dob=======> " + addShop.assistant_family_dob)
+        Timber.d("entity id=======> " + addShop.entity_id)
+        Timber.d("party status id=======> " + addShop.party_status_id)
+        Timber.d("retailer id=======> " + addShop.retailer_id)
+        Timber.d("dealer id=======> " + addShop.dealer_id)
+        Timber.d("beat id=======> " + addShop.beat_id)
+        Timber.d("assigned to shop id=======> " + addShop.assigned_to_shop_id)
+        Timber.d("actual address=======> " + addShop.actual_address)
 
         if (degree_imgPath != null)
-            XLog.d("doctor degree image path=======> $degree_imgPath")
-        XLog.d("=================================================================================")
+            Timber.d("doctor degree image path=======> $degree_imgPath")
+        Timber.d("=================================================================================")
 
         if (TextUtils.isEmpty(shop_imgPath) && TextUtils.isEmpty(degree_imgPath)) {
             val repository = AddShopRepositoryProvider.provideAddShopWithoutImageRepository()
@@ -1277,7 +1999,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val addShopResult = result as AddShopResponse
-                                XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
+                                Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
                                 when (addShopResult.status) {
                                     NetworkConstant.SUCCESS -> {
                                         AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
@@ -1296,7 +2018,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
 
                                     }
                                     NetworkConstant.DUPLICATE_SHOP_ID -> {
-                                        XLog.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
+                                        Timber.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
                                         AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
                                         progress_wheel.stopSpinning()
                                         (mContext as DashboardActivity).showSnackMessage(addShopResult.message!!)
@@ -1330,7 +2052,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                                 (mContext as DashboardActivity).showSnackMessage("Collection added successfully")
                                 isShopRegistrationInProcess = false
                                 if (error != null)
-                                    XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
+                                    Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
                             })
             )
         }
@@ -1342,7 +2064,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val addShopResult = result as AddShopResponse
-                                XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
+                                Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
                                 when (addShopResult.status) {
                                     NetworkConstant.SUCCESS -> {
                                         AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
@@ -1361,7 +2083,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
 
                                     }
                                     NetworkConstant.DUPLICATE_SHOP_ID -> {
-                                        XLog.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
+                                        Timber.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
                                         AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
                                         progress_wheel.stopSpinning()
                                         (mContext as DashboardActivity).showSnackMessage(addShopResult.message!!)
@@ -1395,7 +2117,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                                 (mContext as DashboardActivity).showSnackMessage("Collection added successfully")
                                 isShopRegistrationInProcess = false
                                 if (error != null)
-                                    XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
+                                    Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
                             })
             )
         }
@@ -1442,6 +2164,12 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
 
         if (collectionDetails.patient_no != null)
             addCollection.patient_no = collectionDetails.patient_no!!
+            /*06-01-2022*/
+        if (collectionDetails.Hospital != null)
+            addCollection.Hospital = collectionDetails.Hospital!!
+
+        if (collectionDetails.Email_Address != null)
+            addCollection.Email_Address = collectionDetails.Email_Address!!
 
         progress_wheel.spin()
         if (TextUtils.isEmpty(collectionDetails.file_path)) {
@@ -1544,6 +2272,16 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
         addOrder.latitude = order_lat
         addOrder.longitude = order_long
 
+        if (orderListDetails!!.scheme_amount != null)
+            addOrder.scheme_amount = orderListDetails!!.scheme_amount
+        else
+            addOrder.scheme_amount = ""
+
+        if (orderListDetails!!.scheme_amount != null)
+            addOrder.scheme_amount = orderListDetails!!.scheme_amount
+        else
+            addOrder.scheme_amount = ""
+
         if (remarks != null)
             addOrder.remarks = remarks
         else
@@ -1587,6 +2325,17 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                 addOrder.address = ""
         }
 
+        /*06-01-2022*/
+        if (orderListDetails.Hospital != null)
+            addOrder.Hospital = orderListDetails.Hospital
+        else
+            addOrder.Hospital = ""
+
+        if (orderListDetails.Email_Address != null)
+            addOrder.Email_Address = orderListDetails.Email_Address
+        else
+            addOrder.Email_Address = ""
+
         val list = AppDatabase.getDBInstance()!!.orderProductListDao().getDataAccordingToShopAndOrderId(order_id!!, shop_id!!)
         val productList = ArrayList<AddOrderInputProductList>()
 
@@ -1597,6 +2346,15 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
             product.rate = list[i].rate
             product.total_price = list[i].total_price
             product.product_name = list[i].product_name
+            product.scheme_qty = list[i].scheme_qty
+            product.scheme_rate = list[i].scheme_rate
+            product.total_scheme_price = list[i].total_scheme_price
+
+            product.MRP = list[i].MRP
+
+            //mantis 25601
+            product.order_mrp = list[i].order_mrp
+            product.order_discount = list[i].order_discount
             productList.add(product)
         }
 
@@ -1612,7 +2370,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val orderList_ = result as BaseResponse
-                                XLog.d("NewDateWiseOrderList: Add Order:= " + "\nstatus=========> " + orderList_.status + " , message======> " + orderList_.message)
+                                Timber.d("NewDateWiseOrderList: Add Order:= " + "\nstatus=========> " + orderList_.status + " , message======> " + orderList_.message)
                                 progress_wheel.stopSpinning()
                                 if (orderList_.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()!!.orderDetailsListDao().updateIsUploaded(true, order_id)
@@ -1621,7 +2379,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
 
                                     /*if (shopActivityList[0].isVisited && shopActivityList[0].isDurationCalculated) {
                                     AppDatabase.getDBInstance()!!.shopActivityDao().updateisUploaded(true, shop_id, AppUtils.getCurrentDateForShopActi())
-                                    XLog.d("================sync locally shop visited (date wise order list)===============")
+                                    Timber.d("================sync locally shop visited (date wise order list)===============")
                                 }*/
 
                                     (mContext as DashboardActivity).showSnackMessage("Synced successfully")
@@ -1633,7 +2391,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                             }, { error ->
                                 error.printStackTrace()
                                 if (error.message != null)
-                                    XLog.d("NewDateWiseOrderList:  Add Order:= ERROR=========> " + error.message)
+                                    Timber.d("NewDateWiseOrderList:  Add Order:= ERROR=========> " + error.message)
                                 progress_wheel.stopSpinning()
                                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.unable_to_sync))
                             })
@@ -1647,7 +2405,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val orderList_ = result as BaseResponse
-                                XLog.d("NewDateWiseOrderList: Add Order:= " + "\nstatus=========> " + orderList_.status + " , message======> " + orderList_.message)
+                                Timber.d("NewDateWiseOrderList: Add Order:= " + "\nstatus=========> " + orderList_.status + " , message======> " + orderList_.message)
                                 progress_wheel.stopSpinning()
                                 if (orderList_.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()!!.orderDetailsListDao().updateIsUploaded(true, order_id)
@@ -1656,7 +2414,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
 
                                     /*if (shopActivityList[0].isVisited && shopActivityList[0].isDurationCalculated) {
                                     AppDatabase.getDBInstance()!!.shopActivityDao().updateisUploaded(true, shop_id, AppUtils.getCurrentDateForShopActi())
-                                    XLog.d("================sync locally shop visited (date wise order list)===============")
+                                    Timber.d("================sync locally shop visited (date wise order list)===============")
                                 }*/
 
                                     (mContext as DashboardActivity).showSnackMessage("Synced successfully")
@@ -1668,7 +2426,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                             }, { error ->
                                 error.printStackTrace()
                                 if (error.message != null)
-                                    XLog.d("NewDateWiseOrderList:  Add Order:= ERROR=========> " + error.message)
+                                    Timber.d("NewDateWiseOrderList:  Add Order:= ERROR=========> " + error.message)
                                 progress_wheel.stopSpinning()
                                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.unable_to_sync))
                             })
@@ -1761,6 +2519,31 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
         var uniqKeyObj=AppDatabase.getDBInstance()!!.shopActivityDao().getNewShopActivityKey(shop.shop_id!!,false)
         addShopData.shop_revisit_uniqKey=uniqKeyObj?.shop_revisit_uniqKey!!
 
+        addShopData.project_name = shop.project_name
+        addShopData.landline_number = shop.landline_number
+        addShopData.agency_name = shop.agency_name
+
+
+        addShopData.alternateNoForCustomer = shop.alternateNoForCustomer
+        addShopData.whatsappNoForCustomer = shop.whatsappNoForCustomer
+
+        // duplicate shop api call
+        addShopData.isShopDuplicate=shop.isShopDuplicate
+
+        addShopData.purpose=shop.purpose
+//start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+        try {
+            addShopData.FSSAILicNo = shop.FSSAILicNo
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            addShopData.FSSAILicNo = ""
+        }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+
+        addShopData.GSTN_Number=shop.gstN_Number
+        addShopData.ShopOwner_PAN=shop.shopOwner_PAN
+
+
         callAddShopApi(addShopData, shop.shopImageLocalPath, position, list, shop.doc_degree)
         //}
     }
@@ -1775,77 +2558,77 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
         progress_wheel.spin()
 
 
-        XLog.d("================SyncShop Input Params (Datewise Order List)================")
-        XLog.d("shop id=======> " + addShop.shop_id)
+        Timber.d("================SyncShop Input Params (Datewise Order List)================")
+        Timber.d("shop id=======> " + addShop.shop_id)
         val index = addShop.shop_id!!.indexOf("_")
-        XLog.d("decoded shop id=======> " + addShop.user_id + "_" + AppUtils.getDate(addShop.shop_id!!.substring(index + 1, addShop.shop_id!!.length).toLong()))
-        XLog.d("shop added date=======> " + addShop.added_date)
-        XLog.d("shop address=======> " + addShop.address)
-        XLog.d("assigned to dd id=======> " + addShop.assigned_to_dd_id)
-        XLog.d("assigned to pp id=======> " + addShop.assigned_to_pp_id)
-        XLog.d("date aniversery=======> " + addShop.date_aniversary)
-        XLog.d("dob=======> " + addShop.dob)
-        XLog.d("shop owner phn no=======> " + addShop.owner_contact_no)
-        XLog.d("shop owner email=======> " + addShop.owner_email)
-        XLog.d("shop owner name=======> " + addShop.owner_name)
-        XLog.d("shop pincode=======> " + addShop.pin_code)
-        XLog.d("session token=======> " + addShop.session_token)
-        XLog.d("shop lat=======> " + addShop.shop_lat)
-        XLog.d("shop long=======> " + addShop.shop_long)
-        XLog.d("shop name=======> " + addShop.shop_name)
-        XLog.d("shop type=======> " + addShop.type)
-        XLog.d("user id=======> " + addShop.user_id)
-        XLog.d("amount=======> " + addShop.amount)
-        XLog.d("area id=======> " + addShop.area_id)
-        XLog.d("model id=======> " + addShop.model_id)
-        XLog.d("primary app id=======> " + addShop.primary_app_id)
-        XLog.d("secondary app id=======> " + addShop.secondary_app_id)
-        XLog.d("lead id=======> " + addShop.lead_id)
-        XLog.d("stage id=======> " + addShop.stage_id)
-        XLog.d("funnel stage id=======> " + addShop.funnel_stage_id)
-        XLog.d("booking amount=======> " + addShop.booking_amount)
-        XLog.d("type id=======> " + addShop.type_id)
+        Timber.d("decoded shop id=======> " + addShop.user_id + "_" + AppUtils.getDate(addShop.shop_id!!.substring(index + 1, addShop.shop_id!!.length).toLong()))
+        Timber.d("shop added date=======> " + addShop.added_date)
+        Timber.d("shop address=======> " + addShop.address)
+        Timber.d("assigned to dd id=======> " + addShop.assigned_to_dd_id)
+        Timber.d("assigned to pp id=======> " + addShop.assigned_to_pp_id)
+        Timber.d("date aniversery=======> " + addShop.date_aniversary)
+        Timber.d("dob=======> " + addShop.dob)
+        Timber.d("shop owner phn no=======> " + addShop.owner_contact_no)
+        Timber.d("shop owner email=======> " + addShop.owner_email)
+        Timber.d("shop owner name=======> " + addShop.owner_name)
+        Timber.d("shop pincode=======> " + addShop.pin_code)
+        Timber.d("session token=======> " + addShop.session_token)
+        Timber.d("shop lat=======> " + addShop.shop_lat)
+        Timber.d("shop long=======> " + addShop.shop_long)
+        Timber.d("shop name=======> " + addShop.shop_name)
+        Timber.d("shop type=======> " + addShop.type)
+        Timber.d("user id=======> " + addShop.user_id)
+        Timber.d("amount=======> " + addShop.amount)
+        Timber.d("area id=======> " + addShop.area_id)
+        Timber.d("model id=======> " + addShop.model_id)
+        Timber.d("primary app id=======> " + addShop.primary_app_id)
+        Timber.d("secondary app id=======> " + addShop.secondary_app_id)
+        Timber.d("lead id=======> " + addShop.lead_id)
+        Timber.d("stage id=======> " + addShop.stage_id)
+        Timber.d("funnel stage id=======> " + addShop.funnel_stage_id)
+        Timber.d("booking amount=======> " + addShop.booking_amount)
+        Timber.d("type id=======> " + addShop.type_id)
 
         if (shop_imgPath != null)
-            XLog.d("shop image path=======> $shop_imgPath")
-        XLog.d("director name=======> " + addShop.director_name)
-        XLog.d("family member dob=======> " + addShop.family_member_dob)
-        XLog.d("key person's name=======> " + addShop.key_person_name)
-        XLog.d("phone no=======> " + addShop.phone_no)
-        XLog.d("additional dob=======> " + addShop.addtional_dob)
-        XLog.d("additional doa=======> " + addShop.addtional_doa)
-        XLog.d("family member dob=======> " + addShop.family_member_dob)
-        XLog.d("key person's name=======> " + addShop.key_person_name)
-        XLog.d("phone no=======> " + addShop.phone_no)
-        XLog.d("additional dob=======> " + addShop.addtional_dob)
-        XLog.d("additional doa=======> " + addShop.addtional_doa)
-        XLog.d("doctor family member dob=======> " + addShop.doc_family_member_dob)
-        XLog.d("specialization=======> " + addShop.specialization)
-        XLog.d("average patient count per day=======> " + addShop.average_patient_per_day)
-        XLog.d("category=======> " + addShop.category)
-        XLog.d("doctor address=======> " + addShop.doc_address)
-        XLog.d("doctor pincode=======> " + addShop.doc_pincode)
-        XLog.d("chambers or hospital under same headquarter=======> " + addShop.is_chamber_same_headquarter)
-        XLog.d("chamber related remarks=======> " + addShop.is_chamber_same_headquarter_remarks)
-        XLog.d("chemist name=======> " + addShop.chemist_name)
-        XLog.d("chemist name=======> " + addShop.chemist_address)
-        XLog.d("chemist pincode=======> " + addShop.chemist_pincode)
-        XLog.d("assistant name=======> " + addShop.assistant_name)
-        XLog.d("assistant contact no=======> " + addShop.assistant_contact_no)
-        XLog.d("assistant dob=======> " + addShop.assistant_dob)
-        XLog.d("assistant date of anniversary=======> " + addShop.assistant_doa)
-        XLog.d("assistant family dob=======> " + addShop.assistant_family_dob)
-        XLog.d("entity id=======> " + addShop.entity_id)
-        XLog.d("party status id=======> " + addShop.party_status_id)
-        XLog.d("retailer id=======> " + addShop.retailer_id)
-        XLog.d("dealer id=======> " + addShop.dealer_id)
-        XLog.d("beat id=======> " + addShop.beat_id)
-        XLog.d("assigned to shop id=======> " + addShop.assigned_to_shop_id)
-        XLog.d("actual address=======> " + addShop.actual_address)
+            Timber.d("shop image path=======> $shop_imgPath")
+        Timber.d("director name=======> " + addShop.director_name)
+        Timber.d("family member dob=======> " + addShop.family_member_dob)
+        Timber.d("key person's name=======> " + addShop.key_person_name)
+        Timber.d("phone no=======> " + addShop.phone_no)
+        Timber.d("additional dob=======> " + addShop.addtional_dob)
+        Timber.d("additional doa=======> " + addShop.addtional_doa)
+        Timber.d("family member dob=======> " + addShop.family_member_dob)
+        Timber.d("key person's name=======> " + addShop.key_person_name)
+        Timber.d("phone no=======> " + addShop.phone_no)
+        Timber.d("additional dob=======> " + addShop.addtional_dob)
+        Timber.d("additional doa=======> " + addShop.addtional_doa)
+        Timber.d("doctor family member dob=======> " + addShop.doc_family_member_dob)
+        Timber.d("specialization=======> " + addShop.specialization)
+        Timber.d("average patient count per day=======> " + addShop.average_patient_per_day)
+        Timber.d("category=======> " + addShop.category)
+        Timber.d("doctor address=======> " + addShop.doc_address)
+        Timber.d("doctor pincode=======> " + addShop.doc_pincode)
+        Timber.d("chambers or hospital under same headquarter=======> " + addShop.is_chamber_same_headquarter)
+        Timber.d("chamber related remarks=======> " + addShop.is_chamber_same_headquarter_remarks)
+        Timber.d("chemist name=======> " + addShop.chemist_name)
+        Timber.d("chemist name=======> " + addShop.chemist_address)
+        Timber.d("chemist pincode=======> " + addShop.chemist_pincode)
+        Timber.d("assistant name=======> " + addShop.assistant_name)
+        Timber.d("assistant contact no=======> " + addShop.assistant_contact_no)
+        Timber.d("assistant dob=======> " + addShop.assistant_dob)
+        Timber.d("assistant date of anniversary=======> " + addShop.assistant_doa)
+        Timber.d("assistant family dob=======> " + addShop.assistant_family_dob)
+        Timber.d("entity id=======> " + addShop.entity_id)
+        Timber.d("party status id=======> " + addShop.party_status_id)
+        Timber.d("retailer id=======> " + addShop.retailer_id)
+        Timber.d("dealer id=======> " + addShop.dealer_id)
+        Timber.d("beat id=======> " + addShop.beat_id)
+        Timber.d("assigned to shop id=======> " + addShop.assigned_to_shop_id)
+        Timber.d("actual address=======> " + addShop.actual_address)
 
         if (degree_imgPath != null)
-            XLog.d("doctor degree image path=======> $degree_imgPath")
-        XLog.d("========================================================================")
+            Timber.d("doctor degree image path=======> $degree_imgPath")
+        Timber.d("========================================================================")
 
         if (TextUtils.isEmpty(shop_imgPath) && TextUtils.isEmpty(degree_imgPath)) {
             val repository = AddShopRepositoryProvider.provideAddShopWithoutImageRepository()
@@ -1855,7 +2638,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val addShopResult = result as AddShopResponse
-                                XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
+                                Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
                                 when (addShopResult.status) {
                                     NetworkConstant.SUCCESS -> {
                                         AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
@@ -1873,14 +2656,14 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
 
                                     }
                                     NetworkConstant.DUPLICATE_SHOP_ID -> {
-                                        XLog.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
+                                        Timber.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
                                         AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
                                         progress_wheel.stopSpinning()
                                         //(mContext as DashboardActivity).showSnackMessage(addShopResult.message!!)
                                         if (AppDatabase.getDBInstance()!!.addShopEntryDao().getDuplicateShopData(addShop.owner_contact_no).size > 0) {
                                             AppDatabase.getDBInstance()!!.addShopEntryDao().deleteShopById(addShop.shop_id)
 
-                                            XLog.d("=======Duplicate shop deleted from shop activity table (Date wise Order)============")
+                                            Timber.d("=======Duplicate shop deleted from shop activity table (Date wise Order)============")
                                             AppDatabase.getDBInstance()!!.shopActivityDao().deleteShopByIdAndDate(addShop.shop_id!!, AppUtils.getCurrentDateForShopActi())
                                         }
                                         doAsync {
@@ -1906,7 +2689,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                                 progress_wheel.stopSpinning()
                                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.unable_to_sync))
                                 if (error != null)
-                                    XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
+                                    Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
                             })
             )
         }
@@ -1918,7 +2701,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val addShopResult = result as AddShopResponse
-                                XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
+                                Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
                                 when (addShopResult.status) {
                                     NetworkConstant.SUCCESS -> {
                                         AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
@@ -1936,14 +2719,14 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
 
                                     }
                                     NetworkConstant.DUPLICATE_SHOP_ID -> {
-                                        XLog.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
+                                        Timber.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
                                         AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
                                         progress_wheel.stopSpinning()
                                         //(mContext as DashboardActivity).showSnackMessage(addShopResult.message!!)
                                         if (AppDatabase.getDBInstance()!!.addShopEntryDao().getDuplicateShopData(addShop.owner_contact_no).size > 0) {
                                             AppDatabase.getDBInstance()!!.addShopEntryDao().deleteShopById(addShop.shop_id)
 
-                                            XLog.d("=======Duplicate shop deleted from shop activity table (Date wise Order)============")
+                                            Timber.d("=======Duplicate shop deleted from shop activity table (Date wise Order)============")
                                             AppDatabase.getDBInstance()!!.shopActivityDao().deleteShopByIdAndDate(addShop.shop_id!!, AppUtils.getCurrentDateForShopActi())
                                         }
                                         doAsync {
@@ -1969,7 +2752,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                                 progress_wheel.stopSpinning()
                                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.unable_to_sync))
                                 if (error != null)
-                                    XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
+                                    Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
                             })
             )
         }
@@ -2045,6 +2828,37 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
 
             shopDurationData.shop_revisit_uniqKey = shopActivity.shop_revisit_uniqKey!!
 
+            /*10-12-2021*/
+            shopDurationData.updated_by = Pref.user_id
+            try {
+                shopDurationData.updated_on = shopActivity.updated_on!!
+            }
+            catch(ex:Exception){
+                shopDurationData.updated_on = ""
+            }
+
+            if (!TextUtils.isEmpty(shopActivity.pros_id!!))
+                shopDurationData.pros_id = shopActivity.pros_id!!
+            else
+                shopDurationData.pros_id = ""
+
+            if (!TextUtils.isEmpty(shopActivity.agency_name!!))
+                shopDurationData.agency_name =shopActivity.agency_name!!
+            else
+                shopDurationData.agency_name = ""
+
+            if (!TextUtils.isEmpty(shopActivity.approximate_1st_billing_value))
+                shopDurationData.approximate_1st_billing_value = shopActivity.approximate_1st_billing_value!!
+            else
+                shopDurationData.approximate_1st_billing_value = ""
+
+            //New shop Create issue
+            shopDurationData.isnewShop = shopActivity.isnewShop
+
+            // 1.0 NewDateWiseOrderListFragment AppV 4.0.6  multiple contact Data added on Api called
+            shopDurationData.multi_contact_name = shopActivity.multi_contact_name
+            shopDurationData.multi_contact_number = shopActivity.multi_contact_number
+
             shopDataList.add(shopDurationData)
         }
         else {
@@ -2103,6 +2917,39 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
 
                 shopDurationData.shop_revisit_uniqKey = shopActivity.shop_revisit_uniqKey!!
 
+                /*10-12-2021*/
+                shopDurationData.updated_by = Pref.user_id
+                try {
+                    shopDurationData.updated_on = shopActivity.updated_on!!
+                }
+                catch(ex:Exception){
+                    shopDurationData.updated_on = ""
+                }
+
+                if (!TextUtils.isEmpty(shopActivity.pros_id!!))
+                    shopDurationData.pros_id = shopActivity.pros_id!!
+                else
+                    shopDurationData.pros_id = ""
+
+                if (!TextUtils.isEmpty(shopActivity.agency_name!!))
+                    shopDurationData.agency_name =shopActivity.agency_name!!
+                else
+                    shopDurationData.agency_name = ""
+
+                if (!TextUtils.isEmpty(shopActivity.approximate_1st_billing_value))
+                    shopDurationData.approximate_1st_billing_value = shopActivity.approximate_1st_billing_value!!
+                else
+                    shopDurationData.approximate_1st_billing_value = ""
+
+                //New shop Create issue
+                shopDurationData.isnewShop = shopActivity.isnewShop
+
+                // 1.0 NewDateWiseOrderListFragment AppV 4.0.6  multiple contact Data added on Api called
+                shopDurationData.multi_contact_name = shopActivity.multi_contact_name
+                shopDurationData.multi_contact_number = shopActivity.multi_contact_number
+
+
+
                 shopDataList.add(shopDurationData)
             }
         }
@@ -2119,7 +2966,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
-                            XLog.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + ", RESPONSE:" + result.message)
+                            Timber.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + ", RESPONSE:" + result.message)
                             if (result.status == NetworkConstant.SUCCESS) {
 
                             }
@@ -2127,7 +2974,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                         }, { error ->
                             error.printStackTrace()
                             if (error != null)
-                                XLog.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + error.localizedMessage)
+                                Timber.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + error.localizedMessage)
 //                                (mContext as DashboardActivity).showSnackMessage("ERROR")
                         })
         )
@@ -2141,14 +2988,14 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
         if (!Pref.isMultipleVisitEnable) {
             if (shopActivityList[0].isVisited && shopActivityList[0].isDurationCalculated) {
                 AppDatabase.getDBInstance()!!.shopActivityDao().updateisUploaded(true, shop_id, AppUtils.getCurrentDateForShopActi())
-                XLog.d("================sync locally shop visited (date wise order list)===============")
+                Timber.d("================sync locally shop visited (date wise order list)===============")
             }
         }
         else {
             shopActivityList.forEach {
                 if (it.isVisited && it.isDurationCalculated) {
                     AppDatabase.getDBInstance()!!.shopActivityDao().updateisUploaded(true, shop_id, AppUtils.getCurrentDateForShopActi(), it.startTimeStamp)
-                    XLog.d("================sync locally shop visited (date wise order list)===============")
+                    Timber.d("================sync locally shop visited (date wise order list)===============")
                 }
             }
         }
@@ -2450,6 +3297,16 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
             else
                 addOrder.address = ""
         }
+        /*06-01-2022*/
+        if (order_list[i].Hospital != null)
+            addOrder.Hospital = order_list[i].Hospital
+        else
+            addOrder.Hospital = ""
+
+        if (order_list[i].Email_Address != null)
+            addOrder.Email_Address = order_list[i].Email_Address
+        else
+            addOrder.Email_Address = ""
 
         val list = AppDatabase.getDBInstance()!!.orderProductListDao().getDataAccordingToShopAndOrderId(order_list[i].order_id!!, order_list[i].shop_id!!)
         val productList = java.util.ArrayList<AddOrderInputProductList>()
@@ -2461,6 +3318,11 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
             product.rate = list[j].rate
             product.total_price = list[j].total_price
             product.product_name = list[j].product_name
+            product.MRP = list[j].MRP
+
+            //mantis 25601 23-01-2023
+            product.order_mrp = list[j].order_mrp
+            product.order_discount = list[j].order_discount
             productList.add(product)
         }
 

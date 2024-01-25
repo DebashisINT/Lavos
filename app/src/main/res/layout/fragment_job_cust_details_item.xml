@@ -5,7 +5,7 @@
     android:id="@+id/fl_job_cust_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/smoke_white">
+    android:background="@color/color_silver">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -329,7 +329,7 @@
                         android:textSize="@dimen/_11sdp" />
                 </LinearLayout>
             </LinearLayout>
-<!--            selector_job_btn_bg-->
+
             <com.lavos.widgets.AppCustomTextView
                 android:id="@+id/tv_update_status"
                 android:layout_width="match_parent"
@@ -337,7 +337,7 @@
                 android:text="@string/update_status"
                 android:textColor="@color/white"
                 android:textSize="@dimen/_11sdp"
-                android:background="@drawable/shape_custom_border_blue_button"
+                android:background="@drawable/selector_job_btn_bg"
                 android:paddingTop="@dimen/_7sdp"
                 android:paddingBottom="@dimen/_7sdp"
                 android:layout_marginLeft="@dimen/_20sdp"

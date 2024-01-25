@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import com.lavos.R
 import com.lavos.app.AppDatabase
@@ -24,19 +25,25 @@ import com.lavos.features.addshop.presentation.AddShopFragment
 import com.lavos.features.commondialog.presentation.CommonDialog
 import com.lavos.features.commondialog.presentation.CommonDialogClickListener
 import com.lavos.features.dashboard.presentation.DashboardActivity
+import com.lavos.features.returnsOrder.ReturnTypeListFragment
 import com.lavos.features.shopdetail.presentation.ShopDetailFragment
 import com.lavos.widgets.AppCustomEditText
 import com.lavos.widgets.AppCustomTextView
+import kotlinx.android.synthetic.main.cart_adapter_body_layout_newchange.view.*
+import kotlinx.android.synthetic.main.fragment_cart_new.*
 
 
 /**
  * Created by Saikat on 09-11-2018.
  */
+// 1.0  AppV 4.0.6  CartFragment  Saheli    25/01/2023 0025623 discount is editable work
 class CartFragment : BaseFragment(), View.OnClickListener {
 
     private lateinit var mContext: Context
     private lateinit var tv_total_order_value: AppCustomTextView
     private lateinit var tv_total_order_amount: AppCustomTextView
+    private lateinit var tv_total_order_amount_sc: AppCustomTextView
+    private lateinit var ll_schemeRoot: LinearLayout
     private lateinit var rv_cart_list: SwipeMenuRecyclerView
     private lateinit var tv_cancel: AppCustomTextView
     private lateinit var tv_continue: AppCustomTextView
@@ -51,9 +58,19 @@ class CartFragment : BaseFragment(), View.OnClickListener {
     private lateinit var rl_patient: RelativeLayout
     private lateinit var rl_address: RelativeLayout
     private lateinit var rl_phone: RelativeLayout
+    private lateinit var tv_mrp: AppCustomTextView
+    private lateinit var rl_lab: RelativeLayout
+    private lateinit var rl_emailaddress: RelativeLayout
+
+
+
+    private lateinit var et_lab: AppCustomEditText
+    private lateinit var et_emailaddress: AppCustomEditText
 
     private var remarks = ""
     private var imagePath = ""
+
+    private lateinit var tv_discount: AppCustomTextView  //1.0  AppV 4.0.6  CartFragment 0025623 discount is editable work
 
     companion object {
         private var selectedProductList: ArrayList<ProductListEntity>? = null
@@ -86,6 +103,8 @@ class CartFragment : BaseFragment(), View.OnClickListener {
             tv_total_order_value.text = selectedProductList?.size.toString()
 
         tv_total_order_amount = view.findViewById(R.id.tv_total_order_amount)
+        ll_schemeRoot = view.findViewById(R.id.ll_frag_cart_new_scheme_root)
+        tv_total_order_amount_sc = view.findViewById(R.id.tv_total_scheme_amount)
         rv_cart_list = view.findViewById(R.id.rv_cart_list)
         tv_cancel = view.findViewById(R.id.tv_cancel)
         tv_continue = view.findViewById(R.id.tv_continue)
@@ -99,6 +118,17 @@ class CartFragment : BaseFragment(), View.OnClickListener {
         rl_patient = view.findViewById(R.id.rl_patient)
         rl_address = view.findViewById(R.id.rl_address)
         rl_phone = view.findViewById(R.id.rl_phone)
+
+        tv_mrp = view.findViewById(R.id.tv_mrp)
+        rl_lab = view.findViewById(R.id.rl_lab)
+        rl_emailaddress =  view.findViewById(R.id.rl_emailaddress)
+        et_lab = view.findViewById(R.id.et_lab)
+        et_emailaddress = view.findViewById(R.id.et_emailaddress)
+
+        tv_discount = view.findViewById(R.id.tv_frag_new_cart_discount)//1.0  AppV 4.0.6  CartFragment 0025623 discount is editable work
+
+
+
 
         rv_cart_list.layoutManager = LinearLayoutManager(mContext)
 
@@ -119,6 +149,17 @@ class CartFragment : BaseFragment(), View.OnClickListener {
             tv_total_order_amount.text = totalPrice
         }, 200)
 
+        Handler().postDelayed(Runnable {
+            var totalScAmount = 0.0
+
+            for (i in (mContext as DashboardActivity).totalScPrice.indices) {
+                totalScAmount += (mContext as DashboardActivity).totalScPrice[i]
+            }
+            //val totalPrice = DecimalFormat("##.##").format(totalAmount)
+            val totalScPrice = String.format("%.2f", totalScAmount.toFloat())
+            tv_total_order_amount_sc.text = totalScPrice
+        }, 200)
+
         if (AppUtils.stockStatus == 1)
             tv_stock_value.text = getString(R.string.total_stock_value_with_colon)
         else {
@@ -126,16 +167,46 @@ class CartFragment : BaseFragment(), View.OnClickListener {
                 rl_patient.visibility = View.VISIBLE
                 rl_address.visibility = View.VISIBLE
                 rl_phone.visibility = View.VISIBLE
-            }
-            else {
+                //added new lines
+                rl_lab.visibility = View.VISIBLE
+                rl_emailaddress.visibility = View.VISIBLE
+            } else {
                 rl_patient.visibility = View.GONE
                 rl_address.visibility = View.GONE
                 rl_phone.visibility = View.GONE
+                //added new lines
+                rl_lab.visibility = View.GONE
+                rl_emailaddress.visibility = View.GONE
             }
+        }
+        if(Pref.MRPInOrderGlobal && Pref.MRPInOrder){
+            tv_mrp.visibility = View.VISIBLE
+        }
+        else{
+            tv_mrp.visibility = View.GONE
+        }
+
+        //1.0  AppV 4.0.6  CartFragment 0025623 discount is editable work
+        if(Pref.IsDiscountEditableInOrder){
+            tv_discount.visibility = View.VISIBLE
+        }
+        else{
+            tv_discount.visibility = View.GONE
+        }
+
+        if(AppUtils.stockStatus != 0){
+            ll_schemeRoot.visibility=View.GONE
         }
     }
 
     private fun initAdapter() {
+
+        if (!Pref.IsnewleadtypeforRuby) {
+            ll_schemeRoot.visibility = View.GONE
+        } else {
+            ll_schemeRoot.visibility = View.VISIBLE
+        }
+
         rv_cart_list.setItemViewCacheSize(selectedProductList?.size!!)
         rv_cart_list.adapter = CartAdapter(mContext, selectedProductList, object : CartAdapter.OnProductClickListener {
             override fun onDelete(adapterPosition: Int) {
@@ -175,12 +246,12 @@ class CartFragment : BaseFragment(), View.OnClickListener {
 //                }).show((mContext as DashboardActivity).supportFragmentManager, "AddProductRateDialog")
 
                 try {
+                    if (!TextUtils.isEmpty((mContext as DashboardActivity).rateList[adapterPosition]) && !TextUtils.isEmpty((mContext as DashboardActivity).qtyList[adapterPosition])) {
 
-                    if (!TextUtils.isEmpty((mContext as DashboardActivity).rateList[adapterPosition]) &&
-                            !TextUtils.isEmpty((mContext as DashboardActivity).qtyList[adapterPosition])) {
-                        val totalPrice = String.format("%.2f", ((mContext as DashboardActivity).rateList[adapterPosition].toDouble()
-                                * (mContext as DashboardActivity).qtyList[adapterPosition].toInt()))
+                        //val totalPrice = String.format("%.2f", ((mContext as DashboardActivity).rateList[adapterPosition].toDouble() * (mContext as DashboardActivity).qtyList[adapterPosition].toInt()))
+                        val totalPrice = String.format("%.2f", ((mContext as DashboardActivity).rateList[adapterPosition].toDouble() * (mContext as DashboardActivity).qtyList[adapterPosition].toDouble()))
                         (mContext as DashboardActivity).totalPrice[adapterPosition] = totalPrice.toDouble()
+
                     } else
                         (mContext as DashboardActivity).totalPrice[adapterPosition] = 0.00
                 } catch (e: Exception) {
@@ -193,7 +264,6 @@ class CartFragment : BaseFragment(), View.OnClickListener {
 
                 Handler().postDelayed(Runnable {
                     var totalAmount = 0.00
-
                     for (i in (mContext as DashboardActivity).totalPrice.indices) {
                         totalAmount += (mContext as DashboardActivity).totalPrice[i]
                     }
@@ -203,6 +273,31 @@ class CartFragment : BaseFragment(), View.OnClickListener {
 
 
             }
+
+            override fun onEditSchema(adapterPosition: Int) {
+
+                try {
+                    if (!TextUtils.isEmpty((mContext as DashboardActivity).schemarateList[adapterPosition]) && !TextUtils.isEmpty((mContext as DashboardActivity).schemaqtyList[adapterPosition])) {
+                        val totalSc = String.format("%.2f", (mContext as DashboardActivity).schemaqtyList[adapterPosition].toInt() * (mContext as DashboardActivity).schemarateList[adapterPosition].toDouble())
+                        (mContext as DashboardActivity).totalScPrice[adapterPosition] = totalSc.toDouble()
+                    } else
+                        (mContext as DashboardActivity).totalScPrice[adapterPosition] = 0.00
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    (mContext as DashboardActivity).totalScPrice[adapterPosition] = 0.00
+                }
+
+                Handler().postDelayed(Runnable {
+                    var totalScAmount = 0.00
+                    for (i in (mContext as DashboardActivity).totalScPrice.indices) {
+                        totalScAmount += (mContext as DashboardActivity).totalScPrice[i]
+                    }
+                    val finalTotalScAmount = String.format("%.2f", totalScAmount)
+                    tv_total_order_amount_sc.text = finalTotalScAmount
+                }, 200)
+
+            }
+
 
             override fun onProductClick(brand: ProductListEntity?, adapterPosition: Int, isSelected: Boolean) {
                 if (isSelected)
@@ -230,6 +325,11 @@ class CartFragment : BaseFragment(), View.OnClickListener {
                 (mContext as DashboardActivity).qtyList.removeAt(adapterPosition)
                 (mContext as DashboardActivity).rateList.removeAt(adapterPosition)
                 (mContext as DashboardActivity).totalPrice.removeAt(adapterPosition)
+
+
+                /*28-12-2021*/
+                (mContext as DashboardActivity).schemarateList.removeAt(adapterPosition)
+                (mContext as DashboardActivity).schemaqtyList.removeAt(adapterPosition)
 
                 initAdapter()
 
@@ -277,10 +377,13 @@ class CartFragment : BaseFragment(), View.OnClickListener {
             R.id.tv_continue -> {
                 if (selectedProductList != null && selectedProductList?.size!! > 0) {
                     val list = (mContext as DashboardActivity).totalPrice
+                    val listSc = (mContext as DashboardActivity).totalScPrice
+
                     (mContext as DashboardActivity).onBackPressed()
                     if ((mContext as DashboardActivity).getFragment() is OrderTypeListFragment)
                         ((mContext as DashboardActivity).getFragment() as OrderTypeListFragment).saveOrder(tv_total_order_amount.text.toString().trim(),
-                                selectedProductList, list, remarks, imagePath, et_patient.text.toString().trim(), et_address.text.toString().trim(), et_phone.text.toString().trim())
+                                selectedProductList, list, remarks, imagePath, et_patient.text.toString().trim(), et_address.text.toString().trim(), et_phone.text.toString().trim(),tv_total_order_amount_sc.text.toString().trim(),listSc,
+                        et_lab.text.toString().trim(),et_emailaddress.text.toString().trim())
                 } else
                     (mContext as DashboardActivity).showSnackMessage("Please select a product first")
             }
@@ -342,6 +445,9 @@ class CartFragment : BaseFragment(), View.OnClickListener {
         if (!Pref.isShowAllProduct && AppUtils.stockStatus == 0) {
             val qtyList = (mContext as DashboardActivity).qtyList
             val rateList = (mContext as DashboardActivity).rateList
+
+            val qtyschemeList = (mContext as DashboardActivity).schemaqtyList
+            val rateschemeList = (mContext as DashboardActivity).schemarateList
 
             for (i in rateList.indices) {
 
@@ -434,9 +540,22 @@ class CartFragment : BaseFragment(), View.OnClickListener {
             val rateList = ArrayList<String>()
             val totalPriceList = ArrayList<Double>()
 
+
+
+            val qtyschemeList = ArrayList<String>()
+            val rateschemeList = ArrayList<String>()
+            val totalschemeList = ArrayList<Double>()
+
+            val tempschemeQtyList = ArrayList<String>()
+            val tempschemeRateList = ArrayList<String>()
+            val tempschemePriceList = ArrayList<Double>()
+
             val tempQtyList = ArrayList<String>()
             val tempRateList = ArrayList<String>()
             val tempPriceList = ArrayList<Double>()
+
+            val mrpList = ArrayList<String>()
+            val tempMrpList = ArrayList<String>()
 
             qtyList.addAll((mContext as DashboardActivity).qtyList)
             rateList.addAll((mContext as DashboardActivity).rateList)
@@ -445,21 +564,38 @@ class CartFragment : BaseFragment(), View.OnClickListener {
             tempRateList.addAll((mContext as DashboardActivity).rateList)
             tempPriceList.addAll((mContext as DashboardActivity).totalPrice)
 
+
+            mrpList.addAll((mContext as DashboardActivity).mrpList)
+            qtyschemeList.addAll((mContext as DashboardActivity).schemaqtyList)
+            rateschemeList.addAll((mContext as DashboardActivity).schemarateList)
+            totalschemeList.addAll((mContext as DashboardActivity).totalScPrice)
+
+            tempschemeQtyList.addAll((mContext as DashboardActivity).schemaqtyList)
+            tempschemeRateList.addAll((mContext as DashboardActivity).schemarateList)
+            tempschemePriceList.addAll((mContext as DashboardActivity).totalScPrice)
+            mrpList.addAll((mContext as DashboardActivity).mrpList)
+            tempMrpList.addAll((mContext as DashboardActivity).mrpList)
+
+
             for (i in rateList.indices) {
                 if (rateList[i].endsWith(".")) {
                     (mContext as DashboardActivity).showSnackMessage(getString(R.string.enter_valid_rate))
                     return
-                } else if (rateList[i].toDouble() == 0.00) {
+                }
+
+                else if (rateList[i].toDouble() == 0.00) {
                     if (AppUtils.stockStatus == 0)
                         tempRateList.remove(rateList[i])
                 }
             }
 
             for (i in qtyList.indices) {
-                if (qtyList[i].length > 1 && qtyList[i].startsWith("0")) {
+                //if (qtyList[i].length > 1 && qtyList[i].startsWith("0")) {
+                if (qtyList[i].length > 1 && qtyList[i].equals("0")) {
                     (mContext as DashboardActivity).showSnackMessage(getString(R.string.enter_valid_qty))
                     return
-                } else if (qtyList[i].toInt() == 0) {
+                //} else if (qtyList[i].toInt() == 0) {
+                } else if (qtyList[i].toDouble() == 0.0) {
                     tempQtyList.remove(qtyList[i])
                 }
             }
@@ -542,14 +678,12 @@ class CartFragment : BaseFragment(), View.OnClickListener {
                         saveData()
                     else
                         showRemarksAlert()
-                }
-                else
+                } else
                     saveData()
             }
-
+            
             override fun onRightClick(editableData: String) {
             }
-
         }).show((mContext as DashboardActivity).supportFragmentManager, "")
     }
 
@@ -557,7 +691,6 @@ class CartFragment : BaseFragment(), View.OnClickListener {
         AddRemarksSignDialog.getInstance(remarks, imagePath, { remark, imgPath ->
             remarks = remark
             imagePath = imgPath
-
             saveData()
         }, {
             saveData()
@@ -566,19 +699,22 @@ class CartFragment : BaseFragment(), View.OnClickListener {
 
     private fun saveData() {
         val list = (mContext as DashboardActivity).totalPrice
+        val listSc = (mContext as DashboardActivity).totalScPrice
         (mContext as DashboardActivity).onBackPressed()
         if ((mContext as DashboardActivity).getFragment() is OrderTypeListFragment) {
 
-            ShopDetailFragment.isOrderEntryPressed=false
-            AddShopFragment.isOrderEntryPressed=false
+            ShopDetailFragment.isOrderEntryPressed = false
+            AddShopFragment.isOrderEntryPressed = false
 
             if (AppUtils.stockStatus == 0) {
                 ((mContext as DashboardActivity).getFragment() as OrderTypeListFragment).saveOrder(tv_total_order_amount.text.toString().trim(),
-                        selectedProductList, list, remarks, imagePath, et_patient.text.toString().trim(), et_address.text.toString().trim(), et_phone.text.toString().trim())
+                        selectedProductList, list, remarks, imagePath, et_patient.text.toString().trim(), et_address.text.toString().trim(), et_phone.text.toString().trim(),tv_total_order_amount_sc.text.toString().trim(),listSc,
+                        et_lab.text.toString().trim(),et_emailaddress.text.toString().trim())
             } else if (AppUtils.stockStatus == 1) {
                 ((mContext as DashboardActivity).getFragment() as OrderTypeListFragment).saveStock(tv_total_order_amount.text.toString().trim(),
                         selectedProductList, list)
             }
         }
+
     }
 }

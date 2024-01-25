@@ -1,7 +1,13 @@
 package com.lavos.app
 
+import com.lavos.app.utils.AppUtils
+import okhttp3.CacheControl
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 
@@ -11,56 +17,43 @@ import java.util.concurrent.TimeUnit
 class NetworkConstant {
     //Base URL
     companion object {
-        //local
-//        var BASE_URL="http://10.0.8.251:8084/API/"
-//       var ADD_SHOP_BASE_URL="http://10.0.8.251:8084/"
 
-        /*var BASE_URL = "http://10.0.14.110:8083/API/"
-        var ADD_SHOP_BASE_URL = "http://10.0.14.110:8083/"*/
+        var BASE_URL = "http://fts.indusnettechnologies.com:7020/API/"
+        var ADD_SHOP_BASE_URL = "http://fts.indusnettechnologies.com:7020/"
 
-        /*var BASE_URL = "http://10.0.8.251:8085/API/"
-        var ADD_SHOP_BASE_URL = "http://10.0.8.251:8085/"*/
-
-        /*var BASE_URL = "http://10.0.8.251:9099/API/"
-        var ADD_SHOP_BASE_URL = "http://10.0.8.251:9099/"*/
+        //Saraogi
+        //var BASE_URL = "http://fts.indusnettechnologies.com:7004/API/"
+       // var ADD_SHOP_BASE_URL = "http://fts.indusnettechnologies.com:7004/"
 
 
+        //var BASE_URL = "http://3.7.30.86:8072/API/"
+        //var ADD_SHOP_BASE_URL = "http://3.7.30.86:8072/"
 
-        //var BASE_URL = "http://fts.indusnettechnologies.com:8094/API/" //demo live
-        //var ADD_SHOP_BASE_URL = "http://fts.indusnettechnologies.com:8094/" //demo live
 
-        var BASE_URL = "http://fts.indusnettechnologies.com:7020/API/" //lavos live
-        var ADD_SHOP_BASE_URL = "http://fts.indusnettechnologies.com:7020/" //lavos live
+        //var BASE_URL = "http://localhost:8081/API/"
+        //var ADD_SHOP_BASE_URL = "http://localhost:8081/"
+
+        //var BASE_URL = "http://192.168.4.174:8081/API/"
+        //var ADD_SHOP_BASE_URL = "http://192.168.4.174:8081/"
 
 
 
-        //var BASE_URL = "http://3.7.30.86:82/API/"
-        //var ADD_SHOP_BASE_URL = "http://3.7.30.86:82/"
-
-        //var BASE_URL = "http://fts.indusnettechnologies.com:8094/API/"  // live url for demo
-        //var ADD_SHOP_BASE_URL = "http://fts.indusnettechnologies.com:8094/"  // live url for demo
 
 
-        //LIVE
-        /*var BASE_URL = "http://fts.indusnettechnologies.com:8081/API/"
-        var ADD_SHOP_BASE_URL = "http://fts.indusnettechnologies.com:8081/"*/
+
+
+
 
         /*var BASE_URL = "http://fts.indusnettechnologies.com:8094/API/"
         var ADD_SHOP_BASE_URL = "http://fts.indusnettechnologies.com:8094/"*/
 
-        //DEV
-        /*var BASE_URL = "http://69.10.45.146:8081/API/"
-        var ADD_SHOP_BASE_URL = "http://69.10.45.146:8081/"*/
-
-        /*var BASE_URL = "http://fts.indusnettechnologies.com:8082/API/"
-        var ADD_SHOP_BASE_URL = "http://fts.indusnettechnologies.com:8082/"*/
 
         /*var BASE_URL = "http://hrms.indusnettechnologies.com:8081/API/"
         var ADD_SHOP_BASE_URL = "http://hrms.indusnettechnologies.com:8081/"*/
 
         /*DEV Internal*/
-//         var BASE_URL="http://hrms.indusnettechnologies.com:8085/API/"
-//         var ADD_SHOP_BASE_URL="http://hrms.indusnettechnologies.com:8085"
+//         var BASE_URL="http://hrms.indusnettechnologies.com:7025/API/"
+//         var ADD_SHOP_BASE_URL="http://hrms.indusnettechnologies.com:7025"
 
         /*lavos INTERNAL*/
 //        var BASE_URL="http://geapl.breezeerp.in:8083/API/"
@@ -140,6 +133,8 @@ class NetworkConstant {
                     .build()
         }
     }
+
+
 
 
 }

@@ -5,19 +5,19 @@
     xmlns:wheel="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/smoke_white">
+    android:background="@color/color_silver_light">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/smoke_white">
+        android:background="@color/color_silver_light">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:paddingBottom="@dimen/_5sdp"
-            android:paddingTop="@dimen/_5sdp">
+            android:paddingTop="@dimen/_5sdp"
+            android:paddingBottom="@dimen/_5sdp">
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
@@ -30,6 +30,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/shape_cursor_two"
                     android:orientation="vertical"
                     android:padding="@dimen/_10sdp">
 
@@ -37,7 +38,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/choose_attendance_type"
-                        android:textColor="@color/light_gray"
+                        android:textColor="@color/dark_gray"
                         android:textSize="@dimen/_13sdp" />
 
                     <LinearLayout
@@ -121,6 +122,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:background="@drawable/shape_cursor_two"
                         android:orientation="vertical"
                         android:padding="@dimen/_5sdp">
 
@@ -128,8 +130,8 @@
                             android:id="@+id/rl_leave_type_header"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:paddingBottom="@dimen/_5sdp"
-                            android:paddingTop="@dimen/_5sdp">
+                            android:paddingTop="@dimen/_5sdp"
+                            android:paddingBottom="@dimen/_5sdp">
 
                             <com.lavos.widgets.AppCustomTextView
                                 android:id="@+id/tv_leave_type"
@@ -142,7 +144,7 @@
                                 android:hint="@string/select_leave_type"
                                 android:paddingRight="@dimen/_5sdp"
                                 android:textColor="@android:color/black"
-                                android:textColorHint="@color/light_gray"
+                                android:textColorHint="@color/dark_gray"
                                 android:textSize="@dimen/_13sdp" />
 
                             <ImageView
@@ -184,11 +186,12 @@
                     app:cardCornerRadius="@dimen/_4sdp"
                     app:cardElevation="@dimen/_2sdp">
 
-                    <RelativeLayout
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_marginLeft="@dimen/_10sdp"
-                        android:layout_marginRight="@dimen/_10sdp"
+                        android:paddingStart="@dimen/_10sdp"
+                        android:paddingEnd="@dimen/_10sdp"
+                        android:background="@drawable/shape_cursor_two"
                         android:paddingTop="@dimen/_5sdp">
 
                         <com.lavos.widgets.AppCustomEditText
@@ -203,10 +206,12 @@
                             android:scrollbarStyle="insideInset"
                             android:scrollbars="vertical"
                             android:textColor="@android:color/black"
-                            android:textColorHint="@color/light_gray"
+                            android:textColorHint="@color/dark_gray"
                             android:textSize="@dimen/_13sdp" />
-                    </RelativeLayout>
+                    </LinearLayout>
+
                 </androidx.cardview.widget.CardView>
+
             </LinearLayout>
 
             <LinearLayout
@@ -228,14 +233,15 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
+                        android:background="@drawable/shape_cursor_two"
                         android:padding="@dimen/_5sdp">
 
                         <RelativeLayout
                             android:id="@+id/rl_work_type_header"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:paddingBottom="@dimen/_5sdp"
-                            android:paddingTop="@dimen/_5sdp">
+                            android:paddingTop="@dimen/_5sdp"
+                            android:paddingBottom="@dimen/_5sdp">
 
                             <com.lavos.widgets.AppCustomTextView
                                 android:id="@+id/tv_work_type"
@@ -248,7 +254,7 @@
                                 android:hint="@string/select_work_type"
                                 android:paddingRight="@dimen/_5sdp"
                                 android:textColor="@android:color/black"
-                                android:textColorHint="@color/light_gray"
+                                android:textColorHint="@color/dark_gray"
                                 android:textSize="@dimen/_13sdp" />
 
                             <ImageView
@@ -279,8 +285,173 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content" />
                         </LinearLayout>
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
+                <!--Distributor List-->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cv_dd_root"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/_5sdp"
+                    app:cardBackgroundColor="@android:color/white"
+                    app:cardCornerRadius="@dimen/_4sdp"
+                    app:cardElevation="@dimen/_2sdp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/shape_cursor_two"
+                        android:padding="@dimen/_5sdp">
+
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="@dimen/_5sdp"
+                            android:paddingBottom="@dimen/_5sdp">
+
+                            <com.lavos.widgets.AppCustomTextView
+                                android:id="@+id/tv_dd"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentLeft="true"
+                                android:layout_centerVertical="true"
+                                android:layout_marginLeft="@dimen/_2sdp"
+                                android:paddingRight="@dimen/_5sdp"
+                                android:textColor="@android:color/black"
+                                android:textColorHint="@color/dark_gray"
+                                android:textSize="@dimen/_13sdp" />
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentRight="true"
+                                android:layout_centerVertical="true"
+                                android:contentDescription="@null"
+                                android:padding="@dimen/_5sdp"
+                                android:src="@drawable/selector_dropdown" />
+                        </RelativeLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cv_beat_type_root"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/_5sdp"
+                    app:cardBackgroundColor="@android:color/white"
+                    app:cardCornerRadius="@dimen/_4sdp"
+                    app:cardElevation="@dimen/_2sdp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/shape_cursor_two"
+                        android:padding="@dimen/_5sdp">
+
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="@dimen/_5sdp"
+                            android:paddingBottom="@dimen/_5sdp">
+
+                            <com.lavos.widgets.AppCustomTextView
+                                android:id="@+id/tv_beat_type"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentLeft="true"
+                                android:layout_centerVertical="true"
+                                android:layout_marginLeft="@dimen/_2sdp"
+                                android:paddingRight="@dimen/_5sdp"
+                                android:textColor="@android:color/black"
+                                android:textColorHint="@color/dark_gray"
+                                android:textSize="@dimen/_13sdp" />
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentRight="true"
+                                android:layout_centerVertical="true"
+                                android:contentDescription="@null"
+                                android:padding="@dimen/_5sdp"
+                                android:src="@drawable/selector_dropdown" />
+                        </RelativeLayout>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cv_reimbursement_type_root"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/_5sdp"
+                    app:cardBackgroundColor="@android:color/white"
+                    app:cardCornerRadius="@dimen/_4sdp"
+                    app:cardElevation="@dimen/_2sdp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/shape_cursor_two"
+                        android:padding="@dimen/_5sdp">
+
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="@dimen/_5sdp"
+                            android:paddingBottom="@dimen/_5sdp">
+
+                            <com.lavos.widgets.AppCustomTextView
+                                android:id="@+id/tv_reimbursement_type"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentLeft="true"
+                                android:layout_centerVertical="true"
+                                android:layout_marginLeft="@dimen/_2sdp"
+                                android:hint="Select Reimbursement Type"
+                                android:paddingRight="@dimen/_5sdp"
+                                android:textColor="@android:color/black"
+                                android:textColorHint="@color/dark_gray"
+                                android:textSize="@dimen/_13sdp" />
+
+                            <ImageView
+                                android:id="@+id/iv_reimb_type_dropdown"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentRight="true"
+                                android:layout_centerVertical="true"
+                                android:contentDescription="@null"
+                                android:padding="@dimen/_5sdp"
+                                android:src="@drawable/selector_dropdown" />
+                        </RelativeLayout>
+
+                        <LinearLayout
+                            android:id="@+id/ll_reimb_type_list"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:visibility="gone">
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="0.5dp"
+                                android:background="@android:color/black" />
+
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/rv_reimb_type_list"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
 
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cv_route"
@@ -302,8 +473,8 @@
                             android:id="@+id/rl_route_header"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:paddingBottom="@dimen/_5sdp"
-                            android:paddingTop="@dimen/_5sdp">
+                            android:paddingTop="@dimen/_5sdp"
+                            android:paddingBottom="@dimen/_5sdp">
 
                             <com.lavos.widgets.AppCustomTextView
                                 android:id="@+id/tv_route_type"
@@ -362,6 +533,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:background="@drawable/shape_cursor_two"
                         android:orientation="vertical">
 
                         <com.lavos.widgets.AppCustomTextView
@@ -392,10 +564,10 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_gravity="center"
-                                    android:layout_marginBottom="@dimen/_5sdp"
                                     android:layout_marginLeft="@dimen/_10sdp"
-                                    android:layout_marginRight="@dimen/_12sdp"
                                     android:layout_marginTop="@dimen/_3sdp"
+                                    android:layout_marginRight="@dimen/_12sdp"
+                                    android:layout_marginBottom="@dimen/_5sdp"
                                     android:gravity="center"
                                     android:orientation="horizontal">
 
@@ -403,8 +575,8 @@
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="center"
-                                        android:layout_marginRight="@dimen/_5sdp"
                                         android:layout_marginTop="@dimen/_5sdp"
+                                        android:layout_marginRight="@dimen/_5sdp"
                                         android:contentDescription="@null"
                                         android:src="@drawable/ic_rupee_icon"
                                         android:visibility="gone" />
@@ -414,7 +586,7 @@
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="center"
                                         android:gravity="center_vertical"
-                                        android:textColorHint="@color/light_gray"
+                                        android:textColorHint="@color/dark_gray"
                                         app:hintTextAppearance="@style/TextAppearance.App.TextInputLayout">
 
                                         <com.lavos.widgets.AppCustomEditText
@@ -434,10 +606,10 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_gravity="center"
-                                    android:layout_marginBottom="@dimen/_5sdp"
                                     android:layout_marginLeft="@dimen/_10sdp"
-                                    android:layout_marginRight="@dimen/_12sdp"
                                     android:layout_marginTop="@dimen/_3sdp"
+                                    android:layout_marginRight="@dimen/_12sdp"
+                                    android:layout_marginBottom="@dimen/_5sdp"
                                     android:gravity="center"
                                     android:orientation="horizontal">
 
@@ -445,8 +617,8 @@
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="center"
-                                        android:layout_marginRight="@dimen/_5sdp"
                                         android:layout_marginTop="@dimen/_5sdp"
+                                        android:layout_marginRight="@dimen/_5sdp"
                                         android:contentDescription="@null"
                                         android:src="@drawable/ic_rupee_icon"
                                         android:visibility="gone" />
@@ -456,7 +628,7 @@
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="center"
                                         android:gravity="center_vertical"
-                                        android:textColorHint="@color/light_gray"
+                                        android:textColorHint="@color/dark_gray"
                                         app:hintTextAppearance="@style/TextAppearance.App.TextInputLayout">
 
                                         <com.lavos.widgets.AppCustomEditText
@@ -488,6 +660,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:background="@drawable/shape_cursor_two"
                         android:orientation="vertical">
 
                         <com.lavos.widgets.AppCustomTextView
@@ -518,10 +691,10 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_gravity="center"
-                                    android:layout_marginBottom="@dimen/_5sdp"
                                     android:layout_marginLeft="@dimen/_10sdp"
-                                    android:layout_marginRight="@dimen/_12sdp"
                                     android:layout_marginTop="@dimen/_3sdp"
+                                    android:layout_marginRight="@dimen/_12sdp"
+                                    android:layout_marginBottom="@dimen/_5sdp"
                                     android:gravity="center"
                                     android:orientation="horizontal">
 
@@ -530,19 +703,19 @@
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="center"
                                         android:gravity="center_vertical"
-                                        android:textColorHint="@color/light_gray"
+                                        android:textColorHint="@color/dark_gray"
                                         app:hintTextAppearance="@style/TextAppearance.App.TextInputLayout">
 
                                         <com.lavos.widgets.AppCustomEditText
                                             android:id="@+id/et_from_loc"
                                             android:layout_width="match_parent"
                                             android:layout_height="wrap_content"
-                                            android:hint="@string/start_loc"
-                                            android:editable="false"
-                                            android:focusable="false"
-                                            android:textSize="@dimen/_13sdp"
                                             android:drawableRight="@drawable/ic_gray_down_arrow_icon"
                                             android:drawablePadding="@dimen/_5sdp"
+                                            android:editable="false"
+                                            android:focusable="false"
+                                            android:hint="@string/start_loc"
+                                            android:textSize="@dimen/_13sdp"
                                             app:theme="@style/EvoEditTextTheme" />
                                     </com.google.android.material.textfield.TextInputLayout>
                                 </LinearLayout>
@@ -551,10 +724,10 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_gravity="center"
-                                    android:layout_marginBottom="@dimen/_5sdp"
                                     android:layout_marginLeft="@dimen/_10sdp"
-                                    android:layout_marginRight="@dimen/_12sdp"
                                     android:layout_marginTop="@dimen/_3sdp"
+                                    android:layout_marginRight="@dimen/_12sdp"
+                                    android:layout_marginBottom="@dimen/_5sdp"
                                     android:gravity="center"
                                     android:orientation="horizontal">
 
@@ -563,19 +736,19 @@
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="center"
                                         android:gravity="center_vertical"
-                                        android:textColorHint="@color/light_gray"
+                                        android:textColorHint="@color/dark_gray"
                                         app:hintTextAppearance="@style/TextAppearance.App.TextInputLayout">
 
                                         <com.lavos.widgets.AppCustomEditText
                                             android:id="@+id/et_to_loc"
                                             android:layout_width="match_parent"
                                             android:layout_height="wrap_content"
-                                            android:hint="@string/end_loc"
-                                            android:editable="false"
-                                            android:focusable="false"
-                                            android:textSize="@dimen/_13sdp"
                                             android:drawableRight="@drawable/ic_gray_down_arrow_icon"
                                             android:drawablePadding="@dimen/_5sdp"
+                                            android:editable="false"
+                                            android:focusable="false"
+                                            android:hint="@string/end_loc"
+                                            android:textSize="@dimen/_13sdp"
                                             app:theme="@style/EvoEditTextTheme" />
                                     </com.google.android.material.textfield.TextInputLayout>
                                 </LinearLayout>
@@ -589,10 +762,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/_5sdp"
+                    android:visibility="gone"
                     app:cardBackgroundColor="@android:color/white"
                     app:cardCornerRadius="@dimen/_4sdp"
-                    app:cardElevation="@dimen/_2sdp"
-                    android:visibility="gone">
+                    app:cardElevation="@dimen/_2sdp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -618,8 +791,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
-                            android:gravity="center_vertical"
                             android:layout_marginLeft="@dimen/_5sdp"
+                            android:gravity="center_vertical"
                             android:textColorHint="@color/light_gray"
                             app:hintTextAppearance="@style/TextAppearance.App.TextInputLayout">
 
@@ -634,8 +807,8 @@
                         </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
-                
-                
+
+
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cv_todays_target"
                     android:layout_width="match_parent"
@@ -648,6 +821,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:background="@drawable/shape_cursor_two"
                         android:orientation="vertical">
 
                         <com.lavos.widgets.AppCustomTextView
@@ -679,10 +853,10 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_gravity="center"
-                                    android:layout_marginBottom="@dimen/_5sdp"
                                     android:layout_marginLeft="@dimen/_10sdp"
-                                    android:layout_marginRight="@dimen/_12sdp"
                                     android:layout_marginTop="@dimen/_3sdp"
+                                    android:layout_marginRight="@dimen/_12sdp"
+                                    android:layout_marginBottom="@dimen/_5sdp"
                                     android:gravity="center"
                                     android:orientation="horizontal">
 
@@ -690,8 +864,8 @@
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="center"
-                                        android:layout_marginRight="@dimen/_5sdp"
                                         android:layout_marginTop="@dimen/_5sdp"
+                                        android:layout_marginRight="@dimen/_5sdp"
                                         android:contentDescription="@null"
                                         android:src="@drawable/ic_rupee_icon" />
 
@@ -700,7 +874,7 @@
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="center"
                                         android:gravity="center_vertical"
-                                        android:textColorHint="@color/light_gray"
+                                        android:textColorHint="@color/dark_gray"
                                         app:hintTextAppearance="@style/TextAppearance.App.TextInputLayout">
 
                                         <com.lavos.widgets.AppCustomEditText
@@ -720,10 +894,10 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_gravity="center"
-                                    android:layout_marginBottom="@dimen/_5sdp"
                                     android:layout_marginLeft="@dimen/_10sdp"
-                                    android:layout_marginRight="@dimen/_12sdp"
                                     android:layout_marginTop="@dimen/_3sdp"
+                                    android:layout_marginRight="@dimen/_12sdp"
+                                    android:layout_marginBottom="@dimen/_5sdp"
                                     android:gravity="center"
                                     android:orientation="horizontal">
 
@@ -731,8 +905,8 @@
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="center"
-                                        android:layout_marginRight="@dimen/_5sdp"
                                         android:layout_marginTop="@dimen/_5sdp"
+                                        android:layout_marginRight="@dimen/_5sdp"
                                         android:contentDescription="@null"
                                         android:src="@drawable/ic_rupee_icon" />
 
@@ -741,7 +915,7 @@
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="center"
                                         android:gravity="center_vertical"
-                                        android:textColorHint="@color/light_gray"
+                                        android:textColorHint="@color/dark_gray"
                                         app:hintTextAppearance="@style/TextAppearance.App.TextInputLayout">
 
                                         <com.lavos.widgets.AppCustomEditText
@@ -780,7 +954,7 @@
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="center"
                                         android:gravity="center_vertical"
-                                        android:textColorHint="@color/light_gray"
+                                        android:textColorHint="@color/dark_gray"
                                         app:hintTextAppearance="@style/TextAppearance.App.TextInputLayout">
 
                                         <com.lavos.widgets.AppCustomEditText
@@ -800,10 +974,10 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_gravity="center"
-                                    android:layout_marginBottom="@dimen/_5sdp"
                                     android:layout_marginLeft="@dimen/_10sdp"
-                                    android:layout_marginRight="@dimen/_12sdp"
                                     android:layout_marginTop="@dimen/_3sdp"
+                                    android:layout_marginRight="@dimen/_12sdp"
+                                    android:layout_marginBottom="@dimen/_5sdp"
                                     android:gravity="center"
                                     android:orientation="horizontal">
 
@@ -820,7 +994,7 @@
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="center"
                                         android:gravity="center_vertical"
-                                        android:textColorHint="@color/light_gray"
+                                        android:textColorHint="@color/dark_gray"
                                         app:hintTextAppearance="@style/TextAppearance.App.TextInputLayout">
 
                                         <com.lavos.widgets.AppCustomEditText
@@ -847,6 +1021,58 @@
                 </androidx.cardview.widget.CardView>
 
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/card_root_joint_visit_check"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="@android:color/white"
+                    app:cardCornerRadius="@dimen/_4sdp"
+                    app:cardElevation="@dimen/_2sdp"
+                    android:layout_marginLeft="@dimen/_5sdp"
+                    android:layout_marginRight="@dimen/_5sdp"
+                    android:layout_marginTop="@dimen/_5sdp"
+                    android:layout_marginBottom="@dimen/_5sdp">
+
+                    <CheckBox
+                        android:id="@+id/cb_frag_attend_joint_visit"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_40sdp"
+                            android:text="Joint Visit"
+                            android:textSize="@dimen/_13sdp"
+                            android:background="@drawable/shape_cursor_cus"/>
+
+<!--                    android:buttonTint="@color/gray_50"-->
+
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/card_root_joint_team_sel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="@android:color/white"
+                    app:cardCornerRadius="@dimen/_4sdp"
+                    app:cardElevation="@dimen/_2sdp"
+                    android:layout_marginLeft="@dimen/_5sdp"
+                    android:layout_marginRight="@dimen/_5sdp"
+                    android:layout_marginTop="@dimen/_5sdp"
+                    android:layout_marginBottom="@dimen/_5sdp">
+
+
+                        <com.lavos.widgets.AppCustomTextView
+                            android:id="@+id/tv_frag_attend_team_member"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_40sdp"
+                            android:hint="Select Team Member"
+                            android:gravity="center|start"
+                            android:paddingStart="@dimen/_5sdp"
+                            android:textColor="@android:color/black"
+                            android:textColorHint="@color/light_gray"
+                            android:textSize="@dimen/_13sdp"
+                            android:drawableEnd="@drawable/ic_down_arrow"
+                            android:background="@drawable/shape_cursor_two"/>
+
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/_5sdp"
@@ -857,8 +1083,9 @@
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_marginLeft="@dimen/_10sdp"
-                        android:layout_marginRight="@dimen/_10sdp"
+                        android:paddingStart="@dimen/_10sdp"
+                        android:paddingEnd="@dimen/_10sdp"
+                        android:background="@drawable/shape_cursor_two"
                         android:paddingTop="@dimen/_5sdp">
 
                         <com.lavos.widgets.AppCustomEditText
@@ -890,6 +1117,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
+                        android:background="@drawable/shape_cursor_two"
                         android:padding="@dimen/_10sdp">
 
                         <com.lavos.widgets.AppCustomTextView
@@ -909,18 +1137,18 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/_5sdp"
+                                android:text="Current Date &amp; Time    :"
                                 android:textColor="@android:color/black"
-                                android:textSize="@dimen/_13sdp"
-                                android:text="@string/current_date_time" />
+                                android:textSize="@dimen/_13sdp" />
 
                             <com.lavos.widgets.AppCustomTextView
                                 android:id="@+id/tv_current_date_time"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginLeft="@dimen/_5sdp"
                                 android:layout_marginTop="@dimen/_5sdp"
                                 android:textColor="@color/colorPrimary"
-                                android:textSize="@dimen/_11sdp"
-                                android:layout_marginLeft="@dimen/_5sdp"/>
+                                android:textSize="@dimen/_11sdp" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -931,18 +1159,18 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/_5sdp"
+                                android:text="Applicable In Time       :"
                                 android:textColor="@android:color/black"
-                                android:textSize="@dimen/_13sdp"
-                                android:text="@string/applicable_in_time" />
+                                android:textSize="@dimen/_13sdp" />
 
                             <com.lavos.widgets.AppCustomTextView
                                 android:id="@+id/tv_approved_in_time"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginLeft="@dimen/_5sdp"
                                 android:layout_marginTop="@dimen/_5sdp"
                                 android:textColor="@color/colorPrimary"
-                                android:textSize="@dimen/_13sdp"
-                                android:layout_marginLeft="@dimen/_5sdp"/>
+                                android:textSize="@dimen/_11sdp" />
                         </LinearLayout>
 
 
@@ -974,8 +1202,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginLeft="@dimen/_5sdp"
-                            android:layout_marginRight="@dimen/_5sdp"
                             android:layout_marginTop="@dimen/_5sdp"
+                            android:layout_marginRight="@dimen/_5sdp"
                             android:background="@drawable/rectangular_boarder_bg"
                             android:padding="@dimen/_5sdp"
                             android:textColor="@color/black"
@@ -992,8 +1220,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="@dimen/_10sdp"
-                android:layout_marginRight="@dimen/_10sdp"
                 android:layout_marginTop="@dimen/_15sdp"
+                android:layout_marginRight="@dimen/_10sdp"
                 android:background="@drawable/shape_custom_border_blue_button"
                 android:clickable="true"
                 android:focusable="true"

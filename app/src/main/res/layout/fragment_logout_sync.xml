@@ -870,6 +870,61 @@
 
                 </RelativeLayout>
 
+
+                <!--17-12-2021 Return on Logout snyc-->
+                <RelativeLayout
+                    android:id="@+id/rl_return"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/curve_border_bg"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/_7sdp"
+                    android:layout_marginTop="@dimen/_8sdp">
+
+                    <com.lavos.widgets.AppCustomTextView
+                        android:id="@+id/add_return_sync_tv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:gravity="center_vertical"
+                        android:text="@string/return_sync"
+                        android:textColor="@color/login_txt_color"
+                        android:textSize="@dimen/_11sdp" />
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/add_return_sync_img"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:gravity="center_vertical"
+                        android:padding="@dimen/_3sdp"
+                        app:srcCompat="@drawable/ic_sync_icon" />
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/add_return_tick_img"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:gravity="center_vertical"
+                        android:visibility="gone"
+                        app:srcCompat="@drawable/ic_check" />
+
+                    <com.lavos.widgets.AppCustomTextView
+                        android:id="@+id/tv_return_retry"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:gravity="center_vertical"
+                        android:padding="@dimen/_5sdp"
+                        android:text="@string/data_sync_retry"
+                        android:textColor="@color/red"
+                        android:textSize="@dimen/_11sdp"
+                        android:visibility="gone" />
+
+                </RelativeLayout>
+
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
@@ -894,6 +949,6 @@
         android:padding="@dimen/_10sdp"
         android:text="@string/logout"
         android:textColor="@drawable/selector_text_clor_blue_white"
-        android:textSize="@dimen/_11sdp" />
+        android:textSize="@dimen/_13sdp" />
 
 </RelativeLayout>

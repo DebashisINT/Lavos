@@ -8,7 +8,7 @@ import com.lavos.app.utils.AppUtils
 import com.lavos.base.BaseResponse
 import com.lavos.base.presentation.BaseActivity
 import com.lavos.fcm.api.UpdateDeviceTokenRepoProvider
-import com.elvishew.xlog.XLog
+
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.doAsync

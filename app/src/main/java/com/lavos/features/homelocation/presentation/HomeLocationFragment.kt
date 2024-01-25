@@ -104,7 +104,8 @@ class HomeLocationFragment : BaseFragment(), View.OnClickListener {
                         val fileUrl = Uri.parse(path)
 
                         val file = File(fileUrl.path)
-//                        val uri = Uri.fromFile(file)
+                        //val uri = Uri.fromFile(file)
+                        //27-09-2021
                         val uri: Uri = FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
                         shareIntent.type = "image/png"
                         shareIntent.putExtra(Intent.EXTRA_STREAM, uri)

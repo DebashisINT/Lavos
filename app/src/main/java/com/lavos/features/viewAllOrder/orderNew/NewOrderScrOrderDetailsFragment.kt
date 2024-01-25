@@ -1,10 +1,10 @@
 package com.lavos.features.viewAllOrder.orderNew
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.TextUtils
@@ -24,7 +24,6 @@ import com.lavos.app.domain.AddShopDBModelEntity
 import com.lavos.app.types.FragType
 import com.lavos.app.utils.AppUtils
 import com.lavos.app.utils.FTStorageUtils
-import com.lavos.app.utils.Toaster
 import com.lavos.app.widgets.MovableFloatingActionButton
 import com.lavos.base.presentation.BaseFragment
 import com.lavos.features.dashboard.presentation.DashboardActivity
@@ -36,9 +35,6 @@ import com.lavos.features.viewAllOrder.model.ProductOrder
 import com.lavos.features.viewAllOrder.presentation.AdapterNewOrdScrOrdList
 import com.lavos.widgets.AppCustomTextView
 import java.io.File
-import java.lang.Exception
-import java.util.*
-import kotlin.collections.ArrayList
 
 class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
     private lateinit var mContext: Context
@@ -50,9 +46,8 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
     private lateinit var myshop_addr_TV: AppCustomTextView
     private lateinit var myshop_contact_TV: AppCustomTextView
 
-    private var adapterNewOrdScrOrdList: AdapterNewOrdScrOrdList? = null
+    private var adapterNewOrdScrOrdList: AdapterNewOrdScrOrdList?=null
 
-    //private lateinit var share_Icon: LinearLayout
     private lateinit var share: MovableFloatingActionButton
 
     override fun onAttach(context: Context) {
@@ -62,18 +57,17 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
 
     companion object {
         var mAddShopDataObj: AddShopDBModelEntity? = null
-        var shop_id: String = ""
+        var shop_id:String = ""
         fun getInstance(objects: Any): NewOrderScrOrderDetailsFragment {
             val Fragment = NewOrderScrOrderDetailsFragment()
             if (!TextUtils.isEmpty(objects.toString())) {
-                shop_id = objects.toString()
+                shop_id=objects.toString()
                 mAddShopDataObj = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(shop_id)
             }
             return Fragment
         }
 
     }
-
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
@@ -87,241 +81,187 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
         super.onResume()
     }
 
-
-  /*  fun onShareClick() {
-        var qty_Order: Int = 0
-        val heading = "ORDER SUMMARY"
-
-
-        var pdfBody = "\n\n\n\nShop Name: " +  mAddShopDataObj?.shopName + "\n\nShop Address: " + mAddShopDataObj?.address +
-                "\n\nShop Contact: "+  mAddShopDataObj?.ownerContactNumber
-
-        val orderList =  AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderAll(shop_id)
-
-
-
-        orderList?.forEach {it1 ->
-            pdfBody = pdfBody + "\n\n-----------------------------------------------------------------------------\n\n"+
-                    "Date: " + it1.order_date + "Order#: " + it1.order_id +""
-                 var qtty_list = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderQtyOrderIDWise(it1.order_id!!)
-                      for (i in 0..qtty_list!!.size - 1) {
-                           qty_Order = qty_Order + qtty_list.get(i).toString().toInt()
-                       }
-
-            }
-            pdfBody = pdfBody +
-                    "  QTY: " + qty_Order + "\n\n"
-
-
-
-
-        val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)
-
-        val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderSummary_" +
-                "_" + Pref.user_id + ".pdf", image, heading, 3.7f)
-
-        if (!TextUtils.isEmpty(path)) {
-            try {
-                val shareIntent = Intent(Intent.ACTION_SEND)
-                val fileUrl = Uri.parse(path)
-
-                val file = File(fileUrl.path)
-                val uri = Uri.fromFile(file)
-                shareIntent.type = "image/png"
-                shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
-                startActivity(Intent.createChooser(shareIntent, "Share pdf using"));
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        } else
-            (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
-
-
-    }*/
-
+    @SuppressLint("UseRequireInsteadOfGet")
     private fun initView(view: View?) {
         CustomStatic.NewOrderTotalCartItem=0
-        //Toaster.msgShort(mContext,shop_id)
         share=view!!.findViewById(R.id.add_new_order_share)
 
         share.setCustomClickListener {
             onShareClickNew()
         }
 
-        mRv_orderDetails = view!!.findViewById(R.id.rv_new_order_list)
-        mRv_orderDetails.layoutManager = LinearLayoutManager(mContext)
-        ll_Add = view!!.findViewById(R.id.ll_frag_new_order_detalis_add)
+        mRv_orderDetails=view!!.findViewById(R.id.rv_new_order_list)
+        mRv_orderDetails.layoutManager= LinearLayoutManager(mContext)
+        ll_Add=view!!.findViewById(R.id.ll_frag_new_order_detalis_add)
         ll_Add.setOnClickListener(this)
 
         myshop_name_TV = view!!.findViewById(R.id.myshop_name_TV)
-        myshop_addr_TV = view!!.findViewById(R.id.myshop_address_TV_ord)
+        myshop_addr_TV = view!!.findViewById(R.id.myshop_address_TV)
         myshop_contact_TV = view!!.findViewById(R.id.tv_contact_number)
-        //share_Icon = view!!.findViewById(R.id.ll_frag_new_order_detalis_share)
 
 
-        myshop_name_TV.text = mAddShopDataObj?.shopName
-        myshop_addr_TV.text = mAddShopDataObj?.address
-        myshop_contact_TV.text = "Owner Contact Number: " + mAddShopDataObj?.ownerContactNumber.toString()
-
-        //share_Icon.setOnClickListener(this)
+        myshop_name_TV.text=mAddShopDataObj?.shopName
+        myshop_addr_TV.text= mAddShopDataObj?.address
+        myshop_contact_TV.text="Owner Contact Number: " + mAddShopDataObj?.ownerContactNumber.toString()
 
         getOrderList()
     }
 
-    private var final_order_list: ArrayList<NewOrderCartModel> = ArrayList()
-    private var newOrderCartModel1: NewOrderCartModel? = null
-    private var newOrderCartModel2: NewOrderCartModel? = null
+    private  var final_order_list:ArrayList<NewOrderCartModel> = ArrayList()
+    private  var newOrderCartModel1:NewOrderCartModel? = null
+    private  var newOrderCartModel2:NewOrderCartModel? = null
 
 
-    data class OrderIDDateStatus(var order_date: String, var isUploaded: Boolean)
-    data class OrderIDDateViewStatus(var order_id: String, var order_date: String, var isUploaded: Boolean)
+    data class OrderIDDateStatus(var order_date:String,var isUploaded:Boolean)
+    data class OrderIDDateViewStatus(var order_id:String,var order_date:String,var isUploaded:Boolean)
+    var rv_data:ArrayList<OrderIDDateViewStatus> = ArrayList()
 
-    var qty_list: ArrayList<String> = ArrayList()
-    var rv_data: ArrayList<OrderIDDateViewStatus> = ArrayList()
-
-    private fun getOrderList() {
-        qty_list.clear()
-        var objOrderDistList = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderDistinct(shop_id)
-        try {
-            for (i in 0..objOrderDistList!!.size - 1) {
-                var qty_Order: Int = 0
-                var qtty_list = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderQtyOrderIDWise(objOrderDistList.get(i))
-                for (i in 0..qtty_list!!.size - 1) {
-                    qty_Order = qty_Order + qtty_list.get(i).toString().toInt()
-                }
+    private fun getOrderList(){
+        var objOrderDistList=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderDistinct(shop_id)
+        try{for(i in 0..objOrderDistList!!.size-1){
+            var objDateUploadList=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getOrderIdDateStatus(objOrderDistList!!.get(i))
+            var obj:OrderIDDateViewStatus = OrderIDDateViewStatus(objOrderDistList.get(i),objDateUploadList!!.order_date,objDateUploadList.isUploaded)
+            rv_data.add(obj)
+        }}catch (ex:Exception){ex.printStackTrace()}
 
 
-                var objDateUploadList = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getOrderIdDateStatus(objOrderDistList!!.get(i))
-                var obj: OrderIDDateViewStatus = OrderIDDateViewStatus(objOrderDistList.get(i), objDateUploadList!!.order_date, objDateUploadList.isUploaded)
-
-                qty_list.add(qty_Order.toString())
-                rv_data.add(obj)
-            }
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-        }
-
-
-        adapterNewOrdScrOrdList = AdapterNewOrdScrOrdList(mContext, rv_data, object : NewOrdScrShowDetaisOnCLick {
+        adapterNewOrdScrOrdList=AdapterNewOrdScrOrdList(mContext,rv_data,object : NewOrdScrShowDetaisOnCLick{
             override fun getOrderID(orderID: String, orderDate: String) {
-                getOrderDetailsList(orderID, orderDate)
+                getOrderDetailsList(orderID,orderDate)
             }
         })
-        mRv_orderDetails.adapter = adapterNewOrdScrOrdList
+        mRv_orderDetails.adapter=adapterNewOrdScrOrdList
 
     }
 
 
-    private fun getOrderDetailsList(orderID: String, orderDate: String) {
-        var orderAllList = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderAll(shop_id)
+    private fun getOrderDetailsList(orderID:String,orderDate:String){
+        var orderAllList=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderAll(shop_id)
         //var orderIdList=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderDistinct(shop_id)
-        var orderIdList: ArrayList<String> = ArrayList()
+        var orderIdList:ArrayList<String> = ArrayList()
         orderIdList.add(orderID)
         final_order_list.clear()
 
-        for (i in 0..orderIdList!!.size - 1) {
-            newOrderCartModel1 = NewOrderCartModel()
-            newOrderCartModel2 = NewOrderCartModel()
+        for(i in 0..orderIdList!!.size-1){
+            newOrderCartModel1=NewOrderCartModel()
+            newOrderCartModel2=NewOrderCartModel()
             //var uniqGender=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getUniqGenderForOrderID(orderIdList.get(i))
 
-            var productIDList = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getProductCodeDistinctByOrderID(orderIdList.get(i))
+            var productIDList=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getProductCodeDistinctByOrderID(orderIdList.get(i))
             //
 
 
-            for (j in 0..productIDList!!.size - 1) {
+            for(j in 0..productIDList!!.size-1){
 
-                if (j != 0) {
-                    if (newOrderCartModel1 != null) {
-                        if (newOrderCartModel1!!.color_list.size > 0)
+                if(j!=0){
+                    if(newOrderCartModel1!=null){
+                        if(newOrderCartModel1!!.color_list.size>0)
                             final_order_list.add(newOrderCartModel1!!)
                     }
-                    if (newOrderCartModel2 != null) {
-                        if (newOrderCartModel2!!.color_list.size > 0)
+                    if(newOrderCartModel2!=null){
+                        if(newOrderCartModel2!!.color_list.size>0)
                             final_order_list.add(newOrderCartModel2!!)
                     }
                 }
 
-                newOrderCartModel1 = NewOrderCartModel()
-                newOrderCartModel2 = NewOrderCartModel()
+                newOrderCartModel1=NewOrderCartModel()
+                newOrderCartModel2=NewOrderCartModel()
 
                 //newOrderCartModel1!!.product_id=productIDList!!.get(j)
                 //newOrderCartModel2!!.product_id=productIDList!!.get(j)
                 //newOrderCartModel1!!.product_name=AppDatabase.getDBInstance()?.newOrderProductDao()?.getNewOrderProductName(productIDList!!.get(j))!!
                 //newOrderCartModel2!!.product_name=AppDatabase.getDBInstance()?.newOrderProductDao()?.getNewOrderProductName(productIDList!!.get(j))!!
 
-                var colorIDListForProduct = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getColorIDDistinctByOrderID(orderIdList.get(i), productIDList.get(j))
-                for (k in 0..colorIDListForProduct!!.size - 1) {
+                var colorIDListForProduct=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getColorIDDistinctByOrderID(orderIdList.get(i),productIDList.get(j))
+                for(k in 0..colorIDListForProduct!!.size-1){
                     var sizeQtyListMale = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getSizeQtyByProductColorIDMale(orderIdList!!.get(i), productIDList!!.get(j), colorIDListForProduct!!.get(k),
                             Pref.new_ord_gender_male)
                     var sizeQtyListFeMale = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getSizeQtyByProductColorIDFemale(orderIdList!!.get(i), productIDList!!.get(j), colorIDListForProduct!!.get(k),
                             Pref.new_ord_gender_female)
-                    if (sizeQtyListMale!!.size > 0) {
-                        newOrderCartModel1!!.product_id = productIDList!!.get(j)
-                        newOrderCartModel1!!.product_name = AppDatabase.getDBInstance()?.newOrderProductDao()?.getNewOrderProductName(productIDList!!.get(j))!!
+                    if(sizeQtyListMale!!.size>0){
+                        newOrderCartModel1!!.product_id=productIDList!!.get(j)
+                        newOrderCartModel1!!.product_name=AppDatabase.getDBInstance()?.newOrderProductDao()?.getNewOrderProductName(productIDList!!.get(j))!!
 
-                        //newOrderCartModel1!!.gender = "MALE"
+                        //newOrderCartModel1!!.gender="MALE"
                         newOrderCartModel1!!.gender = Pref.new_ord_gender_male
 
-                        var colorSel = AppDatabase.getDBInstance()?.newOrderColorDao()?.getNewOrderColorName(colorIDListForProduct.get(k))
-                        var colorList: ColorList = ColorList(colorSel!!, colorIDListForProduct.get(k), sizeQtyListMale as ArrayList<ProductOrder>)
+                        try{
+                            var totalRate = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getNewOrderProductRateByOrdID(productIDList!!.get(j),orderIdList.get(i))!!.toDouble()
+                            var qt = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getNewOrderProductQtyByOrdID(productIDList!!.get(j),orderIdList.get(i))!!.toDouble()
+                            //newOrderCartModel1!!.rate=(totalRate/qt).toString()
+                            newOrderCartModel1!!.rate=totalRate.toString()
+                        }catch (ex:Exception){
+                            newOrderCartModel1!!.rate="0.0"
+                        }
+                        //newOrderCartModel1!!.rate=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getNewOrderProductRateByOrdID(productIDList!!.get(j),orderIdList.get(i))!!
+
+
+
+
+                        var colorSel= AppDatabase.getDBInstance()?.newOrderColorDao()?.getNewOrderColorName(colorIDListForProduct.get(k))
+                        var colorList: ColorList = ColorList(colorSel!!,colorIDListForProduct.get(k), sizeQtyListMale as ArrayList<ProductOrder>)
                         newOrderCartModel1!!.color_list.add(colorList)
                     }
 
-                    if (sizeQtyListFeMale!!.size > 0) {
-                        newOrderCartModel2!!.product_id = productIDList!!.get(j)
-                        newOrderCartModel2!!.product_name = AppDatabase.getDBInstance()?.newOrderProductDao()?.getNewOrderProductName(productIDList!!.get(j))!!
+                    if(sizeQtyListFeMale!!.size>0){
+                        newOrderCartModel2!!.product_id=productIDList!!.get(j)
+                        newOrderCartModel2!!.product_name=AppDatabase.getDBInstance()?.newOrderProductDao()?.getNewOrderProductName(productIDList!!.get(j))!!
 
-                        //newOrderCartModel2!!.gender = "FEMALE"
+                        //newOrderCartModel2!!.gender="FEMALE"
                         newOrderCartModel2!!.gender = Pref.new_ord_gender_female
 
-                        var colorSel = AppDatabase.getDBInstance()?.newOrderColorDao()?.getNewOrderColorName(colorIDListForProduct.get(k))
-                        var colorList: ColorList = ColorList(colorSel!!, colorIDListForProduct.get(k), sizeQtyListFeMale as ArrayList<ProductOrder>)
+                        try{
+                            var totalRate = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getNewOrderProductRateByOrdID(productIDList!!.get(j),orderIdList.get(i))!!.toDouble()
+                            var qt = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getNewOrderProductQtyByOrdID(productIDList!!.get(j),orderIdList.get(i))!!.toDouble()
+                            //newOrderCartModel1!!.rate=(totalRate/qt).toString()
+                            newOrderCartModel1!!.rate=totalRate.toString()
+                        }catch (ex:Exception){
+                            newOrderCartModel1!!.rate="0.0"
+                        }
+                        //newOrderCartModel2!!.rate=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getNewOrderProductRateByOrdID(productIDList!!.get(j),orderIdList.get(i))!!
+
+                        var colorSel= AppDatabase.getDBInstance()?.newOrderColorDao()?.getNewOrderColorName(colorIDListForProduct.get(k))
+                        var colorList: ColorList = ColorList(colorSel!!,colorIDListForProduct.get(k), sizeQtyListFeMale as ArrayList<ProductOrder>)
                         newOrderCartModel2!!.color_list.add(colorList)
                     }
-
-
                 }
 
             }
 
-            if (newOrderCartModel1 != null) {
-                if (newOrderCartModel1!!.color_list.size > 0)
-                    final_order_list.add(newOrderCartModel1!!)
+            if(newOrderCartModel1!=null){
+                if(newOrderCartModel1!!.color_list.size>0)
+                final_order_list.add(newOrderCartModel1!!)
             }
-            if (newOrderCartModel2 != null) {
-                if (newOrderCartModel2!!.color_list.size > 0)
-                    final_order_list.add(newOrderCartModel2!!)
+            if(newOrderCartModel2!=null){
+                if(newOrderCartModel2!!.color_list.size>0)
+                final_order_list.add(newOrderCartModel2!!)
             }
 
         }
 
-        CustomStatic.IsFromViewNewOdrScr = true
-        CustomStatic.IsFromViewNewOdrScrOrderID = orderID
-        CustomStatic.IsFromViewNewOdrScrOrderDate = orderDate
+        CustomStatic.IsFromViewNewOdrScr=true
+        CustomStatic.IsFromViewNewOdrScrOrderID=orderID
+        CustomStatic.IsFromViewNewOdrScrOrderDate=orderDate
         (mContext as DashboardActivity).loadFragment(FragType.NeworderScrCartFragment, true, final_order_list)
 
     }
 
-    private fun arrangProduct() {
+    private fun arrangProduct( ){
+
 
 
     }
 
 
+
+
     override fun onClick(v: View?) {
-        if (v != null) {
-            when (v.id) {
+        if(v!=null){
+            when(v.id){
                 R.id.ll_frag_new_order_detalis_add -> {
-                    if(Pref.isAddAttendence){
-                        println("new_ord");
-                        (mContext as DashboardActivity).loadFragment(FragType.NewOrderScrActiFragment, true, shop_id)
-                    }else{
-                        (mContext as DashboardActivity).checkToShowAddAttendanceAlert()
-                    }
-
+                    (mContext as DashboardActivity).loadFragment(FragType.NewOrderScrActiFragment, true, shop_id)
                 }
-
-                R.id.ll_frag_new_order_detalis_share->{
+                R.id.add_new_order_share->{
                     //onShareClick()
                     onShareClickNew()
                 }
@@ -330,6 +270,7 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
     }
 
 
+    @SuppressLint("UseRequireInsteadOfGet")
     fun onShareClickNew(){
         var heading = "ORDER SUMMARY"
         var pdfBody: String = "\n\n"
@@ -346,7 +287,7 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
             for (j in 0..qtty_list!!.size - 1) {
                 qty_Order = qty_Order + qtty_list.get(j).toString().toInt()
             }
-            var content="\n\n"+AppUtils.convertToCommonFormat(rv_data.get(i).order_date)+"        "+rv_data.get(i).order_id+"           "+qty_Order.toString()+"\n"+
+            var content="\n\n"+ AppUtils.convertToCommonFormat(rv_data.get(i).order_date)+"        "+rv_data.get(i).order_id+"           "+qty_Order.toString()+"\n"+
                     "\n____________________________________________________________"
             pdfBody=pdfBody+content
         }
@@ -380,6 +321,5 @@ class NewOrderScrOrderDetailsFragment : BaseFragment(), View.OnClickListener {
 
 
     }
-
 
 }

@@ -1,29 +1,35 @@
 package com.lavos.app
 
+import android.content.ContentResolver
 import android.content.Context
+import android.net.Uri
 import android.os.Environment
 import android.os.StrictMode
+import android.provider.MediaStore
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import com.crashlytics.android.Crashlytics
-import com.elvishew.xlog.LogConfiguration
-import com.elvishew.xlog.XLog
-import com.elvishew.xlog.interceptor.BlacklistTagsFilterInterceptor
-import com.elvishew.xlog.printer.AndroidPrinter
-import com.elvishew.xlog.printer.Printer
-import com.elvishew.xlog.printer.file.FilePrinter
-import com.elvishew.xlog.printer.file.backup.NeverBackupStrategy
-import com.elvishew.xlog.printer.file.clean.FileLastModifiedCleanStrategy
+import com.lavos.app.utils.AppUtils
+import com.lavos.app.utils.FileLoggingTree
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
 import com.facebook.stetho.Stetho
 import com.marcinmoskala.kotlinpreferences.PreferenceHolder
 import io.fabric.sdk.android.Fabric
+import timber.log.Timber
 import java.io.File
 
 
 class FTSApp : MultiDexApplication() {
 
     lateinit var appComponent: AppComponent
-    var globalFilePrinter: Printer? = null
+    //var globalFilePrinter: Printer? = null
 
     @Suppress("INTEGER_OVERFLOW")
     private val MAX_TIME: Long = 1000 * 60 * 60 * 24 * 300
@@ -37,7 +43,8 @@ class FTSApp : MultiDexApplication() {
     override fun onCreate() {
         super.onCreate()
 //        appComponent = buildAppComponent()
-        initXlog()
+        //initXlog()
+        //initTimber()
 
         AppDatabase.initAppDatabase(this)
         Stetho.initializeWithDefaults(this)
@@ -55,12 +62,22 @@ class FTSApp : MultiDexApplication() {
                  .build()
      }*/
 
+    private fun initTimber() {
+        Timber.plant(Timber.DebugTree())
+        Timber.plant(FileLoggingTree())
+    }
+
 
     /**
      * Initialize XLog.
      */
+    /*
     private fun initXlog() {
-        val config = LogConfiguration.Builder()
+
+
+        println("initXlog - FTSApp " + AppUtils.getCurrentDateTime().toString())
+        try {
+            val config = LogConfiguration.Builder()
 //                .logLevel(if (BuildConfig.DEBUG)
 //                    LogLevel.ALL             // Specify log level, logs below this level won't be printed, default: LogLevel.ALL
 //                else
@@ -78,30 +95,40 @@ class FTSApp : MultiDexApplication() {
                 // .addObjectFormatter(AnyClass.class,                 // Add formatter for specific class of object
                 //     new AnyClassObjectFormatter())                  // Use Object.toString() by default
                 .addInterceptor(BlacklistTagsFilterInterceptor(    // Add blacklist tags filter
-                        "blacklist1", "blacklist2", "blacklist3"))
+                    "blacklist1", "blacklist2", "blacklist3"))
                 // .addInterceptor(new WhitelistTagsFilterInterceptor( // Add whitelist tags filter
                 //     "whitelist1", "whitelist2", "whitelist3"))
                 // .addInterceptor(new MyInterceptor())                // Add a log interceptor
                 .build()
 
-        val androidPrinter = AndroidPrinter()             // Printer that print the log using android.util.Log
-        //val filePrinter = FilePrinter.Builder(File(getExternalStorageDirectory(), "xlavoslogsample").path)// Printer that print the log to the file system
-        val filePrinter = FilePrinter.Builder(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "xlavoslogsample").path)// Printer that print the log to the file system
+            val androidPrinter = AndroidPrinter()             // Printer that print the log using android.util.Log
+            //val filePrinter = FilePrinter.Builder(File(getExternalStorageDirectory(), "xlavoslogsample").path)// Printer that print the log to the file system
+            val filePrinter = FilePrinter.Builder(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "xlavoslogsample").path)// Printer that print the log to the file system
                 // Specify the path to save log file
 //                .fileNameGenerator(ChangelessFileNameGenerator())        // Default: ChangelessFileNameGenerator("log")
-                 .backupStrategy(NeverBackupStrategy())             // Default: FileSizeBackupStrategy(1024 * 1024)
+                //.backupStrategy(NeverBackupStrategy())             // Default: FileSizeBackupStrategy(1024 * 1024)
+                //.backupStrategy(FileSizeBackupStrategy2(50*1024,1))             // Default: FileSizeBackupStrategy(1024 * 1024)
+                .backupStrategy(FileSizeBackupStrategy2(1024*1024*40,1))
+                    // Default: FileSizeBackupStrategy(1024 * 1024)
                 //.logFlattener(ClassicFlattener())                  // Default: DefaultFlattener
                 .cleanStrategy(FileLastModifiedCleanStrategy(MAX_TIME))
+                //.cleanStrategy(FileLastModifiedCleanStrategy(9000000))  //2.5 hts
+                //.cleanStrategy(FileLastModifiedCleanStrategy(57000000)) // 15.8 hrs
                 .build()
 
-        XLog.init(                                                 // Initialize XLog
+            XLog.init(                                                 // Initialize XLog
                 config, // Specify the log configuration, if not specified, will use new LogConfiguration.Builder().build()
                 androidPrinter, // Specify printers, if no printer is specified, AndroidPrinter(for Android)/ConsolePrinter(for java) will be used.
                 filePrinter)
 
-        // For future usage: partial usage in MainActivity.
-        globalFilePrinter = filePrinter
-    }
+            // For future usage: partial usage in MainActivity.
+            globalFilePrinter = filePrinter
+            println("initXlog - filePrinter done " + AppUtils.getCurrentDateTime().toString())
+        }catch (ex:Exception){
+            println("initXlog - exception ${ex.message} " + AppUtils.getCurrentDateTime().toString())
+        }
 
+    }
+*/
 
 }

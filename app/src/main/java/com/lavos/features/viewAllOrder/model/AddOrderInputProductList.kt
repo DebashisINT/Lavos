@@ -9,4 +9,10 @@ class AddOrderInputProductList {
     var rate: String? = null
     var total_price: String? = null
     var product_name: String? = null
+    var scheme_qty: String? = null
+    var scheme_rate: String? = null
+    var total_scheme_price: String? = null
+    var MRP: String? = null
+    var order_mrp: String? = null
+    var order_discount: String? = null
 }

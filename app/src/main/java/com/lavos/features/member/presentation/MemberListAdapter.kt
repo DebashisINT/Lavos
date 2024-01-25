@@ -1,16 +1,23 @@
 package com.lavos.features.member.presentation
 
+import android.app.Dialog
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.os.Handler
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Filter
 import android.widget.Filterable
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import com.lavos.R
 import com.lavos.app.Pref
 import com.lavos.features.dashboard.presentation.DashboardActivity
 import com.lavos.features.member.model.TeamListDataModel
+import com.lavos.widgets.AppCustomTextView
 import kotlinx.android.synthetic.main.inflate_member_list_item.view.*
 
 
@@ -76,7 +83,56 @@ class MemberListAdapter(context: Context, val teamList: ArrayList<TeamListDataMo
             else
                 itemView.tv_team_details.visibility = View.VISIBLE
 
+            if(teamList[adapterPosition].isLeaveApplied){
+                if(teamList[adapterPosition].isLeavePending){
+                    DrawableCompat.setTint(
+                            DrawableCompat.wrap(itemView.iv_leave.getDrawable()),
+                            ContextCompat.getColor(context,R.color.color_custom_red)
+                    )
+                }
+                else{
+                    DrawableCompat.setTint(
+                            DrawableCompat.wrap(itemView.iv_leave.getDrawable()),
+                            ContextCompat.getColor(context,R.color.color_custom_green)
+                    )
+                }
+            }
+             else{
+                DrawableCompat.setTint(
+                        DrawableCompat.wrap(itemView.iv_leave.getDrawable()),
+                        ContextCompat.getColor(context,R.color.default_gray)
+                )
+            }
+//                itemView.iv_leave.setImageDrawable(context.getDrawable(R.drawable.ic_applyleave))
 
+            if(Pref.Leaveapprovalfromsupervisorinteam){
+                itemView.iv_leave.visibility = View.VISIBLE
+            }
+            else{
+                itemView.iv_leave.visibility = View.GONE
+            }
+
+            itemView.iv_leave.setOnClickListener({
+                if(teamList[adapterPosition].isLeaveApplied){
+                    listener.onLeaveClick(teamList[adapterPosition])
+                }else{
+                    val simpleDialog = Dialog(context)
+                    simpleDialog.setCancelable(false)
+                    simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                    simpleDialog.setContentView(R.layout.dialog_message)
+                    val dialogHeader = simpleDialog.findViewById(R.id.dialog_message_headerTV) as AppCustomTextView
+                    val dialogBody = simpleDialog.findViewById(R.id.dialog_message_header_TV) as AppCustomTextView
+                    val obBtn = simpleDialog.findViewById(R.id.tv_message_ok) as AppCustomTextView
+                    dialogHeader.text="Hi "+Pref.user_name+"!"
+                    dialogBody.text = "Nothing to show."
+                    obBtn.setOnClickListener({ view ->
+                        simpleDialog.cancel()
+
+                    })
+                    simpleDialog.show()
+                }
+
+            })
             itemView.tv_team_details.setOnClickListener({
                 listener.onTeamClick(teamList[adapterPosition])
             })
@@ -97,11 +153,93 @@ class MemberListAdapter(context: Context, val teamList: ArrayList<TeamListDataMo
                 listener.onLocClick(teamList[adapterPosition])
             }
 
+            itemView.iv_coll.setOnClickListener{
+                listener.onCollClick(teamList[adapterPosition])
+            }
+
             itemView.iv_job.visibility=View.GONE
+
+            if(Pref.IsShowRepeatOrdersNotificationinTeam){
+                itemView.iv_zero_order.visibility = View.VISIBLE
+            }else{
+                itemView.iv_zero_order.visibility = View.GONE
+            }
+
+            itemView.iv_zero_order.setOnClickListener{
+                listener.onZeroOrderClick(teamList[adapterPosition])
+            }
+
+            if(Pref.IsBeatRouteReportAvailableinTeam){
+                itemView.iv_beat.visibility = View.VISIBLE
+            }else{
+                itemView.iv_beat.visibility = View.GONE
+            }
+
+            itemView.iv_beat.setOnClickListener{
+                listener.onBeatClick(teamList[adapterPosition])
+            }
+
+            if(Pref.IsShowStateInTeam){
+                itemView.ll_state_root.visibility = View.VISIBLE
+            }else{
+                itemView.ll_state_root.visibility = View.GONE
+            }
+            if(Pref.IsShowBranchInTeam){
+                itemView.ll_branch_root.visibility = View.VISIBLE
+            }else{
+                itemView.ll_branch_root.visibility = View.GONE
+            }
+            if(Pref.IsShowDesignationInTeam){
+                itemView.ll_design_root.visibility = View.VISIBLE
+            }else{
+                itemView.ll_design_root.visibility = View.GONE
+            }
+
+
+            itemView.tv_state_member_list_show.text  = teamList[adapterPosition].State
+            itemView.tv_branch_member_list_show.text  = teamList[adapterPosition].Branch
+            itemView.tv_des_member_list_show.text  = teamList[adapterPosition].Designation
+
+            itemView.tv_empcode_member_list_show.text  = teamList[adapterPosition].Employee_Code
+
+            //start 1.0  OfflineMemberAdapter AppV 4.1.5 Saheli    06/06/2023  mantis 0026301: Team Details page working
+            if(Pref.isOfflineTeam){
+                itemView.iv_beat.visibility=View.GONE
+                itemView.iv_zero_order.visibility = View.GONE
+                itemView.iv_coll.visibility = View.GONE
+                itemView.iv_leave.visibility = View.GONE
+            }
+            else{
+                if(Pref.IsBeatRouteReportAvailableinTeam){
+                    itemView.iv_beat.visibility = View.VISIBLE
+                }else{
+                    itemView.iv_beat.visibility = View.GONE
+                }
+                if(Pref.IsShowRepeatOrdersNotificationinTeam){
+                    itemView.iv_zero_order.visibility = View.VISIBLE
+                }else{
+                    itemView.iv_zero_order.visibility = View.GONE
+                }
+                itemView.iv_coll.visibility = View.VISIBLE
+                if(Pref.Leaveapprovalfromsupervisorinteam){
+                    itemView.iv_leave.visibility = View.VISIBLE
+                }
+                else{
+                    itemView.iv_leave.visibility = View.GONE
+                }
+            }
+
+            itemView.tv_team_details_all_party.setOnClickListener {
+                listener.onAllPartyClick(teamList[adapterPosition])
+            }
+            //end 1.0  OfflineMemberAdapter AppV 4.1.5 Saheli    06/06/2023  mantis 0026301: Team Details page working
+
         }
     }
 
     interface OnClickListener {
+        fun onLeaveClick(team: TeamListDataModel)
+
         fun onTeamClick(team: TeamListDataModel)
 
         fun onShopClick(team: TeamListDataModel)
@@ -112,7 +250,15 @@ class MemberListAdapter(context: Context, val teamList: ArrayList<TeamListDataMo
 
         fun onLocClick(team: TeamListDataModel)
 
+        fun onCollClick(team: TeamListDataModel)
+
+        fun onZeroOrderClick(team: TeamListDataModel)
+
+        fun onBeatClick(team: TeamListDataModel)
+
         fun getSize(size: Int)
+
+        fun onAllPartyClick(team: TeamListDataModel)
     }
 
     override fun getFilter(): Filter {

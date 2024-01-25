@@ -1,11 +1,16 @@
 package com.lavos.features.addAttendence.api.leavetytpeapi
 
 import com.lavos.app.NetworkConstant
+import com.lavos.base.BaseResponse
+import com.lavos.features.addAttendence.model.ApprovalLeaveResponseModel
 import com.lavos.features.addAttendence.model.LeaveTypeResponseModel
+import com.lavos.features.leaveapplynew.model.ApprovalRejectReqModel
+import com.lavos.features.leaveapplynew.model.clearAttendanceonRejectReqModelRejectReqModel
 import io.reactivex.Observable
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
@@ -17,6 +22,19 @@ interface LeaveTypeApi {
     @FormUrlEncoded
     @POST("Leave/Types")
     fun getLeaveTypeList(@Field("session_token") session_token: String, @Field("user_id") user_id: String): Observable<LeaveTypeResponseModel>
+
+
+    @FormUrlEncoded
+    @POST("LeaveApproval/UserLeaveList")
+    fun getApprovalLeaveList(@Field("session_token") session_token: String, @Field("user_id_leave_applied") user_id: String): Observable<ApprovalLeaveResponseModel>
+
+
+    @POST("LeaveApproval/UserLeaveForApprovalStatus")
+    fun postApprovalRejectclick(@Body ApprovalRejectReqModel: ApprovalRejectReqModel?): Observable<BaseResponse>
+
+
+    @POST("Attendance/DeleteLeaveAttendance")
+    fun clearAttendanceonRejectclick(@Body clearAttendanceonRejectReModel: clearAttendanceonRejectReqModelRejectReqModel?): Observable<BaseResponse>
 
     /**
      * Companion object to create the GithubApiService

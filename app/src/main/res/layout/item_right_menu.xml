@@ -12,10 +12,10 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/_65sdp"
         android:layout_gravity="center_vertical"
-        android:drawablePadding="@dimen/_5sdp"
+        android:drawablePadding="@dimen/_1sdp"
         android:drawableTop="@drawable/ic_delete_icon"
         android:gravity="center_horizontal"
-        android:padding="@dimen/_8sdp"
+        android:padding="@dimen/_6sdp"
         android:text="Delete"
         android:textColor="@color/white"
         android:textSize="@dimen/_8sdp" />

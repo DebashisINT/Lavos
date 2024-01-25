@@ -16,7 +16,8 @@ import com.lavos.features.dashboard.presentation.DashboardActivity
 import com.lavos.features.location.LocationWizard
 import com.lavos.widgets.AppCustomEditText
 import com.lavos.widgets.AppCustomTextView
-import com.elvishew.xlog.XLog
+
+import timber.log.Timber
 
 /**
  * Created by Pratishruti on 02-02-2018.
@@ -109,7 +110,7 @@ class UpdateShopAddressDialog : DialogFragment() {
             new_address_EDT.setText(LocationWizard.getLocationName(mContext, loc.latitude, loc.longitude))
         } catch (e: Exception) {
             e.printStackTrace()
-            XLog.e("Update Shop Address", "Address calculation error(From shop list)=========> " + e.localizedMessage + " for shop " + addShopData.shopName)
+            Timber.e("Update Shop Address", "Address calculation error(From shop list)=========> " + e.localizedMessage + " for shop " + addShopData.shopName)
             new_address_EDT.setText("Unknown")
         }
 

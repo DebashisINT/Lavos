@@ -1,12 +1,14 @@
 package com.lavos.features.device_info.presentation
 
 import android.content.Context
+import android.hardware.Camera
 import android.os.Bundle
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.lavos.R
 import com.lavos.app.AppDatabase
 import com.lavos.app.NetworkConstant
@@ -22,12 +24,13 @@ import com.lavos.features.location.model.AppInfoDataModel
 import com.lavos.features.location.model.AppInfoInputModel
 import com.lavos.features.location.model.AppInfoResponseModel
 import com.lavos.widgets.AppCustomTextView
-import com.elvishew.xlog.XLog
+
 import com.pnikosis.materialishprogress.ProgressWheel
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
+import timber.log.Timber
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -39,6 +42,7 @@ class DeviceInfoListFragment : BaseFragment() {
     private lateinit var tv_no_data_available: AppCustomTextView
     private lateinit var progress_wheel: ProgressWheel
     private lateinit var tv_pick_date: AppCustomTextView
+    private lateinit var backcamera: TextView
 
     private var selectedDate = ""
 
@@ -59,21 +63,25 @@ class DeviceInfoListFragment : BaseFragment() {
         selectedDate = AppUtils.getCurrentDateForShopActi()
 
         val list = AppDatabase.getDBInstance()?.batteryNetDao()?.getAll()
-        if (list != null && list.isNotEmpty())
+        if (list != null && list.isNotEmpty()) {
             initAdapter()
-        else
+        }
+        else {
             getListFromApi()
+        }
 
         return view
     }
 
     private fun initView(view: View) {
         view.apply {
+            backcamera = findViewById(R.id.backcamera)
             rv_device_info_list = findViewById(R.id.rv_device_info_list)
             tv_no_data_available = findViewById(R.id.tv_no_data_available)
             progress_wheel = findViewById(R.id.progress_wheel)
             tv_pick_date = findViewById(R.id.tv_pick_date)
         }
+//        backcamera.text = getBackCameraResolutionInMp().toString()
 
         tv_pick_date.text = AppUtils.getFormattedDate(myCalendar.time)
         progress_wheel.stopSpinning()
@@ -88,8 +96,34 @@ class DeviceInfoListFragment : BaseFragment() {
             cal.add(Calendar.DATE, -10)
             datePicker.datePicker.minDate = cal.timeInMillis
             datePicker.show()
+            datePicker.show()
         }
     }
+
+    fun getBackCameraResolutionInMp(): Float {
+        val noOfCameras: Int = Camera.getNumberOfCameras()
+        var maxResolution = -1f
+        var pixelCount: Long = -1
+        for (i in 0 until noOfCameras) {
+            val cameraInfo: Camera.CameraInfo = Camera.CameraInfo()
+            Camera.getCameraInfo(i, cameraInfo)
+            if (cameraInfo.facing === Camera.CameraInfo.CAMERA_FACING_BACK) {
+                val camera: Camera = Camera.open(i)
+                val cameraParams: Camera.Parameters = camera.getParameters()
+                for (j in 0 until cameraParams.getSupportedPictureSizes().size) {
+                    val pixelCountTemp: Int = cameraParams.getSupportedPictureSizes().get(j).width * cameraParams.getSupportedPictureSizes().get(j).height // Just changed i to j in this loop
+                    if (pixelCountTemp > pixelCount) {
+                        pixelCount = pixelCountTemp.toLong()
+                        maxResolution = pixelCountTemp.toFloat() / 1024000.0f
+
+                    }
+                }
+                camera.release()
+            }
+        }
+        return maxResolution
+    }
+
 
     val date = android.app.DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
         // TODO Auto-generated method stub
@@ -132,7 +166,7 @@ class DeviceInfoListFragment : BaseFragment() {
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             val response = result as AppInfoResponseModel
-                            XLog.e("Get App Info : RESPONSE : " + response.status + ":" + response.message)
+                            Timber.e("Get App Info : RESPONSE : " + response.status + ":" + response.message)
                             if (response.status == NetworkConstant.SUCCESS) {
                                 doAsync {
 
@@ -149,6 +183,7 @@ class DeviceInfoListFragment : BaseFragment() {
                                             net_type = it.network_type
                                             mob_net_type = it.mobile_network_type
                                             isUploaded = true
+                                            Power_Saver_Status = Pref.PowerSaverStatus
                                         })
                                     }
 
@@ -157,15 +192,14 @@ class DeviceInfoListFragment : BaseFragment() {
                                         initAdapter()
                                     }
                                 }
-                            }
-                            else {
+                            } else {
                                 progress_wheel.stopSpinning()
                                 (mContext as DashboardActivity).showSnackMessage(response.message!!)
                             }
 
                         }, { error ->
                             error.printStackTrace()
-                            XLog.e("Get App Info : ERROR : " + error.localizedMessage)
+                            Timber.e("Get App Info : ERROR : " + error.localizedMessage)
                             progress_wheel.stopSpinning()
                             (mContext as DashboardActivity).showSnackMessage(getString(R.string.something_went_wrong))
                         })
@@ -194,11 +228,11 @@ class DeviceInfoListFragment : BaseFragment() {
 
         val appInfoInput = AppInfoInputModel(Pref.session_token!!, Pref.user_id!!, appInfoList)
 
-        XLog.d("============App Info Input(Device Info List)===========")
-        XLog.d("session_token==========> " + appInfoInput.session_token)
-        XLog.d("user_id==========> " + appInfoInput.user_id)
-        XLog.d("app_info_list.size==========> " + appInfoInput.app_info_list?.size)
-        XLog.d("==============================================================")
+        Timber.d("============App Info Input(Device Info List)===========")
+        Timber.d("session_token==========> " + appInfoInput.session_token)
+        Timber.d("user_id==========> " + appInfoInput.user_id)
+        Timber.d("app_info_list.size==========> " + appInfoInput.app_info_list?.size)
+        Timber.d("==============================================================")
 
         progress_wheel.spin()
         val repository = LocationRepoProvider.provideLocationRepository()
@@ -208,7 +242,7 @@ class DeviceInfoListFragment : BaseFragment() {
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             val response = result as BaseResponse
-                            XLog.e("App Info : RESPONSE : " + response.status + ":" + response.message)
+                            Timber.e("App Info : RESPONSE : " + response.status + ":" + response.message)
                             AppUtils.isAppInfoUpdating = false
 
                             if (response.status == NetworkConstant.SUCCESS) {
@@ -222,7 +256,7 @@ class DeviceInfoListFragment : BaseFragment() {
                         }, { error ->
                             AppUtils.isAppInfoUpdating = false
                             error.printStackTrace()
-                            XLog.e("App Info : ERROR : " + error.localizedMessage)
+                            Timber.e("App Info : ERROR : " + error.localizedMessage)
                             progress_wheel.stopSpinning()
                             (mContext as DashboardActivity).showSnackMessage(getString(R.string.something_went_wrong))
                         })

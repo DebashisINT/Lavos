@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:fitsSystemWindows="true"
-    >
+    android:fitsSystemWindows="true">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
@@ -154,14 +153,70 @@
                 android:visibility="visible"
                 android:contentDescription="@null"/>
 
-            <androidx.appcompat.widget.AppCompatImageView
+
+
+           <!-- <FrameLayout
+                android:id="@+id/fl_noti_with_num"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone">
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@null"
+                    app:srcCompat="@drawable/ic_notification_white"
+                    android:visibility="visible"
+                    android:padding="@dimen/_5sdp" />
+
+                <TextView
+                    android:layout_width="@dimen/_15sdp"
+                    android:layout_height="@dimen/_15sdp"
+                    android:text="1+"
+                    android:textSize="@dimen/_11sdp"
+                    android:background="@drawable/xx"
+                    android:gravity="center"
+                    android:textColor="@color/white"
+                    android:layout_gravity="right"/>
+
+            </FrameLayout>-->
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/logo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@null"
+                    app:srcCompat="@drawable/ic_notification_white"
+                    android:visibility="visible"
+                    android:padding="@dimen/_5sdp" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/tv_noti_count"
+                    android:layout_width="@dimen/_15sdp"
+                    android:layout_height="@dimen/_15sdp"
+                    android:text="1+"
+                    android:textSize="@dimen/_11sdp"
+                    android:background="@drawable/xx"
+                    android:gravity="center"
+                    android:textColor="@color/white"
+                    android:layout_gravity="right"
+                    android:visibility="gone"/>
+
+            </FrameLayout>
+
+            <!--<androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/logo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="@null"
                 app:srcCompat="@drawable/ic_notification_white"
                 android:visibility="visible"
-                android:padding="@dimen/_5sdp" />
+                android:padding="@dimen/_5sdp" />-->
+
 
             <ImageView
                 android:id="@+id/iv_filter_icon"
@@ -169,16 +224,6 @@
                 android:layout_height="wrap_content"
                 android:padding="@dimen/_5sdp"
                 android:src="@drawable/ic_dashboard_filter_icon"
-                android:contentDescription="@null"
-                android:visibility="gone"/>
-
-            <ImageView
-                android:id="@+id/rl_share_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="@dimen/_5sdp"
-                android:src="@drawable/ic_share"
-                android:tint="@color/white"
                 android:contentDescription="@null"
                 android:visibility="gone"/>
 
@@ -191,13 +236,13 @@
 
                 <ImageView
                     android:id="@+id/iv_delete_icon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="@dimen/_32sdp"
+                    android:layout_height="@dimen/_32sdp"
                     android:contentDescription="@null"
                     android:paddingLeft="@dimen/_5sdp"
                     android:paddingTop="@dimen/_5sdp"
                     android:paddingBottom="@dimen/_5sdp"
-                    android:src="@drawable/ic_cart_icon" />
+                    android:src="@drawable/icon_cart3" />
 
                 <com.lavos.widgets.AppCustomTextView
                     android:id="@+id/tv_cart_count"
@@ -263,12 +308,12 @@
 
         <ImageView
             android:id="@+id/iv_sync_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="@dimen/_30sdp"
+            android:layout_height="@dimen/_30sdp"
             android:padding="@dimen/_5sdp"
             android:layout_centerVertical="true"
             android:layout_toLeftOf="@id/iv_search_icon"
-            android:src="@drawable/ic_header_reload_icon"
+            android:src="@drawable/icon_refresh1"
             android:visibility="gone"/>
 
         <!--<RelativeLayout
@@ -331,9 +376,9 @@
                 android:gravity="center"
                 android:paddingTop="@dimen/_3sdp"
                 android:paddingBottom="@dimen/_3sdp"
-                android:paddingRight="@dimen/_15sdp"
+                android:paddingRight="@dimen/_20sdp"
                 android:textColor="@color/white"
-                android:textSize="@dimen/_13sdp" />
+                android:textSize="@dimen/_12sdp" />
 
         </RelativeLayout>
 
@@ -390,9 +435,9 @@
 
         <com.lavos.app.MaterialSearchView
             android:id="@+id/search_view"
+            style="@style/MaterialSearchViewStyle"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            style="@style/MaterialSearchViewStyle"/>
+            android:layout_height="match_parent" />
     </RelativeLayout>
 
 

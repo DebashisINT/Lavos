@@ -36,13 +36,14 @@ import com.lavos.features.nearbyshops.model.ShopData
 import com.lavos.features.nearbyshops.model.ShopListResponse
 import com.lavos.widgets.AppCustomEditText
 import com.lavos.widgets.AppCustomTextView
-import com.elvishew.xlog.XLog
+
 import com.pnikosis.materialishprogress.ProgressWheel
 import com.themechangeapp.pickimage.PermissionHelper
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
+import timber.log.Timber
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -566,6 +567,15 @@ class EditActivityFragment : BaseFragment(), View.OnClickListener {
                 shopObj.assigned_to_shop_id = ""
             else
                 shopObj.assigned_to_shop_id = shop_list[i].assigned_to_shop_id
+            //start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+            try {
+                shopObj.FSSAILicNo = shop_list[i].FSSAILicNo
+            }catch (ex:Exception){
+                ex.printStackTrace()
+                shopObj.FSSAILicNo = ""
+            }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+
 
             list.add(shopObj)
             AppDatabase.getDBInstance()!!.addShopEntryDao().insert(shopObj)
@@ -863,6 +873,20 @@ class EditActivityFragment : BaseFragment(), View.OnClickListener {
     }
 
     private fun initPermissionCheck() {
+
+        //begin mantis id 26741 Storage permission updation Suman 22-08-2023
+        var permissionList = arrayOf<String>( Manifest.permission.CAMERA)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            permissionList += Manifest.permission.READ_MEDIA_IMAGES
+            permissionList += Manifest.permission.READ_MEDIA_AUDIO
+            permissionList += Manifest.permission.READ_MEDIA_VIDEO
+        }else{
+            permissionList += Manifest.permission.WRITE_EXTERNAL_STORAGE
+            permissionList += Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+//end mantis id 26741 Storage permission updation Suman 22-08-2023
+
         permissionUtils = PermissionUtils(mContext as Activity, object : PermissionUtils.OnPermissionListener {
             override fun onPermissionGranted() {
                 if (isAttachment)
@@ -875,7 +899,7 @@ class EditActivityFragment : BaseFragment(), View.OnClickListener {
                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.accept_permission))
             }
 
-        }, arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+        },permissionList)// arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
     }
 
     fun onRequestPermission(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -994,28 +1018,28 @@ class EditActivityFragment : BaseFragment(), View.OnClickListener {
                 activity.due_date!!, activity.due_time!!)
 
 
-        XLog.d("==============Edit Activity Input Params (Add Activity)====================")
-        XLog.d("user_id=======> " + Pref.user_id)
-        XLog.d("session_token=======> " + Pref.session_token)
-        XLog.d("id=======> " + activity.activity_id)
-        XLog.d("party_id=======> " + activity.party_id)
-        XLog.d("details=======> " + activity.details)
-        XLog.d("date=======> " + activity.date)
-        XLog.d("time=======> " + activity.time)
-        XLog.d("name=======> " + activity.name)
-        XLog.d("time=======> " + activity.time)
-        XLog.d("activity_id=======> " + activity.activity_dropdown_id)
-        XLog.d("type_id=======> " + activity.type_id)
-        XLog.d("product_id=======> " + activity.product_id)
-        XLog.d("subject=======> " + activity.subject)
-        XLog.d("details=======> " + activity.details)
-        XLog.d("duration=======> " + activity.duration)
-        XLog.d("priority_id=======> " + activity.priority_id)
-        XLog.d("due_date=======> " + activity.due_date)
-        XLog.d("due_time=======> " + activity.due_time)
-        XLog.d("attachments=======> " + activity.attachments)
-        XLog.d("image=======> " + activity.image)
-        XLog.d("========================================================================")
+        Timber.d("==============Edit Activity Input Params (Add Activity)====================")
+        Timber.d("user_id=======> " + Pref.user_id)
+        Timber.d("session_token=======> " + Pref.session_token)
+        Timber.d("id=======> " + activity.activity_id)
+        Timber.d("party_id=======> " + activity.party_id)
+        Timber.d("details=======> " + activity.details)
+        Timber.d("date=======> " + activity.date)
+        Timber.d("time=======> " + activity.time)
+        Timber.d("name=======> " + activity.name)
+        Timber.d("time=======> " + activity.time)
+        Timber.d("activity_id=======> " + activity.activity_dropdown_id)
+        Timber.d("type_id=======> " + activity.type_id)
+        Timber.d("product_id=======> " + activity.product_id)
+        Timber.d("subject=======> " + activity.subject)
+        Timber.d("details=======> " + activity.details)
+        Timber.d("duration=======> " + activity.duration)
+        Timber.d("priority_id=======> " + activity.priority_id)
+        Timber.d("due_date=======> " + activity.due_date)
+        Timber.d("due_time=======> " + activity.due_time)
+        Timber.d("attachments=======> " + activity.attachments)
+        Timber.d("image=======> " + activity.image)
+        Timber.d("========================================================================")
 
         if (TextUtils.isEmpty(activity.attachments) && TextUtils.isEmpty(activity.image)) {
             val repository = ActivityRepoProvider.activityRepoProvider()

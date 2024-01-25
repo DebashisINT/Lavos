@@ -7,7 +7,7 @@
     android:orientation="vertical">
 
     <LinearLayout
-        android:id="@+id/shop_list_LL_new_ord"
+        android:id="@+id/shop_list_LL"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="@dimen/_5sdp"
@@ -18,7 +18,7 @@
         android:orientation="vertical">
 
         <RelativeLayout
-            android:id="@+id/shop_detail_RL_new_ord"
+            android:id="@+id/shop_detail_RL"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
@@ -28,6 +28,7 @@
             android:paddingBottom="@dimen/_5sdp">
 
             <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/shop_image_IV"
                 android:layout_width="@dimen/_45sdp"
                 android:layout_height="@dimen/_45sdp"
                 android:layout_centerVertical="true"
@@ -46,7 +47,7 @@
                 android:visibility="visible" />
 
             <RelativeLayout
-                android:id="@+id/shop_details_rl_new_ord"
+                android:id="@+id/shop_details_rl"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
@@ -54,7 +55,7 @@
                 android:layout_toRightOf="@id/shop_IV">
 
                 <RelativeLayout
-                    android:id="@+id/sync_RL_new_ord"
+                    android:id="@+id/sync_RL"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
@@ -72,10 +73,10 @@
                 </RelativeLayout>
 
                 <com.lavos.widgets.AppCustomTextView
-                    android:id="@+id/myshop_address_TV_ord"
+                    android:id="@+id/myshop_address_TV"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/sync_RL_new_ord"
+                    android:layout_below="@id/sync_RL"
                     android:layout_marginBottom="@dimen/_3sdp"
                     android:singleLine="true"
                     android:textColor="@color/light_gray"
@@ -86,7 +87,7 @@
                     android:id="@+id/tv_contact_number"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/myshop_address_TV_ord"
+                    android:layout_below="@id/myshop_address_TV"
                     android:layout_marginBottom="@dimen/_3sdp"
                     android:singleLine="true"
                     android:textColor="@color/light_gray"
@@ -105,7 +106,6 @@
                         android:layout_alignParentLeft="true"
                         android:layout_marginRight="@dimen/_5sdp"
                         android:layout_marginBottom="@dimen/_3sdp"
-                        android:layout_toLeftOf="@+id/view_all_tv"
                         android:singleLine="true"
                         android:text="@string/order_amount_text"
                         android:textColor="@color/light_gray"
@@ -151,7 +151,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/shop_list_LL_new_ord"
+        android:layout_below="@+id/shop_list_LL"
         android:orientation="vertical">
 
         <LinearLayout
@@ -167,11 +167,11 @@
                 android:id="@+id/tv_date"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1.1"
+                android:layout_weight="1"
                 android:gravity="center"
                 android:text="Date"
                 android:textColor="@color/white"
-                android:textSize="@dimen/_9sdp"
+                android:textSize="@dimen/_10sdp"
                 android:textStyle="bold" />
 
             <com.lavos.widgets.AppCustomTextView
@@ -182,7 +182,7 @@
                 android:gravity="center"
                 android:text="Order#"
                 android:textColor="@color/white"
-                android:textSize="@dimen/_9sdp"
+                android:textSize="@dimen/_10sdp"
                 android:textStyle="bold" />
 
 
@@ -190,12 +190,13 @@
                 android:id="@+id/tv_duration"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1.2"
+                android:layout_weight="1"
                 android:gravity="center"
-                android:text="Qty"
+                android:text="QTY"
                 android:textColor="@color/white"
-                android:textSize="@dimen/_9sdp"
-                android:textStyle="bold" />
+                android:textSize="@dimen/_11sdp"
+                android:textStyle="bold"
+                android:visibility="gone"/>
 
             <com.lavos.widgets.AppCustomTextView
                 android:id="@+id/tv_view"
@@ -205,7 +206,7 @@
                 android:gravity="center"
                 android:text="View"
                 android:textColor="@color/white"
-                android:textSize="@dimen/_9sdp"
+                android:textSize="@dimen/_10sdp"
                 android:textStyle="bold" />
 
             <com.lavos.widgets.AppCustomTextView
@@ -216,7 +217,7 @@
                 android:gravity="center"
                 android:text="Sync"
                 android:textColor="@color/white"
-                android:textSize="@dimen/_9sdp"
+                android:textSize="@dimen/_10sdp"
                 android:textStyle="bold"
                 android:visibility="visible" />
         </LinearLayout>
@@ -262,7 +263,7 @@
             android:id="@+id/add_new_order_share"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/color_custom_green"
+            android:backgroundTint="@color/green"
             android:tint="@color/white"
             android:src="@drawable/ic_share"
             app:fabSize="normal"
@@ -271,8 +272,5 @@
             android:layout_margin="@dimen/_1sdp"/>
 
     </RelativeLayout>
-
-
-
 
 </RelativeLayout>

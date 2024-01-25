@@ -5,7 +5,7 @@
     android:id="@+id/rl_add_quot_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@color/color_silver"
     android:padding="@dimen/_10sdp">
 
     <ScrollView
@@ -16,7 +16,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/white"
+            android:background="@color/color_silver"
             android:orientation="vertical">
 
             <RelativeLayout
@@ -1068,8 +1068,6 @@
                     android:background="@color/light_gray" />
             </RelativeLayout>
 
-<!--            selector_blue_botton_bg-->
-
             <com.lavos.widgets.AppCustomTextView
                 android:id="@+id/tv_save_btn"
                 android:layout_width="match_parent"
@@ -1077,7 +1075,7 @@
                 android:layout_marginLeft="@dimen/_60sdp"
                 android:layout_marginRight="@dimen/_60sdp"
                 android:layout_marginTop="@dimen/_20sdp"
-                android:background="@drawable/shape_custom_border_blue_button"
+                android:background="@drawable/selector_blue_botton_bg"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"

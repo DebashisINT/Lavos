@@ -2,6 +2,7 @@ package com.lavos.app.domain
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.lavos.app.AppConstant
 
@@ -10,7 +11,6 @@ import com.lavos.app.AppConstant
  */
 @Dao
 interface OrderProductListDao {
-
     @Query("SELECT * FROM " + AppConstant.ORDER_PRODUCT_LIST_TABLE)
     fun getAll(): List<OrderProductListEntity>
 
@@ -25,4 +25,8 @@ interface OrderProductListDao {
 
     @Query("DELETE FROM " + AppConstant.ORDER_PRODUCT_LIST_TABLE)
     fun delete()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @JvmSuppressWildcards
+    abstract fun insertAll(kist: List<OrderProductListEntity>)
 }

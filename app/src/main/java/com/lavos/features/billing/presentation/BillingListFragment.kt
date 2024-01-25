@@ -1,10 +1,13 @@
 package com.lavos.features.billing.presentation
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -13,7 +16,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.FileProvider
-import com.elvishew.xlog.XLog
+import com.lavos.NumberToWords
+
 import com.pnikosis.materialishprogress.ProgressWheel
 import com.lavos.R
 import com.lavos.app.AppDatabase
@@ -47,16 +51,26 @@ import com.lavos.features.viewAllOrder.api.addorder.AddOrderRepoProvider
 import com.lavos.features.viewAllOrder.model.AddOrderInputParamsModel
 import com.lavos.features.viewAllOrder.model.AddOrderInputProductList
 import com.lavos.widgets.AppCustomTextView
+import com.itextpdf.text.*
+import com.itextpdf.text.pdf.PdfPCell
+import com.itextpdf.text.pdf.PdfPTable
+import com.itextpdf.text.pdf.PdfWriter
+import com.itextpdf.text.pdf.draw.VerticalPositionMark
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
+import timber.log.Timber
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import kotlin.collections.ArrayList
 
 /**
  * Created by Saikat on 19-02-2019.
  */
+// 1.0 AddBillingFragment AppV 4.0.6 saheli 12-01-2023 multiple contact Data added on Api called
 class BillingListFragment : BaseFragment(), View.OnClickListener {
 
     private lateinit var mContext: Context
@@ -99,6 +113,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
         return view
     }
 
+    @SuppressLint("RestrictedApi")
     private fun initView(view: View) {
         fab = view.findViewById(R.id.fab)
         progress_wheel = view.findViewById(R.id.progress_wheel)
@@ -129,7 +144,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
             }
 
             override fun onDownloadClick(bill: BillingEntity) {
-                val heading = "SALES INVOICE"
+                /*val heading = "SALES INVOICE"
                 var pdfBody = "\n\n\n\nInvoice No.: " + bill.invoice_no + "\n\nInvoice Date: " +
                         AppUtils.convertToCommonFormat(bill.invoice_date) + "\n\nInvoice Amount: " + getString(R.string.rupee_symbol_with_space) + bill.invoice_amount +
                         "\n\nOrder No.: " + bill.order_id + "\n\nOrder Date: "
@@ -141,7 +156,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                         "\n\nContact No.: " + shop?.ownerContactNumber + "\n\nSales Person: " + Pref.user_name + "\n\n\n"
 
                 val productList = AppDatabase.getDBInstance()!!.orderProductListDao().getDataAccordingToOrderId(order.order_id!!)
-                productList?.forEach {it1 ->
+                productList?.forEach { it1 ->
                     pdfBody = pdfBody + "Item: " + it1.product_name + "\nQty: " + it1.qty + "  Rate: " +
                             getString(R.string.rupee_symbol_with_space) + it1.rate + "  Amount: " + getString(R.string.rupee_symbol_with_space) +
                             it1.total_price + "\n\n"
@@ -160,7 +175,8 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                         val fileUrl = Uri.parse(path)
 
                         val file = File(fileUrl.path)
-//                        val uri = Uri.fromFile(file)
+                        //val uri = Uri.fromFile(file)
+                        //27-09-2021
                         val uri: Uri = FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
                         shareIntent.type = "image/png"
                         shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
@@ -168,9 +184,11 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
-                }
-                else
-                    (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
+                } else
+                    (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")*/
+
+                /*27-04-2022*/
+                saveDataAsPdf(bill)
             }
 
             override fun onCreateQrClick(bill: BillingEntity) {
@@ -185,7 +203,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                         "\n\nContact No.: " + shop?.ownerContactNumber + "\n\nSales Person: " + Pref.user_name + "\n\n\n"
 
                 val productList = AppDatabase.getDBInstance()!!.orderProductListDao().getDataAccordingToOrderId(order.order_id!!)
-                productList?.forEach {it1 ->
+                productList?.forEach { it1 ->
                     pdfBody = pdfBody + "Item: " + it1.product_name + "\nQty: " + it1.qty + "  Rate: INR." + it1.rate + "  Amount: INR." +
                             it1.total_price + "\n\n"
                 }
@@ -199,6 +217,315 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
             }
         })
     }
+
+    private fun saveDataAsPdf(obj: BillingEntity) {
+        /*27-04-2022 new pdf format*/
+        var document: Document = Document()
+        var fileName = "FTS" + "_" + obj.bill_id
+        fileName = fileName.replace("/", "_")
+
+        val path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/lavosApp/INVOICEDETALIS/"
+
+        val dir = File(path)
+        if (!dir.exists()) {
+            dir.mkdirs()
+        }
+        try {
+            PdfWriter.getInstance(document, FileOutputStream(path + fileName + ".pdf"))
+            document.open()
+            var font: Font = Font(Font.FontFamily.HELVETICA, 10f, Font.BOLD)
+            var fontBoldU: Font = Font(Font.FontFamily.HELVETICA, 12f, Font.UNDERLINE or Font.BOLD)
+            var font1: Font = Font(Font.FontFamily.HELVETICA, 8f, Font.NORMAL)
+            val grayFront = Font(Font.FontFamily.HELVETICA, 8f, Font.NORMAL, BaseColor.GRAY)
+            //image add
+            val bm: Bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+            val bitmap = Bitmap.createScaledBitmap(bm, 50, 50, true);
+            val stream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            var img: Image? = null
+            val byteArray: ByteArray = stream.toByteArray()
+            try {
+                img = Image.getInstance(byteArray)
+                img.scaleToFit(90f, 90f)
+                img.scalePercent(70f)
+                img.alignment = Image.ALIGN_LEFT
+            } catch (e: BadElementException) {
+                e.printStackTrace()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+/////////////////////////////
+            val sp = Paragraph("", font)
+            sp.spacingAfter = 50f
+            document.add(sp)
+
+            val h = Paragraph("SALES INVOICE ", fontBoldU)
+            h.alignment = Element.ALIGN_CENTER
+
+            val pHead = Paragraph()
+            pHead.add(Chunk(img, 0f, -30f))
+            pHead.add(h)
+            document.add(pHead)
+
+            val x = Paragraph("", font)
+            x.spacingAfter = 20f
+            document.add(x)
+
+            val order = AppDatabase.getDBInstance()!!.orderDetailsListDao().getSingleOrder(obj.order_id)
+
+            val widthsOrder = floatArrayOf(0.50f, 0.50f)
+
+            var tableHeaderOrder: PdfPTable = PdfPTable(widthsOrder)
+            tableHeaderOrder.getDefaultCell().setHorizontalAlignment(Element.ALIGN_CENTER)
+            tableHeaderOrder.setWidthPercentage(100f)
+
+
+            val cell11 = PdfPCell(Phrase("Invoice No       :     " + obj.invoice_no + "\n\n" + "Invoice Date    :     " + AppUtils.convertToCommonFormat(obj.invoice_date), font))
+            cell11.setHorizontalAlignment(Element.ALIGN_LEFT)
+            cell11.borderColor = BaseColor.GRAY
+            tableHeaderOrder.addCell(cell11)
+
+
+            val cell222 = PdfPCell(Phrase("Order No     :     " + obj.order_id + "\n\n" + "Order Date  :     " + order.only_date, font))
+            cell222.setHorizontalAlignment(Element.ALIGN_LEFT);
+            cell222.borderColor = BaseColor.GRAY
+            cell222.paddingBottom = 10f
+            tableHeaderOrder.addCell(cell222)
+            document.add(tableHeaderOrder)
+//            var orderNoDate: String = ""
+//            var InvoicDate: String = ""
+//            val tableRows = PdfPTable(widthsOrder)
+//            tableRows.defaultCell.horizontalAlignment = Element.ALIGN_LEFT
+//            tableRows.setWidthPercentage(100f);
+//
+//            var cellBodySl1 = PdfPCell(Phrase(orderNoDate + "Order Date: " + AppUtils.convertDateTimeToCommonFormat(obj.date!!), font))
+//            cellBodySl1.setHorizontalAlignment(Element.ALIGN_LEFT)
+//            cellBodySl1.borderColor = BaseColor.GRAY
+////            tableRows.addCell(cellBodySl1)
+//
+//
+//            var cellBody22 = PdfPCell(Phrase(InvoicDate + invoiceNo + "Invoice Date: " + invoiceDate, font))
+//            cellBody22.setHorizontalAlignment(Element.ALIGN_LEFT)
+//            cellBody22.borderColor = BaseColor.GRAY
+////            tableRows.addCell(cellBody22)
+//
+//            document.add(tableRows)
+            document.add(Paragraph())
+            val xz = Paragraph("", font)
+            xz.spacingAfter = 10f
+            document.add(xz)
+
+            val HeadingPartyDetls = Paragraph("Details of Party ", fontBoldU)
+            HeadingPartyDetls.indentationLeft = 82f
+//            HeadingPartyDetls.alignment = Element.ALIGN_LEFT
+            HeadingPartyDetls.spacingAfter = 2f
+            document.add(HeadingPartyDetls)
+
+            val shop = AppDatabase.getDBInstance()?.addShopEntryDao()?.getShopByIdN(order.shop_id)
+
+            val Parties = Paragraph("Name                    :      " + shop?.shopName, font1)
+            Parties.alignment = Element.ALIGN_LEFT
+            Parties.spacingAfter = 2f
+            document.add(Parties)
+
+            val address = Paragraph("Address                :      " + shop?.address, font1)
+            address.alignment = Element.ALIGN_LEFT
+            address.spacingAfter = 2f
+            document.add(address)
+
+
+            val Contact = Paragraph("Contact No.          :      " + shop?.ownerContactNumber, font1)
+            Contact.alignment = Element.ALIGN_LEFT
+            Contact.spacingAfter = 2f
+            document.add(Contact)
+
+
+            val xze = Paragraph("", font)
+            xze.spacingAfter = 10f
+            document.add(xze)
+
+            // table header
+            //val widths = floatArrayOf(0.55f, 0.05f, 0.2f, 0.2f)
+            val widths = floatArrayOf(0.06f, 0.58f, 0.07f, 0.07f, 0.07f, 0.15f)
+
+            var tableHeader: PdfPTable = PdfPTable(widths)
+            tableHeader.getDefaultCell().setHorizontalAlignment(Element.ALIGN_LEFT)
+            tableHeader.setWidthPercentage(100f)
+
+            val cell111 = PdfPCell(Phrase("SL. ", font))
+            cell111.setHorizontalAlignment(Element.ALIGN_LEFT)
+            cell111.borderColor = BaseColor.GRAY
+            tableHeader.addCell(cell111);
+
+            val cell1 = PdfPCell(Phrase("Item Description ", font))
+            cell1.setHorizontalAlignment(Element.ALIGN_LEFT)
+            cell1.borderColor = BaseColor.GRAY
+            tableHeader.addCell(cell1);
+
+            val cell2 = PdfPCell(Phrase("Qty ", font))
+            cell2.setHorizontalAlignment(Element.ALIGN_LEFT);
+            cell2.borderColor = BaseColor.GRAY
+            tableHeader.addCell(cell2);
+
+            val cell21 = PdfPCell(Phrase("Unit ", font))
+            cell21.setHorizontalAlignment(Element.ALIGN_LEFT);
+            cell21.borderColor = BaseColor.GRAY
+            tableHeader.addCell(cell21);
+
+            val cell3 = PdfPCell(Phrase("Rate ", font))
+            cell3.setHorizontalAlignment(Element.ALIGN_LEFT);
+            cell3.borderColor = BaseColor.GRAY
+            tableHeader.addCell(cell3);
+
+            val cell4 = PdfPCell(Phrase("Amount ", font))
+            cell4.setHorizontalAlignment(Element.ALIGN_LEFT);
+            cell4.borderColor = BaseColor.GRAY
+            tableHeader.addCell(cell4);
+
+            document.add(tableHeader)
+
+            //table body
+            var srNo: String = ""
+            var item: String = ""
+            var qty: String = ""
+            var unit: String = ""
+            var rate: String = ""
+            var amount: String = ""
+
+            val productList = AppDatabase.getDBInstance()!!.orderProductListDao().getDataAccordingToOrderId(order.order_id!!)
+
+
+            for (i in 0..productList.size - 1) {
+                srNo = (i + 1).toString() + " "
+                item = productList!!.get(i).product_name + "       "
+                qty = productList!!.get(i).qty + " "
+                //unit = "KG" + " "
+                unit = productList!!.get(i).watt.toString()+" "
+                rate = getString(R.string.rupee_symbol_with_space) + " " + productList!!.get(i).rate + " "
+                amount = getString(R.string.rupee_symbol_with_space) + " " + productList!!.get(i).total_price + " "
+
+
+                val tableRows = PdfPTable(widths)
+                tableRows.defaultCell.horizontalAlignment = Element.ALIGN_CENTER
+                tableRows.setWidthPercentage(100f);
+
+
+                var cellBodySr = PdfPCell(Phrase(srNo, font1))
+                cellBodySr.setHorizontalAlignment(Element.ALIGN_LEFT);
+                cellBodySr.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellBodySr)
+
+                var cellBodySl = PdfPCell(Phrase(item, font1))
+                cellBodySl.setHorizontalAlignment(Element.ALIGN_LEFT);
+                cellBodySl.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellBodySl)
+
+                var cellBody2 = PdfPCell(Phrase(qty, font1))
+                cellBody2.setHorizontalAlignment(Element.ALIGN_LEFT)
+                cellBody2.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellBody2)
+
+
+                var cellBody21 = PdfPCell(Phrase(unit, font1))
+                cellBody21.setHorizontalAlignment(Element.ALIGN_LEFT)
+                cellBody21.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellBody21)
+
+                var cellBody3 = PdfPCell(Phrase(rate, font1))
+                cellBody3.setHorizontalAlignment(Element.ALIGN_LEFT)
+                cellBody3.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellBody3)
+
+                var cellBody4 = PdfPCell(Phrase(amount, font1))
+                cellBody4.setHorizontalAlignment(Element.ALIGN_LEFT)
+                cellBody4.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellBody4)
+
+                document.add(tableRows)
+
+                document.add(Paragraph())
+            }
+            val xffx = Paragraph("", font)
+            xffx.spacingAfter = 12f
+            document.add(xffx)
+
+
+//            val para = Paragraph()
+//            val glue = Chunk(VerticalPositionMark())
+//            val ph1 = Phrase()
+//            val main = Paragraph()
+//            ph1.add(Chunk("Rupees " + NumberToWords.numberToWord(order.amount!!.toDouble().toInt()!!)!!.toUpperCase() + " Only  ", font))
+//            ph1.add(glue) // Here I add special chunk to the same phrase.
+//
+//            ph1.add(Chunk("Total Amount: " + "\u20B9" + order.amount, font))
+//            para.add(ph1)
+//            document.add(para)
+//
+//            val xfffx = Paragraph("", font)
+//            xfffx.spacingAfter = 8f
+//            document.add(xfffx)
+
+            val para1 = Paragraph ()
+            val glue1 = Chunk(VerticalPositionMark())
+            val ph11 = Phrase()
+            val main1 = Paragraph()
+            ph11.add(Chunk("Rupees " + NumberToWords.numberToWord(obj.invoice_amount!!.toDouble().toInt()!!)!!.toUpperCase() + " Only  ", font))
+            ph11.add(glue1) // Here I add special chunk to the same phrase.
+
+            ph11.add(Chunk("Total Invoice Amount: " + "\u20B9" + obj.invoice_amount, font))
+            para1.add(ph11)
+            document.add(para1)
+
+
+
+            val xfx = Paragraph("", font)
+            xfx.spacingAfter = 12f
+            document.add(xfx)
+
+
+            val widthsSalesPerson = floatArrayOf(1f)
+
+            var tablewidthsSalesPersonHeader: PdfPTable = PdfPTable(widthsSalesPerson)
+            tablewidthsSalesPersonHeader.getDefaultCell().setHorizontalAlignment(Element.ALIGN_LEFT)
+            tablewidthsSalesPersonHeader.setWidthPercentage(100f)
+
+            val cellsales = PdfPCell(Phrase("Entered by: " + Pref.user_name, font1))
+            cellsales.setHorizontalAlignment(Element.ALIGN_LEFT)
+            cellsales.borderColor = BaseColor.GRAY
+            tablewidthsSalesPersonHeader.addCell(cellsales)
+
+
+            document.add(tablewidthsSalesPersonHeader)
+
+
+//            val salesPerson = Paragraph("Entered by: " + Pref.user_name, font)
+//            salesPerson.alignment = Element.ALIGN_LEFT
+//            salesPerson.spacingAfter = 10f
+//            document.add(salesPerson)
+
+            document.close()
+
+            var sendingPath = path + fileName + ".pdf"
+            if (!TextUtils.isEmpty(sendingPath)) {
+                try {
+                    val shareIntent = Intent(Intent.ACTION_SEND)
+                    val fileUrl = Uri.parse(sendingPath)
+                    val file = File(fileUrl.path)
+                    val uri: Uri = FileProvider.getUriForFile(mContext, mContext.applicationContext.packageName.toString() + ".provider", file)
+                    shareIntent.type = "image/png"
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+                    startActivity(Intent.createChooser(shareIntent, "Share pdf using"))
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.something_went_wrong1))
+                }
+            }
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+            (mContext as DashboardActivity).showSnackMessage(getString(R.string.something_went_wrong))
+        }
+    }
+
 
     private fun syncShop(billing: BillingEntity, shop: AddShopDBModelEntity) {
         val addShopData = AddShopRequestData()
@@ -282,8 +609,11 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
         addShopData.assigned_to_shop_id = shop.assigned_to_shop_id
         addShopData.actual_address = shop.actual_address
 
-        var uniqKeyObj=AppDatabase.getDBInstance()!!.shopActivityDao().getNewShopActivityKey(shop.shop_id,false)
-        addShopData.shop_revisit_uniqKey=uniqKeyObj?.shop_revisit_uniqKey!!
+        var uniqKeyObj = AppDatabase.getDBInstance()!!.shopActivityDao().getNewShopActivityKey(shop.shop_id, false)
+        addShopData.shop_revisit_uniqKey = uniqKeyObj?.shop_revisit_uniqKey!!
+
+        // duplicate shop api call
+        addShopData.isShopDuplicate=shop.isShopDuplicate
 
         callAddShopApi(addShopData, shop.shopImageLocalPath, shop.doc_degree, billing)
         //}
@@ -300,73 +630,73 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
         progress_wheel.spin()
 
 
-        XLog.d("=======SyncShop Input Params (Add Billing)=============")
-        XLog.d("shop id=======> " + addShop.shop_id)
+        Timber.d("=======SyncShop Input Params (Add Billing)=============")
+        Timber.d("shop id=======> " + addShop.shop_id)
         val index = addShop.shop_id!!.indexOf("_")
-        XLog.d("decoded shop id=======> " + addShop.user_id + "_" + AppUtils.getDate(addShop.shop_id!!.substring(index + 1, addShop.shop_id!!.length).toLong()))
-        XLog.d("shop added date=======> " + addShop.added_date)
-        XLog.d("shop address=======> " + addShop.address)
-        XLog.d("assigned to dd id=======> " + addShop.assigned_to_dd_id)
-        XLog.d("assigned to pp id=======> " + addShop.assigned_to_pp_id)
-        XLog.d("date aniversery=======> " + addShop.date_aniversary)
-        XLog.d("dob=======> " + addShop.dob)
-        XLog.d("shop owner phn no=======> " + addShop.owner_contact_no)
-        XLog.d("shop owner email=======> " + addShop.owner_email)
-        XLog.d("shop owner name=======> " + addShop.owner_name)
-        XLog.d("shop pincode=======> " + addShop.pin_code)
-        XLog.d("session token=======> " + addShop.session_token)
-        XLog.d("shop lat=======> " + addShop.shop_lat)
-        XLog.d("shop long=======> " + addShop.shop_long)
-        XLog.d("shop name=======> " + addShop.shop_name)
-        XLog.d("shop type=======> " + addShop.type)
-        XLog.d("user id=======> " + addShop.user_id)
-        XLog.d("amount=======> " + addShop.amount)
-        XLog.d("area id=======> " + addShop.area_id)
-        XLog.d("model id=======> " + addShop.model_id)
-        XLog.d("primary app id=======> " + addShop.primary_app_id)
-        XLog.d("secondary app id=======> " + addShop.secondary_app_id)
-        XLog.d("lead id=======> " + addShop.lead_id)
-        XLog.d("stage id=======> " + addShop.stage_id)
-        XLog.d("funnel stage id=======> " + addShop.funnel_stage_id)
-        XLog.d("booking amount=======> " + addShop.booking_amount)
-        XLog.d("type id=======> " + addShop.type_id)
+        Timber.d("decoded shop id=======> " + addShop.user_id + "_" + AppUtils.getDate(addShop.shop_id!!.substring(index + 1, addShop.shop_id!!.length).toLong()))
+        Timber.d("shop added date=======> " + addShop.added_date)
+        Timber.d("shop address=======> " + addShop.address)
+        Timber.d("assigned to dd id=======> " + addShop.assigned_to_dd_id)
+        Timber.d("assigned to pp id=======> " + addShop.assigned_to_pp_id)
+        Timber.d("date aniversery=======> " + addShop.date_aniversary)
+        Timber.d("dob=======> " + addShop.dob)
+        Timber.d("shop owner phn no=======> " + addShop.owner_contact_no)
+        Timber.d("shop owner email=======> " + addShop.owner_email)
+        Timber.d("shop owner name=======> " + addShop.owner_name)
+        Timber.d("shop pincode=======> " + addShop.pin_code)
+        Timber.d("session token=======> " + addShop.session_token)
+        Timber.d("shop lat=======> " + addShop.shop_lat)
+        Timber.d("shop long=======> " + addShop.shop_long)
+        Timber.d("shop name=======> " + addShop.shop_name)
+        Timber.d("shop type=======> " + addShop.type)
+        Timber.d("user id=======> " + addShop.user_id)
+        Timber.d("amount=======> " + addShop.amount)
+        Timber.d("area id=======> " + addShop.area_id)
+        Timber.d("model id=======> " + addShop.model_id)
+        Timber.d("primary app id=======> " + addShop.primary_app_id)
+        Timber.d("secondary app id=======> " + addShop.secondary_app_id)
+        Timber.d("lead id=======> " + addShop.lead_id)
+        Timber.d("stage id=======> " + addShop.stage_id)
+        Timber.d("funnel stage id=======> " + addShop.funnel_stage_id)
+        Timber.d("booking amount=======> " + addShop.booking_amount)
+        Timber.d("type id=======> " + addShop.type_id)
 
         if (shop_imgPath != null)
-            XLog.d("shop image path=======> $shop_imgPath")
+            Timber.d("shop image path=======> $shop_imgPath")
 
-        XLog.d("director name=======> " + addShop.director_name)
-        XLog.d("family member dob=======> " + addShop.family_member_dob)
-        XLog.d("key person's name=======> " + addShop.key_person_name)
-        XLog.d("phone no=======> " + addShop.phone_no)
-        XLog.d("additional dob=======> " + addShop.addtional_dob)
-        XLog.d("additional doa=======> " + addShop.addtional_doa)
-        XLog.d("doctor family member dob=======> " + addShop.doc_family_member_dob)
-        XLog.d("specialization=======> " + addShop.specialization)
-        XLog.d("average patient count per day=======> " + addShop.average_patient_per_day)
-        XLog.d("category=======> " + addShop.category)
-        XLog.d("doctor address=======> " + addShop.doc_address)
-        XLog.d("doctor pincode=======> " + addShop.doc_pincode)
-        XLog.d("chambers or hospital under same headquarter=======> " + addShop.is_chamber_same_headquarter)
-        XLog.d("chamber related remarks=======> " + addShop.is_chamber_same_headquarter_remarks)
-        XLog.d("chemist name=======> " + addShop.chemist_name)
-        XLog.d("chemist name=======> " + addShop.chemist_address)
-        XLog.d("chemist pincode=======> " + addShop.chemist_pincode)
-        XLog.d("assistant name=======> " + addShop.assistant_name)
-        XLog.d("assistant contact no=======> " + addShop.assistant_contact_no)
-        XLog.d("assistant dob=======> " + addShop.assistant_dob)
-        XLog.d("assistant date of anniversary=======> " + addShop.assistant_doa)
-        XLog.d("assistant family dob=======> " + addShop.assistant_family_dob)
-        XLog.d("entity id=======> " + addShop.entity_id)
-        XLog.d("party status id=======> " + addShop.party_status_id)
-        XLog.d("retailer id=======> " + addShop.retailer_id)
-        XLog.d("dealer id=======> " + addShop.dealer_id)
-        XLog.d("beat id=======> " + addShop.beat_id)
-        XLog.d("assigned to shop id=======> " + addShop.assigned_to_shop_id)
-        XLog.d("actual address=======> " + addShop.actual_address)
+        Timber.d("director name=======> " + addShop.director_name)
+        Timber.d("family member dob=======> " + addShop.family_member_dob)
+        Timber.d("key person's name=======> " + addShop.key_person_name)
+        Timber.d("phone no=======> " + addShop.phone_no)
+        Timber.d("additional dob=======> " + addShop.addtional_dob)
+        Timber.d("additional doa=======> " + addShop.addtional_doa)
+        Timber.d("doctor family member dob=======> " + addShop.doc_family_member_dob)
+        Timber.d("specialization=======> " + addShop.specialization)
+        Timber.d("average patient count per day=======> " + addShop.average_patient_per_day)
+        Timber.d("category=======> " + addShop.category)
+        Timber.d("doctor address=======> " + addShop.doc_address)
+        Timber.d("doctor pincode=======> " + addShop.doc_pincode)
+        Timber.d("chambers or hospital under same headquarter=======> " + addShop.is_chamber_same_headquarter)
+        Timber.d("chamber related remarks=======> " + addShop.is_chamber_same_headquarter_remarks)
+        Timber.d("chemist name=======> " + addShop.chemist_name)
+        Timber.d("chemist name=======> " + addShop.chemist_address)
+        Timber.d("chemist pincode=======> " + addShop.chemist_pincode)
+        Timber.d("assistant name=======> " + addShop.assistant_name)
+        Timber.d("assistant contact no=======> " + addShop.assistant_contact_no)
+        Timber.d("assistant dob=======> " + addShop.assistant_dob)
+        Timber.d("assistant date of anniversary=======> " + addShop.assistant_doa)
+        Timber.d("assistant family dob=======> " + addShop.assistant_family_dob)
+        Timber.d("entity id=======> " + addShop.entity_id)
+        Timber.d("party status id=======> " + addShop.party_status_id)
+        Timber.d("retailer id=======> " + addShop.retailer_id)
+        Timber.d("dealer id=======> " + addShop.dealer_id)
+        Timber.d("beat id=======> " + addShop.beat_id)
+        Timber.d("assigned to shop id=======> " + addShop.assigned_to_shop_id)
+        Timber.d("actual address=======> " + addShop.actual_address)
 
         if (degree_imgPath != null)
-            XLog.d("doctor degree image path=======> $degree_imgPath")
-        XLog.d("======================================================")
+            Timber.d("doctor degree image path=======> $degree_imgPath")
+        Timber.d("======================================================")
 
         if (TextUtils.isEmpty(shop_imgPath) && TextUtils.isEmpty(degree_imgPath)) {
             val repository = AddShopRepositoryProvider.provideAddShopWithoutImageRepository()
@@ -376,7 +706,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val addShopResult = result as AddShopResponse
-                                XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
+                                Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
                                 if (addShopResult.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
 
@@ -392,7 +722,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                                     progress_wheel.stopSpinning()
 
                                 } else if (addShopResult.status == NetworkConstant.DUPLICATE_SHOP_ID) {
-                                    XLog.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
+                                    Timber.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
                                     AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
                                     progress_wheel.stopSpinning()
                                     //(mContext as DashboardActivity).showSnackMessage(addShopResult.message!!)
@@ -420,12 +750,11 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                                 BaseActivity.isApiInitiated = false
                                 progress_wheel.stopSpinning()
                                 if (error != null)
-                                    XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
+                                    Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
                                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.unable_to_sync))
                             })
             )
-        }
-        else {
+        } else {
             val repository = AddShopRepositoryProvider.provideAddShopRepository()
             BaseActivity.compositeDisposable.add(
                     repository.addShopWithImage(addShop, shop_imgPath, degree_imgPath, mContext)
@@ -433,7 +762,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val addShopResult = result as AddShopResponse
-                                XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
+                                Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
                                 if (addShopResult.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
 
@@ -449,7 +778,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                                     progress_wheel.stopSpinning()
 
                                 } else if (addShopResult.status == NetworkConstant.DUPLICATE_SHOP_ID) {
-                                    XLog.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
+                                    Timber.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
                                     AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
                                     progress_wheel.stopSpinning()
                                     //(mContext as DashboardActivity).showSnackMessage(addShopResult.message!!)
@@ -477,7 +806,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                                 BaseActivity.isApiInitiated = false
                                 progress_wheel.stopSpinning()
                                 if (error != null)
-                                    XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
+                                    Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
                                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.unable_to_sync))
                             })
             )
@@ -554,9 +883,39 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
 
             shopDurationData.shop_revisit_uniqKey = shopActivity.shop_revisit_uniqKey!!
 
+            /*10-12-2021*/
+            shopDurationData.updated_by = Pref.user_id
+            try {
+                shopDurationData.updated_on = shopActivity.updated_on!!
+            } catch (ex: Exception) {
+                shopDurationData.updated_on = ""
+            }
+
+            if (!TextUtils.isEmpty(shopActivity.pros_id!!))
+                shopDurationData.pros_id = shopActivity.pros_id!!
+            else
+                shopDurationData.pros_id = ""
+
+            if (!TextUtils.isEmpty(shopActivity.agency_name!!))
+                shopDurationData.agency_name = shopActivity.agency_name!!
+            else
+                shopDurationData.agency_name = ""
+
+            if (!TextUtils.isEmpty(shopActivity.approximate_1st_billing_value))
+                shopDurationData.approximate_1st_billing_value = shopActivity.approximate_1st_billing_value!!
+            else
+                shopDurationData.approximate_1st_billing_value = ""
+            //duration garbage fix
+            try{
+                if(shopDurationData.spent_duration!!.contains("-") || shopDurationData.spent_duration!!.length != 8)
+                {
+                    shopDurationData.spent_duration="00:00:10"
+                }
+            }catch (ex:Exception){
+                shopDurationData.spent_duration="00:00:10"
+            }
             shopDataList.add(shopDurationData)
-        }
-        else {
+        } else {
             for (i in list.indices) {
                 var shopActivity = list[i]
 
@@ -612,6 +971,43 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
 
                 shopDurationData.shop_revisit_uniqKey = shopActivity.shop_revisit_uniqKey!!
 
+                /*10-12-2021*/
+                shopDurationData.updated_by = Pref.user_id
+                try {
+                    shopDurationData.updated_on = shopActivity.updated_on!!
+                } catch (Ex: Exception) {
+                    shopDurationData.updated_on = ""
+                }
+
+                if (!TextUtils.isEmpty(shopActivity.pros_id!!))
+                    shopDurationData.pros_id = shopActivity.pros_id!!
+                else
+                    shopDurationData.pros_id = ""
+
+                if (!TextUtils.isEmpty(shopActivity.agency_name!!))
+                    shopDurationData.agency_name = shopActivity.agency_name!!
+                else
+                    shopDurationData.agency_name = ""
+
+                if (!TextUtils.isEmpty(shopActivity.approximate_1st_billing_value))
+                    shopDurationData.approximate_1st_billing_value = shopActivity.approximate_1st_billing_value!!
+                else
+                    shopDurationData.approximate_1st_billing_value = ""
+                //duration garbage fix
+                try{
+                    if(shopDurationData.spent_duration!!.contains("-") || shopDurationData.spent_duration!!.length != 8)
+                    {
+                        shopDurationData.spent_duration="00:00:10"
+                    }
+                }catch (ex:Exception){
+                    shopDurationData.spent_duration="00:00:10"
+                }
+                //New shop Create issue
+                shopDurationData.isnewShop = shopActivity.isnewShop!!
+                // 1.0 BillingFragment AppV 4.0.6  multiple contact Data added on Api called
+                shopDurationData.multi_contact_name = shopActivity.multi_contact_name
+                shopDurationData.multi_contact_number = shopActivity.multi_contact_number
+
                 shopDataList.add(shopDurationData)
             }
         }
@@ -628,7 +1024,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
-                            XLog.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + ", RESPONSE:" + result.message)
+                            Timber.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + ", RESPONSE:" + result.message)
                             if (result.status == NetworkConstant.SUCCESS) {
 
                             }
@@ -636,7 +1032,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                         }, { error ->
                             error.printStackTrace()
                             if (error != null)
-                                XLog.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + error.localizedMessage)
+                                Timber.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + error.localizedMessage)
 //                                (mContext as DashboardActivity).showSnackMessage("ERROR")
                         })
         )
@@ -652,7 +1048,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                 AppDatabase.getDBInstance()!!.shopActivityDao().updateisUploaded(true, shop_id, AppUtils.getCurrentDateForShopActi())
             else
                 AppDatabase.getDBInstance()!!.shopActivityDao().updateisUploaded(true, shop_id, AppUtils.getCurrentDateForShopActi(), startTimeStamp)
-            XLog.d("============sync locally shop visited (Add Billing)==========")
+            Timber.d("============sync locally shop visited (Add Billing)==========")
         }*/
 
         shopActivityList?.forEach {
@@ -661,7 +1057,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                     AppDatabase.getDBInstance()!!.shopActivityDao().updateisUploaded(true, shop_id, AppUtils.getCurrentDateForShopActi())
                 else
                     AppDatabase.getDBInstance()!!.shopActivityDao().updateisUploaded(true, shop_id, AppUtils.getCurrentDateForShopActi(), startTimeStamp)
-                XLog.d("============sync locally shop visited (Billing List)==========")
+                Timber.d("============sync locally shop visited (Billing List)==========")
             }
         }
 
@@ -823,8 +1219,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                                         checkToCallOrderApi(billing)
                                     }
                                 }
-                            }
-                            else {
+                            } else {
                                 progress_wheel.stopSpinning()
                                 BaseActivity.isApiInitiated = false
                                 checkToCallOrderApi(billing)
@@ -870,6 +1265,11 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
         addOrder.latitude = orderLat
         addOrder.longitude = orderLong
 
+        if (orderListDetails!!.scheme_amount != null)
+            addOrder.scheme_amount = orderListDetails!!.scheme_amount
+        else
+            addOrder.scheme_amount = ""
+
         if (remarks != null)
             addOrder.remarks = remarks
         else
@@ -912,6 +1312,17 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                 addOrder.address = ""
         }
 
+        /*06-01-2022*/
+        if (orderListDetails?.Hospital != null)
+            addOrder.Hospital = orderListDetails?.Hospital
+        else
+            addOrder.Hospital = ""
+
+        if (orderListDetails?.Email_Address != null)
+            addOrder.Email_Address = orderListDetails?.Email_Address
+        else
+            addOrder.Email_Address = ""
+
         val list = AppDatabase.getDBInstance()!!.orderProductListDao().getDataAccordingToShopAndOrderId(order_id!!, shop_id!!)
         val productList = java.util.ArrayList<AddOrderInputProductList>()
 
@@ -922,6 +1333,15 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
             product.rate = list[i].rate
             product.total_price = list[i].total_price
             product.product_name = list[i].product_name
+            product.scheme_qty = list[i].scheme_qty
+            product.scheme_rate = list[i].scheme_rate
+            product.total_scheme_price = list[i].total_scheme_price
+
+            product.MRP = list[i].MRP
+            //mantis 25601
+            product.order_mrp = list[i].order_mrp
+            product.order_discount = list[i].order_discount
+
             productList.add(product)
         }
 
@@ -952,8 +1372,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.unable_to_sync))
                             })
             )
-        }
-        else {
+        } else {
             val repository = AddOrderRepoProvider.provideAddOrderImageRepository()
             BaseActivity.compositeDisposable.add(
                     repository.addNewOrder(addOrder, signature!!, mContext)
@@ -1015,30 +1434,29 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
 
         addBill.product_list = productList
 
-        XLog.d("======SYNC BILLING DETAILS INPUT PARAMS (BILLING LIST)======")
-        XLog.d("USER ID===> " + addBill.user_id)
-        XLog.d("SESSION ID====> " + addBill.session_token)
-        XLog.d("BILL ID====> " + addBill.bill_id)
-        XLog.d("INVOICE NO.====> " + addBill.invoice_no)
-        XLog.d("INVOICE DATE====> " + addBill.invoice_date)
-        XLog.d("INVOICE AMOUNT====> " + addBill.invoice_amount)
-        XLog.d("REMARKS====> " + addBill.remarks)
-        XLog.d("ORDER ID====> " + addBill.order_id)
+        Timber.d("======SYNC BILLING DETAILS INPUT PARAMS (BILLING LIST)======")
+        Timber.d("USER ID===> " + addBill.user_id)
+        Timber.d("SESSION ID====> " + addBill.session_token)
+        Timber.d("BILL ID====> " + addBill.bill_id)
+        Timber.d("INVOICE NO.====> " + addBill.invoice_no)
+        Timber.d("INVOICE DATE====> " + addBill.invoice_date)
+        Timber.d("INVOICE AMOUNT====> " + addBill.invoice_amount)
+        Timber.d("REMARKS====> " + addBill.remarks)
+        Timber.d("ORDER ID====> " + addBill.order_id)
 
         try {
-            XLog.d("PATIENT NO====> " + addBill.patient_no)
-            XLog.d("PATIENT NAME====> " + addBill.patient_name)
-            XLog.d("PATIENT ADDRESS====> " + addBill.patient_address)
-        }
-        catch (e: Exception) {
+            Timber.d("PATIENT NO====> " + addBill.patient_no)
+            Timber.d("PATIENT NAME====> " + addBill.patient_name)
+            Timber.d("PATIENT ADDRESS====> " + addBill.patient_address)
+        } catch (e: Exception) {
             e.printStackTrace()
         }
 
         if (!TextUtils.isEmpty(billing.attachment))
-            XLog.d("ATTACHMENT=======> " + billing.attachment)
+            Timber.d("ATTACHMENT=======> " + billing.attachment)
 
-        XLog.d("PRODUCT LIST SIZE====> " + addBill.product_list?.size)
-        XLog.d("==============================================================")
+        Timber.d("PRODUCT LIST SIZE====> " + addBill.product_list?.size)
+        Timber.d("==============================================================")
 
         if (!TextUtils.isEmpty(billing.attachment)) {
             val repository = AddBillingRepoProvider.addBillImageRepository()
@@ -1049,7 +1467,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val baseResponse = result as BaseResponse
-                                XLog.d("SYNC BILLING DETAILS : " + "RESPONSE : " + baseResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + baseResponse.message)
+                                Timber.d("SYNC BILLING DETAILS : " + "RESPONSE : " + baseResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + baseResponse.message)
                                 BaseActivity.isApiInitiated = false
 
                                 if (baseResponse.status == NetworkConstant.SUCCESS) {
@@ -1062,7 +1480,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                                 progress_wheel.stopSpinning()
 
                             }, { error ->
-                                XLog.d("SYNC BILLING DETAILS : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + error.localizedMessage)
+                                Timber.d("SYNC BILLING DETAILS : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + error.localizedMessage)
                                 error.printStackTrace()
                                 BaseActivity.isApiInitiated = false
                                 progress_wheel.stopSpinning()
@@ -1078,7 +1496,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val baseResponse = result as BaseResponse
-                                XLog.d("SYNC BILLING DETAILS : " + "RESPONSE : " + baseResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + baseResponse.message)
+                                Timber.d("SYNC BILLING DETAILS : " + "RESPONSE : " + baseResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + baseResponse.message)
                                 BaseActivity.isApiInitiated = false
 
                                 if (baseResponse.status == NetworkConstant.SUCCESS) {
@@ -1091,7 +1509,7 @@ class BillingListFragment : BaseFragment(), View.OnClickListener {
                                 progress_wheel.stopSpinning()
 
                             }, { error ->
-                                XLog.d("SYNC BILLING DETAILS : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + error.localizedMessage)
+                                Timber.d("SYNC BILLING DETAILS : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + error.localizedMessage)
                                 error.printStackTrace()
                                 BaseActivity.isApiInitiated = false
                                 progress_wheel.stopSpinning()

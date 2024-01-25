@@ -55,7 +55,9 @@ class LeaveListFragment : BaseFragment(), View.OnClickListener, DatePickerDialog
         val view = inflater.inflate(R.layout.fragment_leave_list, container, false)
 
         initView(view)
-        getLeaveList(AppUtils.getCurrentDateForShopActi(), AppUtils.getCurrentDateForShopActi())
+        var nextDT=AppUtils.getNextDateForShopActi()
+        getLeaveList(nextDT, nextDT)
+        //getLeaveList(AppUtils.getCurrentDateForShopActi(), AppUtils.getCurrentDateForShopActi())
 
         return view
     }
@@ -75,6 +77,7 @@ class LeaveListFragment : BaseFragment(), View.OnClickListener, DatePickerDialog
             val tomorrowsDateLong = Calendar.getInstance(Locale.ENGLISH).timeInMillis + (1000 * 60 * 60 * 24)
             val cal = Calendar.getInstance(Locale.ENGLISH)
             cal.timeInMillis = tomorrowsDateLong
+
             text = AppUtils.getFormattedDate(cal.time) + " To " + AppUtils.getFormattedDate(cal.time)
         }
 
@@ -196,4 +199,10 @@ class LeaveListFragment : BaseFragment(), View.OnClickListener, DatePickerDialog
 
         getLeaveList(AppUtils.convertFromRightToReverseFormat(fronString), AppUtils.convertFromRightToReverseFormat(endString))
     }
+
+    fun updateItem() {
+        getLeaveList(AppUtils.getCurrentDateForShopActi(), AppUtils.getCurrentDateForShopActi())
+    }
+
+
 }

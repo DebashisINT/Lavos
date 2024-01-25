@@ -1,13 +1,20 @@
 package com.lavos.features.localshops
 
+import android.app.Dialog
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.os.Handler
 import androidx.recyclerview.widget.RecyclerView
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Filter
+import android.widget.Filterable
 import android.widget.ImageView
 import android.widget.LinearLayout
+import androidx.core.content.ContextCompat
 import com.amulyakhare.textdrawable.TextDrawable
 import com.amulyakhare.textdrawable.util.ColorGenerator
 import com.lavos.R
@@ -15,24 +22,69 @@ import com.lavos.app.AppDatabase
 import com.lavos.app.Pref
 import com.lavos.app.domain.AddShopDBModelEntity
 import com.lavos.app.domain.OrderDetailsListEntity
+import com.lavos.app.types.FragType
 import com.lavos.app.utils.AppUtils
+import com.lavos.app.utils.Toaster
+import com.lavos.features.dashboard.presentation.DashboardActivity
 import com.lavos.features.location.LocationWizard
+import com.lavos.widgets.AppCustomTextView
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.inflate_nearby_shops.view.*
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.add_order_ll
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.add_quot_ll
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.call_ll
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.direction_ll
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.direction_view
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.last_visited_date_TV
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.ll_shop_code
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.myshop_address_TV
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.myshop_name_TV
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.order_RL
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.order_amt_p_TV
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.order_view
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.shop_IV
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.shop_damage_ll
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.shop_damage_view
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.shop_image_IV
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.shop_list_LL
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.total_v_TV
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.total_visited_value_TV
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.tv_shop_code
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.tv_shop_contact_no
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.*
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
 
 /**
  * Created by riddhi on 2/1/18.
  */
-class LocalShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>, val listener: LocalShopListClickListener) : RecyclerView.Adapter<LocalShopsListAdapter.MyViewHolder>() {
+// 1.0 LocalShopsListAdapter  AppV 4.0.6  Suman   31/01/2023 Retailer/Entity show from room db mantis_id 25636
+//Begin 2.0 Pref v 4.1.6 Tufan 07/09/2023 mantis 26785 Multi visit Interval in Minutes Against the Same Shop
+
+
+class LocalShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>, val listener: LocalShopListClickListener,private val getSize: (Int) -> Unit) :
+        RecyclerView.Adapter<LocalShopsListAdapter.MyViewHolder>(), Filterable {
     private val layoutInflater: LayoutInflater
     private var context: Context
-    private var mList: List<AddShopDBModelEntity>
+    private var mList: ArrayList<AddShopDBModelEntity>
+
+    private var tempList: ArrayList<AddShopDBModelEntity>? = null
+    private var filterList: ArrayList<AddShopDBModelEntity>? = null
+
 
 
     init {
         layoutInflater = LayoutInflater.from(context)
         this.context = context
-        mList = list
+
+        //mList = list as ArrayList<AddShopDBModelEntity>
+        tempList = ArrayList()
+        filterList = ArrayList()
+        mList = ArrayList()
+
+        tempList?.addAll(list)
+        mList?.addAll(list as ArrayList<AddShopDBModelEntity>)
+
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
@@ -53,6 +105,34 @@ class LocalShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>, 
         fun bindItems(context: Context, list: List<AddShopDBModelEntity>, listener: LocalShopListClickListener) {
             //Picasso.with(context).load(list[adapterPosition].shopImageLocalPath).into(itemView.shop_image_IV)
 
+            try{
+                var shopDetailsProjectName=""
+                shopDetailsProjectName = AppDatabase.getDBInstance()!!.addShopEntryDao().getProjectName(list[adapterPosition].shop_id)
+
+                var shopDetailLand=""
+                shopDetailLand = AppDatabase.getDBInstance()!!.addShopEntryDao().getLand(list[adapterPosition].shop_id)
+
+                if(Pref.IslandlineforCustomer && shopDetailLand!=null){
+                    itemView.tv_landline.text = shopDetailLand
+                    itemView.tv_landline.visibility = View.VISIBLE
+                }
+                else{
+                    itemView.tv_landline.text = "N.A"
+                    itemView.tv_landline.visibility = View.GONE
+                }
+                if(Pref.IsprojectforCustomer && shopDetailsProjectName!=null){
+                    itemView.project_name.text = "Project Name :"+shopDetailsProjectName
+                    itemView.project_name.visibility = View.VISIBLE
+                }
+                else{
+                    itemView.project_name.text = "Project Name : N.A"
+                    itemView.project_name.visibility = View.GONE
+                }
+
+            }
+            catch (ex:Exception){
+            }
+
             itemView.total_v_TV.text = context.getString(R.string.total_visits)
 
             if (!TextUtils.isEmpty(list[adapterPosition].shopImageLocalPath)) {
@@ -61,6 +141,14 @@ class LocalShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>, 
                         .resize(100, 100)
                         .into(itemView.shop_image_IV)
             }
+            var shopNameByID=""
+            if(list[adapterPosition].type!=null || !list[adapterPosition].type.equals("")){
+                shopNameByID = AppDatabase.getDBInstance()!!.shopTypeDao().getShopNameById(list[adapterPosition].type)
+            }
+            else{
+                shopNameByID = "N.A"
+            }
+            itemView.myshop_Type_TV.text = shopNameByID
             itemView.myshop_name_TV.text = list[adapterPosition].shopName
             var address: String = list[adapterPosition].address + ", " + list[adapterPosition].pinCode
             itemView.myshop_address_TV.text = address
@@ -91,8 +179,34 @@ class LocalShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>, 
             itemView.last_visited_date_TV.text = " " + list[adapterPosition].lastVisitedDate
 
             if (list[adapterPosition].visited) {
+
+                var obj = list[adapterPosition]
+
                 itemView.visit_icon.visibility = View.VISIBLE
-                itemView.visit_TV.text = "Revisited Today"
+                if(Pref.isMultipleVisitEnable){
+                    itemView.visit_TV.text = "Revisit Again"
+                    itemView.visit_TV.setTextColor(ContextCompat.getColor(context, R.color.color_custom_red))
+                    itemView.visit_icon.setColorFilter(ContextCompat.getColor(context,R.color.color_custom_red),android.graphics.PorterDuff.Mode.SRC_IN)
+                }else {
+                    itemView.visit_TV.text = "Revisited Today"
+                    itemView.visit_TV.setTextColor(ContextCompat.getColor(context, R.color.maroon))
+                    itemView.visit_icon.setColorFilter(ContextCompat.getColor(context,R.color.maroon),android.graphics.PorterDuff.Mode.SRC_IN)
+                }
+
+                if(Pref.IsmanualInOutTimeRequired){
+                    var statusL = AppDatabase.getDBInstance()!!.shopActivityDao().getShopForDay(obj.shop_id, AppUtils.getCurrentDateForShopActi())
+                    if(statusL.get(0).isDurationCalculated == false){
+                        itemView.visit_TV.text = "Out Location"
+                        itemView.visit_TV.setTextColor(ContextCompat.getColor(context, R.color.red))
+                        itemView.visit_icon.setColorFilter(ContextCompat.getColor(context,R.color.red),android.graphics.PorterDuff.Mode.SRC_IN)
+                    }
+                    else{
+                        itemView.visit_TV.text = "Revisited Today"
+                        itemView.visit_TV.setTextColor(ContextCompat.getColor(context, R.color.maroon))
+                        itemView.visit_icon.setColorFilter(ContextCompat.getColor(context,R.color.maroon),android.graphics.PorterDuff.Mode.SRC_IN)
+                    }
+                }
+
             } else {
                 itemView.visit_icon.visibility = View.GONE
 
@@ -102,7 +216,13 @@ class LocalShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>, 
                     itemView.visit_TV.text = "VISIT THIS SHOP"*/
 
                 itemView.visit_TV.text = "Revisit Now"
+                itemView.visit_TV.setTextColor(ContextCompat.getColor(context, R.color.color_custom_green))
+
+                if(Pref.IsmanualInOutTimeRequired){
+                    itemView.visit_TV.text = "In Location"
+                }
             }
+
 
             itemView.shop_list_LL.setOnClickListener(View.OnClickListener {
                 //                listener.OnNearByShopsListClick(adapterPosition)
@@ -110,26 +230,102 @@ class LocalShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>, 
 
             itemView.visit_rl.setOnClickListener(View.OnClickListener {
                 if (Pref.isMultipleVisitEnable) {
-                    val list_ = AppDatabase.getDBInstance()!!.shopActivityDao().getShopForDay(list[adapterPosition].shop_id, AppUtils.getCurrentDateForShopActi())
-                    /*if (list_ == null || list_.isEmpty())
-                        listener.visitShop(list[adapterPosition])
-                    else {
-                        var isDurationCalculated = false
-                        for (i in list_.indices) {
-                            isDurationCalculated = list_[i].isDurationCalculated
-                            if (!list_[i].isDurationCalculated)
-                                break
 
-                        }
+             //Begin 2.0 Pref v 4.1.6 Tufan 07/09/2023 mantis 26785 Work
+                    var sId = list[adapterPosition].shop_id
+                    var dt = AppUtils.getCurrentDateForShopActi()
+                    val multipleVisitShopList = AppDatabase.getDBInstance()!!.shopActivityDao().getMultipleVisitShopByShopId(list[adapterPosition].shop_id, AppUtils.getCurrentDateForShopActi())
+                    if(multipleVisitShopList.size >0 ){
+                        var duration = AppUtils.geTimeDuration(multipleVisitShopList[0].visited_date!!,AppUtils.getCurrentISODateTime())
+                        if(duration.toInt() > Pref.MultiVisitIntervalInMinutes.toInt()){
+                            val list_ = AppDatabase.getDBInstance()!!.shopActivityDao().getShopForDay(list[adapterPosition].shop_id, AppUtils.getCurrentDateForShopActi())
+                            /*if (list_ == null || list_.isEmpty())
+                                listener.visitShop(list[adapterPosition])
+                            else {
+                                var isDurationCalculated = false
+                                for (i in list_.indices) {
+                                    isDurationCalculated = list_[i].isDurationCalculated
+                                    if (!list_[i].isDurationCalculated)
+                                        break
 
-                        if (isDurationCalculated)
+                                }
+
+                                if (isDurationCalculated)
+                                    listener.visitShop(list[adapterPosition])
+                            }*/
                             listener.visitShop(list[adapterPosition])
-                    }*/
-                    listener.visitShop(list[adapterPosition])
+                        }else{
+                            var durationAfter =  Pref.MultiVisitIntervalInMinutes.toInt() - duration.toInt()
+                            if(Pref.MultiVisitIntervalInMinutes.toInt() == duration.toInt()){
+                                durationAfter = 1
+                            }
+                            val simpleDialog = Dialog(context)
+                            simpleDialog.setCancelable(false)
+                            simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                            simpleDialog.setContentView(R.layout.dialog_ok)
+                            val dialogHeader = simpleDialog.findViewById(R.id.dialog_yes_header_TV) as AppCustomTextView
+                            dialogHeader.text = "Please try after ${durationAfter} minutes"
+                            val dialogYes = simpleDialog.findViewById(R.id.tv_dialog_yes) as AppCustomTextView
+                            dialogYes.setOnClickListener({ view ->
+                                simpleDialog.cancel()
+                            })
+                            simpleDialog.show()
+                        }
+                      }else{
+                        val list_ = AppDatabase.getDBInstance()!!.shopActivityDao().getShopForDay(list[adapterPosition].shop_id, AppUtils.getCurrentDateForShopActi())
+                        /*if (list_ == null || list_.isEmpty())
+                            listener.visitShop(list[adapterPosition])
+                        else {
+                            var isDurationCalculated = false
+                            for (i in list_.indices) {
+                                isDurationCalculated = list_[i].isDurationCalculated
+                                if (!list_[i].isDurationCalculated)
+                                    break
+
+                            }
+
+                            if (isDurationCalculated)
+                                listener.visitShop(list[adapterPosition])
+                        }*/
+                        listener.visitShop(list[adapterPosition])
+                      }
+             //End 2.0 Pref v 4.1.6 Tufan 07/09/2023 mantis 26785 Multi visit Interval in Minutes Against the Same Shop
+
                 }
                 else {
-                    if (!list[adapterPosition].visited)
-                        listener.visitShop(list[adapterPosition])
+                    var objL =  AppDatabase.getDBInstance()!!.shopActivityDao().getDurationCalculatedVisitedShopForADay(AppUtils.getCurrentDateForShopActi(), false)
+                    if(objL.size>0 && Pref.IsmanualInOutTimeRequired){
+                        if(objL.get(0).shopid.equals(list.get(adapterPosition).shop_id)){
+                            var statusL = AppDatabase.getDBInstance()!!.shopActivityDao().getShopForDay(list[adapterPosition].shop_id, AppUtils.getCurrentDateForShopActi())
+                            if(statusL.get(0).isDurationCalculated == false){
+                                listener.outLocation(list[adapterPosition].shop_id)
+                            }
+                        }else{
+                            val simpleDialog = Dialog(context)
+                            simpleDialog.setCancelable(false)
+                            simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                            simpleDialog.setContentView(R.layout.dialog_ok)
+                            val dialogHeader = simpleDialog.findViewById(R.id.dialog_yes_header_TV) as AppCustomTextView
+                            dialogHeader.text = "Shop out location is pending."
+                            val dialogYes = simpleDialog.findViewById(R.id.tv_dialog_yes) as AppCustomTextView
+                            dialogYes.setOnClickListener({ view ->
+                                simpleDialog.cancel()
+                                (context as DashboardActivity).loadFragment(FragType.PendingOutLocationFrag, false, "")
+                            })
+                            simpleDialog.show()
+                        }
+
+                    }else{
+                        if (!list[adapterPosition].visited )
+                            listener.visitShop(list[adapterPosition])
+                        else if(Pref.IsmanualInOutTimeRequired){
+                            var statusL = AppDatabase.getDBInstance()!!.shopActivityDao().getShopForDay(list[adapterPosition].shop_id, AppUtils.getCurrentDateForShopActi())
+                            if(statusL.get(0).isDurationCalculated == false){
+                                listener.outLocation(list[adapterPosition].shop_id)
+                            }
+                        }
+                    }
+
                 }
             })
 
@@ -146,7 +342,8 @@ class LocalShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>, 
                 else if (!TextUtils.isEmpty(dd?.dd_name))
                     itemView.tv_pp_dd_value.text = dd?.dd_name
 
-            } else if (!TextUtils.isEmpty(list[adapterPosition].assigned_to_pp_id)) {
+            }
+            else if (!TextUtils.isEmpty(list[adapterPosition].assigned_to_pp_id)) {
                 itemView.rl_dd.visibility = View.VISIBLE
                 itemView.tv_pp_dd_header.text = context.getString(R.string.pp_super)
 
@@ -157,7 +354,8 @@ class LocalShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>, 
                 else if (!TextUtils.isEmpty(pp?.pp_name))
                     itemView.tv_pp_dd_value.text = pp?.pp_name
 
-            } else {
+            }
+            else {
                 itemView.rl_dd.visibility = View.GONE
             }
 
@@ -193,27 +391,102 @@ class LocalShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>, 
                 listener.onQuationClick(list[adapterPosition])
             }
 
+
+            if (Pref.IsAllowBreakageTracking) {
+                itemView.shop_damage_ll.visibility = View.VISIBLE
+                itemView.shop_damage_view.visibility = View.VISIBLE
+            }
+            else {
+                itemView.shop_damage_ll.visibility = View.GONE
+                itemView.shop_damage_view.visibility = View.GONE
+            }
+
+            itemView.shop_damage_ll.setOnClickListener{
+                listener.onDamageClick(list[adapterPosition].shop_id)
+            }
+            /*21-12-2021*/
+            if(Pref.IsReturnEnableforParty) {
+                if(Pref.IsReturnActivatedforPP){
+                    if(list[adapterPosition].type!!.equals("2")){
+                        itemView.lead_return_llll.visibility = View.VISIBLE
+                        itemView.lead_return_vvview.visibility =  View.VISIBLE
+                    }
+                    else{
+                        itemView.lead_return_llll.visibility = View.GONE
+                        itemView.lead_return_vvview.visibility = View.GONE
+                    }
+                }
+                else if(Pref.IsReturnActivatedforDD){
+                    if(list[adapterPosition].type!!.equals("4")){
+                        itemView.lead_return_llll.visibility = View.VISIBLE
+                        itemView.lead_return_vvview.visibility =  View.VISIBLE
+                    }
+                    else{
+                        itemView.lead_return_llll.visibility = View.GONE
+                        itemView.lead_return_vvview.visibility = View.GONE
+                    }
+                }
+                else if(Pref.IsReturnActivatedforSHOP){
+                    if(list[adapterPosition].type!!.equals("1")){
+                        itemView.lead_return_llll.visibility = View.VISIBLE
+                        itemView.lead_return_vvview.visibility =  View.VISIBLE
+                    }
+                    else{
+                        itemView.lead_return_llll.visibility = View.GONE
+                        itemView.lead_return_vvview.visibility = View.GONE
+                    }
+                }
+            }
+            else{
+                itemView.lead_return_llll.visibility = View.GONE
+                itemView.lead_return_vvview.visibility = View.GONE
+            }
+            /*21-12-2021*/
+            val OrderavalibleByShopId = AppDatabase.getDBInstance()?.orderDetailsListDao()?.getListAccordingToShopId(list[adapterPosition].shop_id!!) as java.util.ArrayList<OrderDetailsListEntity>
+            if(OrderavalibleByShopId.size>0){
+                //itemView.lead_return_ll.isEnabled=true
+                itemView.lead_return_llll.setOnClickListener {
+                    listener.onReturnClick(adapterPosition)
+                }
+            }
+            else{
+                itemView.lead_return_llll.setOnClickListener {
+                    Toaster.msgShort(context,"No Minimum Order Avalible to return.")
+                }
+                //itemView.lead_return_ll.isEnabled=false
+            }
+
+
             if (Pref.isEntityCodeVisible) {
                 if (!TextUtils.isEmpty(list[adapterPosition].entity_code)) {
                     itemView.ll_shop_code.visibility = View.VISIBLE
                     itemView.tv_shop_code.text = list[adapterPosition].entity_code
                 } else
                     itemView.ll_shop_code.visibility = View.GONE
-            } else
+            }
+            else
                 itemView.ll_shop_code.visibility = View.GONE
 
 
             if (Pref.isQuotationShow) {
                 itemView.add_quot_ll.visibility = View.VISIBLE
                 itemView.order_view.visibility = View.VISIBLE
-            } else {
+            }
+            else {
                 itemView.add_quot_ll.visibility = View.GONE
                 itemView.order_view.visibility = View.GONE
             }
 
-            val distance = LocationWizard.getDistance(list[adapterPosition].shopLat, list[adapterPosition].shopLong,
-                    Pref.current_latitude.toDouble(), Pref.current_longitude.toDouble())
-            itemView.approx_distance.text = (distance * 1000).toString() + " mtr"
+            if(Pref.ShowApproxDistanceInNearbyShopList){
+                itemView.ll_approx_dist_show_root.visibility = View.VISIBLE
+                val distance = LocationWizard.getDistance(list[adapterPosition].shopLat, list[adapterPosition].shopLong,
+                Pref.current_latitude.toDouble(), Pref.current_longitude.toDouble())
+                itemView.approx_distance.text = (distance * 1000).toString() + " mtr"
+            }
+            else{
+               itemView.ll_approx_dist_show_root.visibility = View.GONE
+            }
+
 
             if (Pref.willShowPartyStatus)
                 itemView.rl_party.visibility = View.VISIBLE
@@ -238,13 +511,182 @@ class LocalShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>, 
             }
             else
                 itemView.tv_party_value.text = "N.A."
-        }
+
+            itemView.tv_retailer_entity_header.text = "Party Category: "
+            try{
+                if(list[adapterPosition].retailer_id == null || list[adapterPosition].retailer_id.equals("")){
+                    itemView.tv_retailer_entity_value.text = "N.A."
+                }else{
+                    itemView.tv_retailer_entity_value.text = AppDatabase.getDBInstance()?.retailerDao()?.getSingleItem(list[adapterPosition].retailer_id.toString())!!.name
+                }
+            }catch (ex:Exception){
+                itemView.tv_retailer_entity_value.text = "N.A."
+            }
+
+
+            if(Pref.IsFeedbackHistoryActivated){
+                itemView.history_llll.visibility=View.VISIBLE
+                itemView.history_vvview.visibility=View.VISIBLE
+            }else{
+                itemView.history_llll.visibility=View.GONE
+                itemView.history_vvview.visibility=View.GONE
+            }
+            itemView.history_llll.setOnClickListener {
+                listener.onHistoryClick(list[adapterPosition])
+            }
+
+            if (Pref.isOrderShow) {
+                itemView.add_order_ll.visibility = View.VISIBLE
+                itemView.direction_view.visibility = View.VISIBLE
+            } else {
+                itemView.add_order_ll.visibility = View.GONE
+                itemView.direction_view.visibility = View.GONE
+            }
+
+            /*if(Pref.IsSurveyRequiredforDealer && list[adapterPosition].type!!.equals("1")) {
+                itemView.shop_rv_survey_ll.visibility = View.VISIBLE
+                itemView.shop_rv_survey_view.visibility = View.VISIBLE
+            }
+            else if(Pref.IsSurveyRequiredforNewParty && list[adapterPosition].type!!.equals("3")){
+                itemView.shop_rv_survey_ll.visibility = View.VISIBLE
+                itemView.shop_rv_survey_view.visibility = View.VISIBLE
+            }
+            else{
+                itemView.shop_rv_survey_ll.visibility = View.GONE
+                itemView.shop_rv_survey_view.visibility = View.GONE
+            }
+
+            itemView.shop_rv_survey_ll.setOnClickListener{
+                listener.onSurveyClick(list[adapterPosition].shop_id)
+            }*/
+
+            if(Pref.IsAllowNearbyshopWithBeat == false){
+                if(Pref.IsBeatRouteAvailableinAttendance){
+                    if(list[adapterPosition].beat_id.equals(Pref.SelectedBeatIDFromAttend)){
+                        itemView.rl_revisit_nearby_shop.visibility=View.VISIBLE
+                        itemView.visit_rl.isEnabled=true
+                    }else{
+                        itemView.rl_revisit_nearby_shop.visibility=View.GONE
+                        itemView.visit_rl.isEnabled=false
+                    }
+                }
+            }
+
+
+            try{
+                if(Pref.IsGSTINPANEnableInShop) {
+                    if (list[adapterPosition].gstN_Number.isNotEmpty()) {
+                        itemView.myshop_gstin_TV.text = "GSTIN : " + list[adapterPosition].gstN_Number
+                        itemView.myshop_gstin_TV.visibility = View.VISIBLE
+                    } else {
+                        itemView.myshop_gstin_TV.text = "GSTIN : " + "N.A"
+                        itemView.myshop_gstin_TV.visibility = View.VISIBLE
+                    }
+                }else{
+                    itemView.myshop_gstin_TV.visibility = View.GONE
+                }
+                if(Pref.IsGSTINPANEnableInShop) {
+                    if (list[adapterPosition].shopOwner_PAN.isNotEmpty()) {
+                        itemView.myshop_pancard_TV.text = "PAN     : " + list[adapterPosition].shopOwner_PAN
+                        itemView.myshop_pancard_TV.visibility = View.VISIBLE
+                    } else {
+                        itemView.myshop_pancard_TV.text = "PAN     : " + "N.A"
+                        itemView.myshop_pancard_TV.visibility = View.VISIBLE
+                    }
+                }else{
+                    itemView.myshop_pancard_TV.visibility = View.GONE
+                }
+            }
+            catch (ex:Exception){
+                itemView.myshop_gstin_TV.text =  "GSTIN : "+"N.A"
+                itemView.myshop_pancard_TV.text = "PAN     : "+"N.A"
+            }
+            }
     }
 
-    fun updateAdapter(mlist: List<AddShopDBModelEntity>) {
+    fun updateAdapter(mlist: ArrayList<AddShopDBModelEntity>) {
         this.mList = mlist
         notifyDataSetChanged()
     }
+
+    override fun getFilter(): Filter {
+        return SearchFilter()
+    }
+
+    inner class SearchFilter : Filter() {
+        override fun performFiltering(p0: CharSequence?): FilterResults {
+
+            //var land=AppDatabase.getDBInstance()!!.addShopEntryDao().getLandNumber(p0?.toString())
+
+            val results = FilterResults()
+            filterList?.clear()
+
+            try{
+                if(tempList?.size!! < 500){
+                    tempList?.indices!!
+                        .filter { tempList?.get(it)?.shopName?.toLowerCase()?.contains(p0?.toString()?.toLowerCase()!!)!!  ||
+                                tempList?.get(it)?.pinCode?.toLowerCase()?.contains(p0?.toString()?.toLowerCase()!!)!!  ||
+                                tempList?.get(it)?.ownerName?.toLowerCase()?.contains(p0?.toString()?.toLowerCase()!!)!!  ||
+                                tempList?.get(it)?.ownerContactNumber?.toLowerCase()?.contains(p0?.toString()?.toLowerCase()!!)!!  ||
+                                //AppDatabase.getDBInstance()!!.addShopEntryDao().getLandNumber(tempList?.get(it)?.landline_number!!).toLowerCase()?.contains(p0?.toString()?.toLowerCase()!!)!!  ||
+                                //tempList?.get(it)?.landline_number?.toLowerCase()?.contains(land)!! ||
+                                //AppDatabase.getDBInstance()!!.shopTypeDao().getShopNameById(tempList?.get(it)?.type!!).toLowerCase()?.contains(p0?.toString()?.toLowerCase()!!)!!  ||
+                                tempList?.get(it)?.address?.toLowerCase()?.contains(p0?.toString()?.toLowerCase()!!)!!
+                        }
+                        .forEach { filterList?.add(tempList?.get(it)!!) }
+                }else{
+                    filterList = tempList!!.filter { it.shopName.contains(p0!!.toString(),ignoreCase = true) } as ArrayList<AddShopDBModelEntity>
+                }
+            }catch (ex:Exception){
+                ex.printStackTrace()
+            }
+
+            results.values = filterList
+            results.count = filterList?.size!!
+            return results
+        }
+
+        override fun publishResults(p0: CharSequence?, results: FilterResults?) {
+
+            try {
+                filterList = results?.values as ArrayList<AddShopDBModelEntity>?
+                mList?.clear()
+                val hashSet = HashSet<String>()
+                if (filterList != null) {
+
+                    filterList?.indices!!
+                            .filter { hashSet.add(filterList?.get(it)?.shopName!!) }
+                            .forEach { mList?.add(filterList?.get(it)!!) }
+
+                    getSize(mList?.size!!)
+
+                    notifyDataSetChanged()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+
+    fun refreshList(list: ArrayList<AddShopDBModelEntity>) {
+
+        mList?.clear()
+        mList?.addAll(list)
+
+        tempList?.clear()
+        tempList?.addAll(list)
+
+        if (filterList == null)
+            filterList = ArrayList()
+        filterList?.clear()
+
+        notifyDataSetChanged()
+    }
+
+
+
+
 
 
 }

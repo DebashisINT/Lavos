@@ -9,6 +9,9 @@ import io.reactivex.Observable
  */
 class LocationUpdateRepository(val apiService:LocationUpdateApi) {
     fun sendLocationUpdate(location: LocationUpdateRequest): Observable<BaseResponse> {
+        for(i in 0..location.location_details!!.size-1){
+            println("distance_loc_tag LocationUpdateRepository ${location.location_details!!.get(i).latitude} ${location.location_details!!.get(i).longitude} ${location.location_details!!.get(i).distance_covered}")
+        }
         return apiService.sendLocationUpdates(location)
     }
 }

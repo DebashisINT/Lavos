@@ -106,7 +106,7 @@
                 android:id="@+id/tv_ok_btn"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/_35sdp"
-                android:background="@drawable/shape_custom_border_blue_button"
+                android:background="@drawable/deselected_new_order_history"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"

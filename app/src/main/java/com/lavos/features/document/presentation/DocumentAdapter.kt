@@ -1,22 +1,22 @@
 package com.lavos.features.document.presentation
 
 import android.content.Context
-import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.RecyclerView
+import android.text.SpannableString
 import android.text.TextUtils
+import android.text.style.UnderlineSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import com.lavos.CustomStatic
 import com.lavos.R
 import com.lavos.app.Pref
 import com.lavos.app.domain.DocumentListEntity
 import com.lavos.app.utils.AppUtils
-import com.lavos.features.billing.presentation.BillingDetailsFragment
 import kotlinx.android.synthetic.main.inflater_document_item.view.*
 import java.io.File
 
-class DocumentAdapter(private val mContext: Context, private val docList:  ArrayList<DocumentListEntity>,
+class DocumentAdapter(private val mContext: Context, private val docList: ArrayList<DocumentListEntity>,
                       private val onEditClick: (DocumentListEntity) -> Unit, private val onDeleteClick: (DocumentListEntity) -> Unit,
                       private val onShareClick: (DocumentListEntity, String) -> Unit, private val onSyncClick: (DocumentListEntity) -> Unit,
                       private val onAttachmentClick: (DocumentListEntity) -> Unit,
@@ -62,11 +62,13 @@ class DocumentAdapter(private val mContext: Context, private val docList:  Array
                     tv_doc_date_time.text = "N.A."
 
                 if(!docList[adapterPosition].attachment?.startsWith("http")!!) {
-                    val strFileName = File(docList[adapterPosition].attachment!!).name
+                    val strFileName = SpannableString(File(docList[adapterPosition].attachment!!).name)
+                    strFileName.setSpan(UnderlineSpan(), 0, strFileName.length, 0)
                     tv_attachment.text = strFileName
                 }
                 else {
-                    val strFileName = docList[adapterPosition].attachment?.substring(docList[adapterPosition].attachment?.lastIndexOf("/")!! + 1)
+                    val strFileName = SpannableString(docList[adapterPosition].attachment?.substring(docList[adapterPosition].attachment?.lastIndexOf("/")!! + 1))
+                    strFileName.setSpan(UnderlineSpan(), 0, strFileName.length, 0)
                     tv_attachment.text = strFileName
                 }
 
@@ -102,14 +104,17 @@ class DocumentAdapter(private val mContext: Context, private val docList:  Array
                 }
 
                 if (!TextUtils.isEmpty(docList[adapterPosition].document_name))
-                    tv_doc_file_name.text = AppUtils.convertToNotificationDateTime(docList[adapterPosition].document_name!!)
+//                    tv_doc_file_name.text = AppUtils.convertToNotificationDateTime(docList[adapterPosition].document_name!!)
+                    tv_doc_file_name.text = docList[adapterPosition].document_name!!
                 else
                     tv_doc_file_name.text = "N.A."
 
-                tv_attachment.setOnClickListener {
-                    onOpenFileClick(docList[adapterPosition], tv_attachment.text.toString().trim())
-                }
+           if (tv_attachment.text.toString().contains("jpg")||tv_attachment.text.toString().contains("jpeg")||tv_attachment.text.toString().contains("png")) {
+               tv_attachment.setOnClickListener {
+                   onOpenFileClick(docList[adapterPosition], tv_attachment.text.toString().trim())
+               }
 
+           }
 
                 /*tv_attachment.setOnClickListener {
                     onAttchmentClick(docList[adapterPosition], tv_attachment.text.toString().trim())

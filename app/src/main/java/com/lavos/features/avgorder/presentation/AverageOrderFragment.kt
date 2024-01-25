@@ -1,5 +1,6 @@
 package com.lavos.features.avgorder.presentation
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
@@ -161,12 +162,26 @@ class AverageOrderFragment : BaseFragment(), DatePickerListener {
         }
     }
 
+    @SuppressLint("WrongConstant")
     private fun initAdapter(list: List<AddShopDBModelEntity>) {
 //        getLocationList()
         averageShopListAdapter = AverageOrderListAdapter(mContext, list, object : AverageShopListClickListener {
             override fun onSyncClick(position: Int) {
 
             }
+
+            override fun onQuestionnarieClick(shopId: String) {
+
+            }
+
+            override fun onReturnClick(position: Int) {
+
+            }
+
+            override fun onDamageClick(shop_id: String) {
+                TODO("Not yet implemented")
+            }
+
 
             override fun OnItemClick(position: Int) {
                 (mContext as DashboardActivity).loadFragment(FragType.ShopDetailFragment, true, list[position])
@@ -176,6 +191,17 @@ class AverageOrderFragment : BaseFragment(), DatePickerListener {
                 initiatePopupWindow(view, position)
             }
 
+            override fun onSurveyClick(shop_id: String) {
+
+            }
+
+            override fun onMultipleImageClick(shop: Any, position: Int) {
+                TODO("Not yet implemented")
+            }
+
+            override fun onWhatsApiClick(shop_id: String) {
+                TODO("Not yet implemented")
+            }
         })
         layoutManager = LinearLayoutManager(mContext, LinearLayout.VERTICAL, false)
         shopList.layoutManager = layoutManager

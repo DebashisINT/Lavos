@@ -1,5 +1,6 @@
 package com.lavos.features.newcollection
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -137,8 +138,9 @@ class CollectionDetailsStatusFragment : BaseFragment(), View.OnClickListener {
                                 tv_today_percentage.text = String.format("%.2f", today_percentage) + "%"
                                 pb_today_collection.progress = today_percentage.roundToInt()
                             }
-                            else
+                            else {
                                 (mContext as DashboardActivity).showSnackMessage(response.message!!)
+                            }
 
                         }, { error ->
                             error.printStackTrace()
@@ -148,6 +150,7 @@ class CollectionDetailsStatusFragment : BaseFragment(), View.OnClickListener {
         )
     }
 
+    @SuppressLint("UseRequireInsteadOfGet")
     override fun onClick(v: View?) {
         when(v?.id) {
             R.id.cv_total_collection -> {
@@ -167,7 +170,7 @@ class CollectionDetailsStatusFragment : BaseFragment(), View.OnClickListener {
 
                         val file = File(fileUrl.path)
 //                        val uri = Uri.fromFile(file)
-                        val uri: Uri = FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
+                        val uri:Uri= FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
                         shareIntent.type = "image/png"
                         shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
                         startActivity(Intent.createChooser(shareIntent, "Share pdf using"));
@@ -175,8 +178,9 @@ class CollectionDetailsStatusFragment : BaseFragment(), View.OnClickListener {
                         e.printStackTrace()
                     }
                 }
-                else
+                else {
                     (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
+                }
             }
         }
     }

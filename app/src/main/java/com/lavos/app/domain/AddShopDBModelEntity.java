@@ -6,9 +6,13 @@ import androidx.room.PrimaryKey;
 
 import static com.lavos.app.AppConstant.SHOP_TABLE;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Created by sayantan.sarkar on 2/11/17.
  */
+// Revision History
+// 1.0 SHOP_TABLE  AppV 4.0.6  shopStatusUpdate add col
 @Entity(tableName = SHOP_TABLE)
 public class AddShopDBModelEntity {
 
@@ -246,6 +250,327 @@ public class AddShopDBModelEntity {
 
     @ColumnInfo(name = "actual_address")
     private String actual_address = null;
+
+    @ColumnInfo(name = "agency_name")
+    private String agency_name = null;
+
+    @ColumnInfo(name = "lead_contact_number")
+    private String lead_contact_number = null;
+
+
+    @ColumnInfo(name = "rubylead_image1")
+    private String rubylead_image1 = null;
+
+    @ColumnInfo(name = "rubylead_image2")
+    private String rubylead_image2 = null;
+
+    @ColumnInfo(name = "project_name")
+    private String project_name = null;
+
+    @ColumnInfo(name = "landline_number")
+    private String landline_number = null;
+
+    @ColumnInfo(name = "alternateNoForCustomer")
+    private String alternateNoForCustomer = null;
+
+    @ColumnInfo(name = "whatsappNoForCustomer")
+    private String whatsappNoForCustomer = null;
+
+    @ColumnInfo(name = "isShopDuplicate")
+    private boolean isShopDuplicate = false;
+
+    @ColumnInfo(name = "isOwnshop")
+    private boolean isOwnshop = true;
+    // 3.0   AppV 4.0.6  shopStatusUpdate table added
+    @ColumnInfo(name = "shopStatusUpdate")
+    private String shopStatusUpdate = "1";
+
+    @ColumnInfo(name = "GSTN_Number")
+    private String GSTN_Number = null;
+
+    @ColumnInfo(name = "ShopOwner_PAN")
+    private String ShopOwner_PAN =null;
+
+    @ColumnInfo(name = "purpose")
+    private String purpose = null;
+
+
+    @ColumnInfo(name = "FSSAILicNo")
+    public String FSSAILicNo = null;
+
+    @ColumnInfo(name = "isUpdateAddressFromShopMaster")
+    public Boolean isUpdateAddressFromShopMaster = false;
+
+
+//new column
+    @ColumnInfo(name = "companyName")
+    public String companyName = null;
+
+    @ColumnInfo(name = "companyName_id")
+    public String companyName_id = null;
+
+    @ColumnInfo(name = "jobTitle")
+    public String jobTitle = null;
+
+    @ColumnInfo(name = "crm_assignTo")
+    public String crm_assignTo = null;
+
+    @ColumnInfo(name = "crm_assignTo_ID")
+    public String crm_assignTo_ID = null;
+
+    @ColumnInfo(name = "crm_type")
+    public String crm_type = null;
+
+    @ColumnInfo(name = "crm_type_ID")
+    public String crm_type_ID = null;
+
+    @ColumnInfo(name = "crm_status")
+    public String crm_status = null;
+
+    @ColumnInfo(name = "crm_status_ID")
+    public String crm_status_ID = null;
+
+    @ColumnInfo(name = "crm_source")
+    public String crm_source = null;
+
+    @ColumnInfo(name = "crm_source_ID")
+    public String crm_source_ID = null;
+
+    @ColumnInfo(name = "crm_reference")
+    public String crm_reference = null;
+
+    @ColumnInfo(name = "crm_reference_ID")
+    public String crm_reference_ID = null;
+
+    @ColumnInfo(name = "crm_reference_ID_type")
+    public String crm_reference_ID_type = null;
+
+    @ColumnInfo(name = "crm_stage")
+    public String crm_stage = null;
+
+    @ColumnInfo(name = "crm_stage_ID")
+    public String crm_stage_ID = null;
+
+    @ColumnInfo(name = "crm_saved_from")
+    public String crm_saved_from = null;
+
+    @ColumnInfo(name = "crm_firstName")
+    public String crm_firstName = null;
+
+    @ColumnInfo(name = "crm_lastName")
+    public String crm_lastName = null;
+
+    public String getCrm_assignTo_ID() {
+        return crm_assignTo_ID;
+    }
+
+    public void setCrm_assignTo_ID(String crm_assignTo_ID) {
+        this.crm_assignTo_ID = crm_assignTo_ID;
+    }
+
+    public String getCrm_assignTo() {
+        return crm_assignTo;
+    }
+
+    public void setCrm_assignTo(String crm_assignTo) {
+        this.crm_assignTo = crm_assignTo;
+    }
+
+    public String getCrm_status() {
+        return crm_status;
+    }
+
+    public void setCrm_status(String crm_status) {
+        this.crm_status = crm_status;
+    }
+
+    public String getCrm_source() {
+        return crm_source;
+    }
+
+    public void setCrm_source(String crm_source) {
+        this.crm_source = crm_source;
+    }
+
+    public String getCrm_reference() {
+        return crm_reference;
+    }
+
+    public void setCrm_reference(String crm_reference) {
+        this.crm_reference = crm_reference;
+    }
+
+    public String getCompanyName_id() {
+        return companyName_id;
+    }
+
+    public void setCompanyName_id(String companyName_id) {
+        this.companyName_id = companyName_id;
+    }
+
+    public String getJobTitle() {
+        return jobTitle;
+    }
+
+    public void setJobTitle(String jobTitle) {
+        this.jobTitle = jobTitle;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    public String getShopStatusUpdate() {
+        return shopStatusUpdate;
+    }
+
+    public void setShopStatusUpdate(String shopStatusUpdate) {
+        this.shopStatusUpdate = shopStatusUpdate;
+    }
+
+    public String getGSTN_Number() {
+        return GSTN_Number;
+    }
+
+    public void setGSTN_Number(String GSTN_Number) {
+        this.GSTN_Number = GSTN_Number;
+    }
+
+    public String getShopOwner_PAN() {
+        return ShopOwner_PAN;
+    }
+
+    public void setShopOwner_PAN(String shopOwner_PAN) {
+        ShopOwner_PAN = shopOwner_PAN;
+    }
+
+
+    public Boolean getUpdateAddressFromShopMaster() {
+        return isUpdateAddressFromShopMaster;
+    }
+
+    public void setUpdateAddressFromShopMaster(Boolean updateAddressFromShopMaster) {
+        isUpdateAddressFromShopMaster = updateAddressFromShopMaster;
+    }
+
+
+    public boolean isOwnshop() {
+        return isOwnshop;
+    }
+    public void setOwnshop(boolean ownshop) {
+        isOwnshop = ownshop;
+    }
+
+    public boolean getIsShopDuplicate() {
+        return isShopDuplicate;
+    }
+    public void setIsShopDuplicate(boolean isShopDuplicate) {
+        this.isShopDuplicate = isShopDuplicate;
+    }
+
+    public String getPurpose() {
+        return purpose;
+    }
+
+    public void setPurpose(String purpose) {
+        this.purpose = purpose;
+    }
+
+
+
+    public String getFSSAILicNo() {
+        return FSSAILicNo;
+    }
+
+    public void setFSSAILicNo(String FSSAILicNo) {
+        this.FSSAILicNo = FSSAILicNo;
+    }
+
+    public String getAlternateNoForCustomer() {
+        return alternateNoForCustomer;
+    }
+
+    public void setAlternateNoForCustomer(String alternateNoForCustomer) {
+        this.alternateNoForCustomer = alternateNoForCustomer;
+    }
+
+    public String getWhatsappNoForCustomer() {
+        return whatsappNoForCustomer;
+    }
+
+    public void setWhatsappNoForCustomer(String whatsappNoForCustomer) {
+        this.whatsappNoForCustomer = whatsappNoForCustomer;
+    }
+
+
+
+
+    public String getProject_name() {
+        return project_name;
+    }
+
+    public void setProject_name(String project_name) {
+        this.project_name = project_name;
+    }
+
+    public String getLandline_number() {
+        return landline_number;
+    }
+
+    public void setLandline_number(String landline_number) {
+        this.landline_number = landline_number;
+    }
+
+
+
+    public String getRubylead_image1() {
+        return rubylead_image1;
+    }
+
+    public void setRubylead_image1(String rubylead_image1) {
+        this.rubylead_image1 = rubylead_image1;
+    }
+
+    public String getRubylead_image2() {
+        return rubylead_image2;
+    }
+
+    public void setRubylead_image2(String rubylead_image2) {
+        this.rubylead_image2 = rubylead_image2;
+    }
+
+
+
+    public String getAgency_name() {
+        return agency_name;
+    }
+
+    public void setAgency_name(String agency_name) {
+        this.agency_name = agency_name;
+    }
+
+    public String getLead_contact_number() {
+        return lead_contact_number;
+    }
+
+    public void setLead_contact_number(String lead_contact_number) {
+        this.lead_contact_number = lead_contact_number;
+    }
+
+
+
+    public void setCompetitor_img2(String rubylead_image2) {
+        this.rubylead_image2 = rubylead_image2;
+    }
+
+
+
+
+
 
     public String getIs_otp_verified() {
         return is_otp_verified;

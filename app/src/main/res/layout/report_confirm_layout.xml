@@ -32,7 +32,7 @@
             android:layout_toRightOf="@+id/iv_check_icon"
             android:text="@string/reviewed"
             android:textColor="@color/black" />
-<!--        selector_report_confirm_bg-->
+
 
         <com.lavos.widgets.AppCustomTextView
             android:id="@+id/tv_confirm_btn"
@@ -40,7 +40,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_marginLeft="@dimen/_5sdp"
-            android:background="@drawable/shape_custom_border_blue_button"
+            android:background="@drawable/selector_report_confirm_bg"
             android:paddingBottom="@dimen/_7sdp"
             android:paddingLeft="@dimen/_18sdp"
             android:paddingRight="@dimen/_18sdp"

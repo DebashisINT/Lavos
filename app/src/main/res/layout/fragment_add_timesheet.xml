@@ -5,7 +5,7 @@
     android:id="@+id/rl_add_timesheet_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/smoke_white">
+    android:background="@color/color_silver">
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/nsv_apply_reimbursement"
@@ -640,7 +640,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="@drawable/shape_custom_border_blue_button"
+        android:background="@drawable/deselected_new_order_history"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center"

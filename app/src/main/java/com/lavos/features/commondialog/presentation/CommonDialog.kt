@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.view.Window
 import android.widget.ImageView
 import android.widget.RelativeLayout
+import com.lavos.CustomStatic
 import com.lavos.R
 import com.lavos.app.utils.AppUtils
 import com.lavos.widgets.AppCustomEditText
@@ -179,7 +180,8 @@ class CommonDialog : DialogFragment(), View.OnClickListener {
             til_edt_text.visibility = View.VISIBLE
             dialogContent.visibility = View.GONE
             til_edt_text.hint = getString(R.string.remark)
-        } else {
+        }
+        else {
             til_edt_text.visibility = View.GONE
             dialogContent.visibility = View.VISIBLE
         }
@@ -193,7 +195,8 @@ class CommonDialog : DialogFragment(), View.OnClickListener {
             if (AppUtils.isShopAdded)
                 AppUtils.isShopAdded = false
 
-        } else
+        }
+        else
             iv_close_icon.visibility = View.GONE
 
         if (isSetDrawable) {
@@ -202,6 +205,7 @@ class CommonDialog : DialogFragment(), View.OnClickListener {
             dialogOk.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_check_mark, 0, 0, 0)
             dialogOk.compoundDrawablePadding = mContext.resources.getDimensionPixelOffset(R.dimen._5sdp)*/
             dialogOk.background = mContext.resources.getDrawable(R.drawable.deselected_ok_btn_new)
+            //dialogOk.background = mContext.resources.getDrawable(R.drawable.shape_custom_border_green_button)
             //iv_calendar_icon.visibility = View.VISIBLE
         }
         else
@@ -215,6 +219,13 @@ class CommonDialog : DialogFragment(), View.OnClickListener {
         iv_close_icon.setOnClickListener(this)
         dialogCancel.setOnClickListener(this)
         dialogOk.setOnClickListener(this)
+
+        if(CustomStatic.IsCommDLeftBtnColor == true && CustomStatic.IsCommDRightBtnColor == true){
+            dialogCancel.setBackgroundColor(mContext.getColor(R.color.color_custom_green))
+            dialogOk.setBackgroundColor(mContext.getColor(R.color.default_text_color))
+        }
+        CustomStatic.IsCommDLeftBtnColor = false
+        CustomStatic.IsCommDRightBtnColor = false
 
     }
 

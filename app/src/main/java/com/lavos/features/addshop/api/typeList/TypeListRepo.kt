@@ -5,6 +5,7 @@ import com.lavos.app.Pref
 import com.lavos.base.BaseResponse
 import com.lavos.features.addshop.model.*
 import com.lavos.features.addshop.model.assigntopplist.AssignToPPListResponseModel
+import com.lavos.features.beatCustom.BeatTeamResponseModel
 import io.reactivex.Observable
 
 /**
@@ -37,6 +38,14 @@ class TypeListRepo(val apiService: TypeListApi) {
 
     fun beatList(): Observable<BeatListResponseModel> {
         return apiService.getBeatList(Pref.session_token!!, Pref.user_id!!)
+    }
+
+    fun getBeatAreaRoute(): Observable<BetAreaRouteResponseModel> {
+        return apiService.getBeatAreaRouteApi(Pref.session_token!!, Pref.user_id!!)
+    }
+
+    fun beatListForTeam(usrID:String): Observable<BeatListResponseModel> {
+        return apiService.getBeatList(Pref.session_token!!, usrID!!)
     }
 
     fun updateBankDetails(shopId: String, accountHolder: String, accountNo: String, bankName: String, ifsc: String, upi: String): Observable<BaseResponse> {

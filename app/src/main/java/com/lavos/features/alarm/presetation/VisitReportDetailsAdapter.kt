@@ -51,6 +51,8 @@ class VisitReportDetailsAdapter(context: Context, val visitDetailsData: ArrayLis
             itemView.tv_duration.text = visitDetailsData?.get(adapterPosition)?.duration_spent
             itemView.tv_distance.text = visitDetailsData?.get(adapterPosition)?.distance
 
+            itemView.tv_date_visit_report_dtls.text = visitDetailsData?.get(adapterPosition)?.date
+
         }
     }
 }

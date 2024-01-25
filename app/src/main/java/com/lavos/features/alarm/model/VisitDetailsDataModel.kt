@@ -8,4 +8,6 @@ class VisitDetailsDataModel {
     var visit_time: String? = null
     var duration_spent: String? = null
     var distance: String? = null
+
+    var date: String? = null
 }

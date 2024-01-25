@@ -1,8 +1,7 @@
 package com.lavos.features.attendance.api
 
 import com.lavos.app.NetworkConstant
-import com.lavos.features.attendance.model.AttendanceRequest
-import com.lavos.features.attendance.model.AttendanceResponse
+import com.lavos.features.attendance.model.*
 import io.reactivex.Observable
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
@@ -16,6 +15,12 @@ import retrofit2.http.POST
 interface AttendanceListApi {
     /*@POST("Attendance/Records")*/ @POST("Attendance/List")
     fun getAttendanceList(@Body attendanceReq: AttendanceRequest?): Observable<AttendanceResponse>
+
+    @POST("UserWiseDayStartEnd/UserDayStartEndList")
+    fun getDayStartEndListAPI(@Body attendanceReq: AttendanceRequest?): Observable<DayStartEndListResponse>
+
+    @POST("Shoplist/PartyNotVisitedList")
+    fun getPartyListNotVisited(@Body reqBody: InputRequest?): Observable<OutputResponse>
 
     /**
      * Companion object to create the AttendanceListApi

@@ -1,23 +1,21 @@
 package com.lavos.features.micro_learning.presentation
 
 import android.content.Context
-import androidx.recyclerview.widget.RecyclerView
+import android.media.ThumbnailUtils
+import android.provider.MediaStore
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Filter
 import android.widget.Filterable
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.lavos.R
+import com.lavos.app.utils.AppUtils
 import com.lavos.features.micro_learning.model.MicroLearningDataModel
 import kotlinx.android.synthetic.main.inflate_micro_learning_item.view.*
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.uiThread
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 class MicroLearningAdapter(private val mContext: Context, list: ArrayList<MicroLearningDataModel>?,
                            private val onItemClick: (MicroLearningDataModel) -> Unit?, private val onUpdateNoteClick: (MicroLearningDataModel) -> Unit?,
@@ -62,11 +60,21 @@ class MicroLearningAdapter(private val mContext: Context, list: ArrayList<MicroL
                 tv_desc.text = mList?.get(adapterPosition)?.description
                 tv_file_name.text = mList?.get(adapterPosition)?.file_name
                 tv_size.text = mList?.get(adapterPosition)?.file_size
+            /*    var selectedPathVideo = ""
+                selectedPathVideo = AppUtils.getPhotoFilePath(mContext,mList?.get(adapterPosition)?.url.toString())
+                try{
+                    val thumb = ThumbnailUtils.createVideoThumbnail(selectedPathVideo, MediaStore.Video.Thumbnails.MICRO_KIND)
+                    iv_thumbnail.setImageBitmap(thumb)
 
-                if (!TextUtils.isEmpty(mList?.get(adapterPosition)?.thumbnail)) {
+                }catch (e: Exception){
+                    e.printStackTrace()
+                    iv_thumbnail.setImageResource(R.drawable.ic_image)
+                }*/
+          if (!TextUtils.isEmpty(mList?.get(adapterPosition)?.thumbnail)) {
                     Glide.with(mContext)
                             .load(mList?.get(adapterPosition)?.thumbnail)
                             .apply(RequestOptions.placeholderOf(R.drawable.ic_image).error(R.drawable.ic_image))
+                            .thumbnail(Glide.with(context).load(mList?.get(adapterPosition)?.url))
                             .into(iv_thumbnail)
                 }
                 else
@@ -93,9 +101,10 @@ class MicroLearningAdapter(private val mContext: Context, list: ArrayList<MicroL
                 tv_video_duration.text = mList?.get(adapterPosition)?.video_duration
 
                 if (mList?.get(adapterPosition)?.isDownloaded!!)
-                    iv_download.setImageResource(R.drawable.ic_downloaded)
+                    //iv_download.setImageResource(R.drawable.ic_micro_check_thik)
+                    iv_download.setImageResource(R.drawable.ic_down_vote_arrow)
                 else
-                    iv_download.setImageResource(R.drawable.ic_download_circular_button)
+                    iv_download.setImageResource(R.drawable.ic_down_vote_arrow)
 
                 setOnClickListener {
                     onItemClick(mList?.get(adapterPosition)!!)
@@ -104,6 +113,18 @@ class MicroLearningAdapter(private val mContext: Context, list: ArrayList<MicroL
                         mList?.get(adapterPosition)!!.isDownloaded = true
                         notifyDataSetChanged()
                     }*/
+                }
+                menu_microlearn_ll.isSelected = false
+                menu_microlearn_ll.visibility = View.GONE
+
+                iv_more.setOnClickListener {
+                    if (!menu_microlearn_ll.isSelected) {
+                        menu_microlearn_ll.isSelected = true
+                        menu_microlearn_ll.visibility = View.VISIBLE
+                    } else {
+                        menu_microlearn_ll.isSelected = false
+                        menu_microlearn_ll.visibility = View.GONE
+                    }
                 }
 
                 iv_update_note.setOnClickListener {

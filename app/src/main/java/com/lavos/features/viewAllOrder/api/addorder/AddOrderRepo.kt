@@ -3,6 +3,7 @@ package com.lavos.features.viewAllOrder.api.addorder
 import android.content.Context
 import com.lavos.base.BaseResponse
 import com.lavos.features.dashboard.presentation.DashboardActivity
+import com.lavos.features.returnsOrder.ReturnRequest
 import com.lavos.features.timesheet.model.AddTimeSheetInputModel
 import com.lavos.features.viewAllOrder.model.AddOrderInputParamsModel
 import com.lavos.features.viewAllOrder.model.NewOrderSaveApiModel
@@ -19,6 +20,10 @@ import java.io.File
 class AddOrderRepo(val apiService: AddOrderApi) {
     fun addOrder(sessiontoken: String, user_id: String, shop_id: String, order_id: String, order_amount: String, description: String, collection: String, order_date: String): Observable<BaseResponse> {
         return apiService.addOrder(sessiontoken, user_id, shop_id, order_id, order_amount, description, collection, order_date)
+    }
+
+    fun addReturn(ReturnRequest:ReturnRequest): Observable<BaseResponse> {
+        return apiService.addReturn(ReturnRequest)
     }
 
     fun addNewOrder(addOrder: AddOrderInputParamsModel): Observable<BaseResponse> {

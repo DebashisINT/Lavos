@@ -62,7 +62,7 @@
     sml:sml_auto_open_percent="0.2"
     sml:sml_scroller_duration="250">
 
-    <include android:id="@id/smContentView" layout="@layout/cart_adapter_body_layout"/>
+    <include android:id="@id/smContentView" layout="@layout/cart_adapter_body_layout_newchange"/>
     <!-- <include android:id="@id/smMenuViewLeft" layout="@layout/item_simple_left_menu"/>-->
     <include android:id="@id/smMenuViewRight" layout="@layout/item_right_menu"/>
 

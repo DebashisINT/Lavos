@@ -72,6 +72,21 @@ class ShopData {
     var upi = ""
     var assigned_to_shop_id = ""
 
+    var project_name = ""
+    var landline_number = ""
+    var agency_name = ""
+    var lead_contact_number = ""
+
+    var alternateNoForCustomer = ""
+    var whatsappNoForCustomer = ""
+
+    var isShopDuplicate = false
+    var purpose = ""
+    var GSTN_Number = ""
+    var ShopOwner_PAN = ""
+    var FSSAILicNo = ""
+
+    var isUpdateAddressFromShopMaster = false
 //    "shop_id": "1639_1512128366843",
 //    "shop_name": "company 1",
 //    "address": "sdf,kolkata",
@@ -86,5 +101,24 @@ class ShopData {
 //    "date_aniversary": "2017-12-01T00:00:00"
 //    "last_visit_date": "2017-12-07T17:30:54.867",
 //    "total_visit_count": 1
+
+    var shop_firstName:String?= null
+    var shop_lastName:String?= null
+    var crm_companyID:String?= null
+    var crm_companyName:String?= null
+    var crm_jobTitle:String?= null
+    var crm_typeID:String?= null
+    var crm_type:String?= null
+    var crm_statusID:String?= null
+    var crm_status:String?= null
+    var crm_sourceID:String?= null
+    var crm_source:String?= null
+    var crm_reference:String?= null
+    var crm_referenceID:String?= null
+    var crm_referenceID_type:String?= null
+    var crm_stage_ID:String?= null
+    var crm_stage:String?= null
+    var assign_to:String?= null
+    var saved_from_status:String?= null
 
 }

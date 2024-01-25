@@ -1,5 +1,6 @@
 package com.lavos.features.viewAllOrder.orderNew
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Dialog
 import android.content.Context
@@ -13,7 +14,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.recyclerview.widget.GridLayoutManager
+import androidx.appcompat.content.res.AppCompatResources.getDrawable
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.lavos.CustomStatic
@@ -42,7 +44,7 @@ import io.fabric.sdk.android.services.common.CommonUtils.hideKeyboard
 
 class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
 
-    lateinit var btn_add_cart: Button
+    lateinit var btn_add_cart: RelativeLayout
     lateinit var btn_next: Button
 
     private lateinit var mContext: Context
@@ -73,6 +75,22 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
 
     private lateinit var ll_size_icon: LinearLayout
 
+    private lateinit var ll_rate_ll: LinearLayout
+    private lateinit var ll_stock_ll: LinearLayout
+    private lateinit var et_rate_new_ord: EditText
+    private lateinit var tv_stock_new_ord: TextView
+
+    private lateinit var sizeText: TextView
+
+    private lateinit var sizeIcon: ImageView
+
+    private lateinit var ColorTv: TextView
+
+    private lateinit var color_IV: ImageView
+
+    private lateinit var genderTv: TextView
+
+
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -96,6 +114,7 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
         return view
     }
 
+    @SuppressLint("UseRequireInsteadOfGet")
     private fun initView(view: View?) {
         ll_root=view!!.findViewById(R.id.lll_root) as LinearLayout
         horr_scroll_v=view!!.findViewById(R.id.horr_scroll_v) as HorizontalScrollView
@@ -107,12 +126,31 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
         ll_product = view!!.findViewById(R.id.ll_new_order_scr_product)
         ll_color = view!!.findViewById(R.id.ll_new_order_scr_color)
 
+        sizeIcon = view!!.findViewById(R.id.sizeIcon)
+        sizeText = view!!.findViewById(R.id.sizeText)
+
+
+        color_IV = view!!.findViewById(R.id.color_IV)
+        ColorTv = view!!.findViewById(R.id.ColorTv)
+
         btn_next = view!!.findViewById(R.id.btn_nextttt)
         btn_next.setOnClickListener(this)
 
         rv_size = view!!.findViewById(R.id.rv_order_list_size)
 
         ll_size_icon = view!!.findViewById(R.id.ll_order_list_list_icon)
+        ll_rate_ll = view!!.findViewById(R.id.ll_item_new_ord_rate_root)
+        ll_stock_ll = view!!.findViewById(R.id.ll_item_new_ord_stock_root)
+        et_rate_new_ord = view!!.findViewById(R.id.et_rate_new_ord)
+        tv_stock_new_ord = view!!.findViewById(R.id.tv_stock_new_ord)
+
+        genderTv = view!!.findViewById(R.id.genderTv)
+
+        //gender vs product type new order
+        //genderTv.text=getString(R.string.GenderTextNewOrd)
+        //genderSpinner.text="Select "+getString(R.string.GenderTextNewOrd)
+        genderTv.text=getString(R.string.ProductTextNewOrd)
+        genderSpinner.text="Select "+getString(R.string.ProductTextNewOrd)
 
 
         var horizontalLayout = LinearLayoutManager(
@@ -120,16 +158,39 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
                 LinearLayoutManager.HORIZONTAL,
                 false)
         rv_size.setLayoutManager(horizontalLayout)
-
+        try {
+            et_rate_new_ord.setFilters(arrayOf<InputFilter>(DecimalDigitsInputFilter(9, 2)))
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
         ll_gender.setOnClickListener(this)
         ll_product.setOnClickListener(this)
         ll_color.setOnClickListener(this)
 
         btn_add_cart.setOnClickListener(this)
+
+        sizeIcon.setColorFilter(ContextCompat.getColor(mContext, R.color.dark_gray))
+        sizeText.setTextColor(ContextCompat.getColor(mContext, R.color.dark_gray))
+
+
+//        color_IV.setColorFilter(ContextCompat.getColor(mContext, R.color.dark_gray))
+        color_IV.setImageDrawable(getResources(). getDrawable(R.drawable.ic_colour_new_order_gray))
+//        color_IV.background = getDrawable(mContext, R.drawable.ic_colour_new_order_gray)
+        ColorTv.setTextColor(ContextCompat.getColor(mContext, R.color.dark_gray))
+
+
+
+//        sizeIcon.setBackgroundColor(R.color.color_custom_red)
+//        sizeText.setTextColor(R.color.default_text_color)
     }
 
     private fun loadGender() {
+        sizeIcon.setColorFilter(ContextCompat.getColor(mContext, R.color.dark_gray))
+        sizeText.setTextColor(ContextCompat.getColor(mContext, R.color.dark_gray))
+
         ll_size_icon.visibility=View.GONE
+        ll_rate_ll.visibility=View.GONE
+        ll_stock_ll.visibility=View.GONE
         var gender_list = AppDatabase.getDBInstance()?.newOrderGenderDao()?.getGenderList() as List<NewOrderGenderEntity>
         if (gender_list != null && gender_list.isNotEmpty()) {
             GenderListDialog.newInstance(gender_list as ArrayList<NewOrderGenderEntity>) {
@@ -140,11 +201,16 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
                 product_list = AppDatabase.getDBInstance()?.newOrderProductDao()?.getProductListGenderWise(it.gender.toString()) as List<NewOrderProductEntity>
             }.show((mContext as DashboardActivity).supportFragmentManager, "")
         } else {
-            Toaster.msgShort(mContext, "No Gender Found")
+            //Toaster.msgShort(mContext, "No Gender Found")
+            //gender vs product type new order
+            //Toaster.msgShort(mContext, "No "+ getString(R.string.GenderTextNewOrd) +"Found")
+            Toaster.msgShort(mContext, "No "+ getString(R.string.ProductTextNewOrd) +"Found")
         }
     }
 
     private fun loadProduct() {
+        color_IV.setImageDrawable(getResources(). getDrawable(R.drawable.ic_colour_new_order))
+        ColorTv.setTextColor(ContextCompat.getColor(mContext, R.color.default_text_color))
         if (product_list != null && product_list.isNotEmpty()) {
             ProductListNewOrderDialog.newInstance(product_list as ArrayList<NewOrderProductEntity>) {
                 isProductSel = true
@@ -152,10 +218,33 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
                 productSpinner.text = it.product_name
                 color_list = emptyList()
                 color_list = AppDatabase.getDBInstance()?.newOrderColorDao()?.getColorListProductWise(it.product_id!!) as List<NewOrderColorEntity>
+
+                try{
+                    if(Pref.isRateOnline){
+                    et_rate_new_ord.setText(AppDatabase.getDBInstance()?.productRateDao()?.getProductRateByProductID(it.product_id!!.toString())?.rate1.toString())
+                    }
+                }catch (ex:Exception){
+
+                }
+                if (Pref.isRateNotEditable) {
+                    et_rate_new_ord.isEnabled=false
+                }else{
+                    et_rate_new_ord.isEnabled=true
+                }
+
+                try{
+                    tv_stock_new_ord.text = AppDatabase.getDBInstance()?.productRateDao()?.getProductRateByProductID(it.product_id!!.toString())?.stock_amount.toString()
+                }catch (ex:Exception){
+
+                }
+
+
+
             }.show((mContext as DashboardActivity).supportFragmentManager, "")
         } else {
             Toaster.msgShort(mContext, "No Product Found")
         }
+
     }
 
 
@@ -166,16 +255,46 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
                 colorId = it.color_id!!
                 size_list = emptyList()
                 size_list = AppDatabase.getDBInstance()?.newOrderSizeDao()?.getSizeListProductWise(it.product_id!!) as List<NewOrderSizeEntity>
+
+                try{
+                    if(Pref.isRateOnline){
+                        et_rate_new_ord.setText(AppDatabase.getDBInstance()?.productRateDao()?.getProductRateByProductID(it.product_id!!.toString())?.rate1.toString())
+                    }
+                }catch (ex:Exception){
+
+                }
+                if (Pref.isRateNotEditable) {
+                    et_rate_new_ord.isEnabled=false
+                }else{
+                    et_rate_new_ord.isEnabled=true
+                }
+                try{
+                    tv_stock_new_ord.text = AppDatabase.getDBInstance()?.productRateDao()?.getProductRateByProductID(it.product_id!!.toString())?.stock_amount.toString()
+                }catch (ex:Exception){
+
+                }
+
                 loadSize()
+
             }.show((mContext as DashboardActivity).supportFragmentManager, "")
         } else {
             Toaster.msgShort(mContext, "No Color Found")
         }
     }
 
+    @SuppressLint("ResourceAsColor")
     private fun loadSize() {
 
+//        sizeIcon.setBackgroundColor(R.color.color_custom_red)
+        sizeIcon.setColorFilter(ContextCompat.getColor(mContext, R.color.color_custom_red))
+        sizeText.setTextColor(ContextCompat.getColor(mContext, R.color.default_text_color))
+
+//        sizeText.setTextColor(R.color.default_text_color)
+
         ll_size_icon.visibility = View.VISIBLE
+        ll_rate_ll.visibility = View.VISIBLE
+        ll_stock_ll.visibility = View.VISIBLE
+
         if (size_list != null && size_list.isNotEmpty()) {
 
 
@@ -220,6 +339,7 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
 
     override fun onAttach(activity: Activity) {
         super.onAttach(activity)
+        var asd = "asd"
     }
 
 
@@ -228,23 +348,30 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
             when (v.id) {
                 R.id.btn_frag_new_order_screen_add_cart -> {
 
-                    var totalQty:Int=0
-                    for (x in 0..ll_root.childCount - 1){
+                    var totalQty: Int = 0
+                    for (x in 0..ll_root.childCount - 1) {
                         var vi: View = ll_root.getChildAt(x)
                         var et_qty = vi.findViewById(R.id.et_size_count) as EditText
                         var tv_size = vi.findViewById(R.id.item_new_order_product_sizeTv) as AppCustomTextView
-                        if (et_qty.text.toString().length >0) {
-                            totalQty=totalQty+et_qty.text.toString().toInt()
+                        if (et_qty.text.toString().length > 0) {
+                            totalQty = totalQty + et_qty.text.toString().toInt()
                         }
                     }
-                    if(totalQty==0){
-                        Toaster.msgShort(mContext,"Please add Qty for following size.")
+                    if (totalQty == 0) {
+                        Toaster.msgShort(mContext, "Please add Qty for following size.")
                         return
                     }
 
 
+                    sizeIcon.setColorFilter(ContextCompat.getColor(mContext, R.color.dark_gray))
+                    sizeText.setTextColor(ContextCompat.getColor(mContext, R.color.dark_gray))
 
-                    ll_size_icon.visibility=View.GONE
+//                    color_IV.background = getDrawable(mContext, R.drawable.ic_colour_new_order_gray)
+                    color_IV.setImageDrawable(getResources(). getDrawable(R.drawable.ic_colour_new_order_gray))
+                    ColorTv.setTextColor(ContextCompat.getColor(mContext, R.color.dark_gray))
+                    ll_size_icon.visibility = View.GONE
+                    ll_rate_ll.visibility = View.GONE
+                    ll_stock_ll.visibility = View.GONE
                     var isSame: Boolean = false
                     if (isGenderSel) {
                         if (isProductSel) {
@@ -348,11 +475,22 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
                                                                           }
                           */
                                                 final_order_list.get(i).color_list.get(p).order_list = ob1
+                                                if(et_rate_new_ord.text.toString().equals("")){
+                                                    final_order_list.get(i).rate = "0"
+                                                }else{
+                                                final_order_list.get(i).rate = et_rate_new_ord.text.toString()
+                                                }
                                             }
                                         }
 
-                                        if (isSameColorObj == false)
+                                        if (isSameColorObj == false){
                                             final_order_list.get(i).color_list.add(colorList)
+                                            if(et_rate_new_ord.text.toString().equals("")){
+                                                final_order_list.get(i).rate = "0"
+                                            }else{
+                                            final_order_list.get(i).rate = et_rate_new_ord.text.toString()
+                                            }
+                                        }
                                         isSame = true
                                     }
                                 }
@@ -378,9 +516,18 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
                                 var colorList: ColorList = ColorList(colorSpinner.text.toString(), colorId.toString(), order_list)
                                 cartData.color_list.add(colorList)
 
+                                if(et_rate_new_ord.text.toString().equals("")){
+                                    cartData.rate = "0"
+                                }else{
+                                cartData.rate = et_rate_new_ord.text.toString()
+                                }
+
                                 final_order_list.add(cartData)
                             }
 
+
+                            et_rate_new_ord.setText("")
+                            et_rate_new_ord.setHint("Rate  ( \u20B9 )")
 
                             isSame = false
                             genderSpinner.text=genderSpinner.text.toString()
@@ -405,7 +552,7 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
                             simpleDialog.setContentView(R.layout.dialog_message)
                             val dialogHeader = simpleDialog.findViewById(R.id.dialog_message_header_TV) as AppCustomTextView
                             val dialog_yes_no_headerTV = simpleDialog.findViewById(R.id.dialog_message_headerTV) as AppCustomTextView
-                            dialog_yes_no_headerTV.text = "Hi "+Pref.user_name?.substring(0, Pref.user_name?.indexOf(" ")!!)+"!"
+                            dialog_yes_no_headerTV.text = "Hi " + Pref.user_name?.substring(0, Pref.user_name?.indexOf(" ")!!) + "!"
                             dialogHeader.text = "Item Added Successfully."
                             val dialogYes = simpleDialog.findViewById(R.id.tv_message_ok) as AppCustomTextView
                             dialogYes.setOnClickListener({ view ->
@@ -419,13 +566,17 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
                         } else {
                             Toaster.msgShort(mContext, "Please Select a Product")
                         }
-                    }
-                    else {
-                        Toaster.msgShort(mContext, "Please Select Gender First")
+                    } else {
+                        //Toaster.msgShort(mContext, "Please Select Gender First")
+                        //gender vs product type new order
+                        //Toaster.msgShort(mContext, "Please Select "+ getString(R.string.GenderTextNewOrd) +" First")
+                        Toaster.msgShort(mContext, "Please Select "+ getString(R.string.ProductTextNewOrd) +" First")
                     }
 
                 }
                 R.id.ll_new_order_scr_gender -> {
+                    color_IV.setImageDrawable(getResources(). getDrawable(R.drawable.ic_colour_new_order_gray))
+                    ColorTv.setTextColor(ContextCompat.getColor(mContext, R.color.dark_gray))
                     productSpinner.text = productSpinner.text.toString()
                     //productSpinner.text = "Select Product"
                     colorSpinner.text = "Select  Color"
@@ -441,7 +592,10 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
                         ll_root.removeAllViews()
                         loadProduct()
                     } else {
-                        Toaster.msgShort(mContext, "Please Select Gender First")
+                        //Toaster.msgShort(mContext, "Please Select Gender First")
+                        //gender vs product type new order
+                        //Toaster.msgShort(mContext, "Please Select "+ getString(R.string.GenderTextNewOrd) +"First")
+                        Toaster.msgShort(mContext, "Please Select "+ getString(R.string.ProductTextNewOrd) +"First")
                     }
                 }
                 R.id.ll_new_order_scr_color -> {
@@ -450,15 +604,17 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
                             rv_size.adapter = null
                             ll_root.removeAllViews()
                             loadColor()
+
                         } else {
                             Toaster.msgShort(mContext, "Please Select a Product")
                         }
                     } else {
-                        Toaster.msgShort(mContext, "Please Select Gender First")
+                        //Toaster.msgShort(mContext, "Please Select Gender First")
+                        //gender vs product type new order
+                        //Toaster.msgShort(mContext, "Please Select "+ getString(R.string.GenderTextNewOrd) +"First")
+                        Toaster.msgShort(mContext, "Please Select "+ getString(R.string.ProductTextNewOrd) +"First")
                     }
                 }
-
-
 //                R.id.btn_nextttt ->{
 //                    (mContext as DashboardActivity).loadFragment(FragType.NeworderScrCartFragment, true, final_order_list)
 //                }
@@ -469,8 +625,9 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
 
     fun clickToCart() {
         CustomStatic.IsFromViewNewOdrScr = false
-        if ((mContext as DashboardActivity).tv_cart_count.text != "0")
+        if ((mContext as DashboardActivity).tv_cart_count.text != "0"){
             (mContext as DashboardActivity).loadFragment(FragType.NeworderScrCartFragment, true, final_order_list)
+        }
         else
             (mContext as DashboardActivity).showSnackMessage("No item is available in cart")
     }
@@ -497,13 +654,13 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
     var vi:LayoutInflater ? = null
     var viewC: View? = null
     lateinit var ll_root: LinearLayout
-    private fun createDynaView(sizeStr:String){
+    private fun createDynaView(sizeStr: String){
         vi = mContext.applicationContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         viewC = vi!!.inflate(R.layout.item_new_order_product_size, null)
 
         ll_root.addView(viewC)
 
-        var v:View = ll_root.getChildAt(ll_root.childCount-1)
+        var v:View = ll_root.getChildAt(ll_root.childCount - 1)
 
         var sizeLst:AppCustomTextView=(v.findViewById(R.id.item_new_order_product_sizeTv) as AppCustomTextView)
         var qtyLst:EditText=(v.findViewById(R.id.et_size_count) as EditText)
@@ -517,7 +674,6 @@ class NewOrderScrActiFragment : BaseFragment(), View.OnClickListener {
                 qtyLst.setBackgroundResource(R.drawable.blue_line_custom)
             }
         })
-
 
         var x:Int
         var y:Int

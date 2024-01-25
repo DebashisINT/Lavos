@@ -100,7 +100,6 @@
                 android:text="@string/cancel"
                 android:textSize="@dimen/_11sdp"
                 android:gravity="center"
-                android:backgroundTint="#f8424e "
                 android:background="@drawable/selector_order_history_bg"
                 android:textColor="@drawable/selector_text_clor_blue_white"
                 android:clickable="true"
@@ -113,10 +112,9 @@
                 android:layout_weight="1"
                 android:text="@string/ok"
                 android:textSize="@dimen/_11sdp"
-                android:backgroundTint="#57a518"
                 android:gravity="center"
                 android:background="@drawable/selector_order_history_bg"
-                android:textColor="@drawable/selector_text_clor_blue_white"
+                android:textColor="@drawable/selector_text_clor_blue_white_new_new"
                 android:clickable="true"
                 android:focusable="true" />
 

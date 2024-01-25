@@ -1,13 +1,14 @@
 package com.lavos.features.logoutsync.presentation
 
 import android.app.ActivityManager
+import android.app.Dialog
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.net.Uri
+import android.os.*
 import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.AppCompatImageView
 import android.text.TextUtils
@@ -19,8 +20,14 @@ import android.view.animation.AnimationUtils
 import android.widget.RelativeLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat.getSystemService
+import androidx.core.content.FileProvider
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
 import com.lavos.CustomConstants
-import com.elvishew.xlog.XLog
+
 
 import com.lavos.R
 import com.lavos.app.AppDatabase
@@ -37,9 +44,6 @@ import com.lavos.base.presentation.BaseFragment
 import com.lavos.features.activities.api.ActivityRepoProvider
 import com.lavos.features.activities.model.*
 import com.lavos.features.addshop.api.AddShopRepositoryProvider
-import com.lavos.features.addshop.model.AddShopRequestCompetetorImg
-import com.lavos.features.addshop.model.AddShopRequestData
-import com.lavos.features.addshop.model.AddShopResponse
 import com.lavos.features.billing.api.AddBillingRepoProvider
 import com.lavos.features.billing.model.AddBillingInputParamsModel
 import com.lavos.features.commondialog.presentation.CommonDialog
@@ -91,25 +95,61 @@ import com.lavos.features.viewAllOrder.model.AddOrderInputProductList
 import com.lavos.mappackage.SendBrod
 import com.lavos.widgets.AppCustomTextView
 import com.lavos.MonitorService
+import com.lavos.MySingleton
+import com.lavos.features.addshop.model.*
+import com.lavos.features.addshop.model.assigntopplist.AddShopUploadImg
+import com.lavos.features.addshop.presentation.ShopExtraContactReq
+import com.lavos.features.addshop.presentation.multiContactRequestData
+import com.lavos.features.contacts.CallHisDtls
+import com.lavos.features.login.api.LoginRepositoryProvider
+import com.lavos.features.login.model.GetConcurrentUserResponse
+import com.lavos.features.login.model.WhatsappApiData
+import com.lavos.features.performance.model.Gps_status_list
+import com.lavos.features.performance.model.UpdateGpsInputListParamsModel
+import com.lavos.features.returnsOrder.ReturnProductList
+import com.lavos.features.returnsOrder.ReturnRequest
 import com.lavos.features.viewAllOrder.model.NewOrderSaveApiModel
 import com.lavos.features.viewAllOrder.orderNew.NewOrderScrActiFragment
 import com.lavos.features.viewAllOrder.orderNew.NeworderScrCartFragment
+import com.facebook.stetho.common.LogUtil
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.gson.JsonParser
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlinx.android.synthetic.main.activity_login_new.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
+import timber.log.Timber
+import java.io.*
 import java.util.*
+import java.util.concurrent.ExecutionException
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import kotlin.collections.ArrayList
 
 /**
  * Created by Kinsuk on 14-01-2019.
  */
+//Revision History
+// 1.0 LogoutSyncFragment AppV 4.0.6 suman 12-01-2023 multiple contact updation
+// 2.0 LogoutSyncFragment AppV 4.0.6 saheli 20-01-2023  Shop duartion Issue mantis 25597
+// 3.0 LogoutSyncFragment AppV 4.0.7 saheli 21-01-2023  mantis 0025685
+//4.0 LogoutSyncFragment AppV 4.1.3 saheli 03-05-2023  mantis 0026013
 class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
     private lateinit var mContext: Context
 
     private lateinit var addShopTickImg: AppCompatImageView
     private lateinit var addShopSyncImg: AppCompatImageView
+
+    private lateinit var addReturnSyncImg: AppCompatImageView
+    private lateinit var addReturnTickImg: AppCompatImageView
+
     private lateinit var addCurrentStockSyncImg: AppCompatImageView
     private lateinit var addCurrentStockTickImg: AppCompatImageView
     private lateinit var addCompetetorStockSyncImg: AppCompatImageView
@@ -164,6 +204,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
     private lateinit var rl_shop: RelativeLayout
     private lateinit var rl_currentStock: RelativeLayout
     private lateinit var rl_competitorStock: RelativeLayout
+    private lateinit var rl_return: RelativeLayout
     private lateinit var rl_quot: RelativeLayout
     private lateinit var rl_team: RelativeLayout
     private lateinit var rl_timesheet: RelativeLayout
@@ -236,7 +277,6 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         //Pref.DayEndMarked=true
         initView(view)
 
-
         if ((mContext as DashboardActivity).isForceLogout) {
             val notificationManager = mContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancelAll()
@@ -286,15 +326,19 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                     AppDatabase.getDBInstance()!!.shopActivityDao().updateOutTime(AppUtils.getCurrentTimeWithMeredian(), shopActivityList[i].shopid!!, AppUtils.getCurrentDateForShopActi(), shopActivityList[i].startTimeStamp)
                     AppDatabase.getDBInstance()!!.shopActivityDao().updateOutLocation(LocationWizard.getNewLocationName(mContext, Pref.current_latitude.toDouble(), Pref.current_longitude.toDouble()), shopActivityList[i].shopid!!, AppUtils.getCurrentDateForShopActi(), shopActivityList[i].startTimeStamp)
 
-                    val netStatus = if (AppUtils.isOnline(mContext))
+                    val netStatus = if (AppUtils.isOnline(mContext)) {
                         "Online"
-                    else
+                        }
+                    else {
                         "Offline"
+                        }
 
-                    val netType = if (AppUtils.getNetworkType(mContext).equals("wifi", ignoreCase = true))
+                    val netType = if (AppUtils.getNetworkType(mContext).equals("wifi", ignoreCase = true)) {
                         AppUtils.getNetworkType(mContext)
-                    else
+                        }
+                    else {
                         "Mobile ${AppUtils.mobNetType(mContext)}"
+                        }
 
                     if (!Pref.isMultipleVisitEnable) {
                         AppDatabase.getDBInstance()!!.shopActivityDao().updateDeviceStatusReason(AppUtils.getDeviceName(), AppUtils.getAndroidVersion(),
@@ -380,7 +424,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribeOn(Schedulers.io())
                                     .subscribe({ result ->
-                                        XLog.d("Stock/AddCurrentStock : RESPONSE " + result.status)
+                                        Timber.d("Stock/AddCurrentStock : RESPONSE " + result.status)
                                         if (result.status == NetworkConstant.SUCCESS){
                                             AppDatabase.getDBInstance()?.shopCurrentStockEntryDao()!!.syncShopStocktable(currentStock.stock_id.toString())
                                             AppDatabase.getDBInstance()?.shopCurrentStockProductsEntryDao()!!.syncShopProductsStock(currentStock?.stock_id.toString())
@@ -391,9 +435,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                         }
                                     },{error ->
                                         if (error == null) {
-                                            XLog.d("Stock/AddCurrentStock : ERROR " + "UNEXPECTED ERROR IN Add Stock ACTIVITY API")
+                                            Timber.d("Stock/AddCurrentStock : ERROR " + "UNEXPECTED ERROR IN Add Stock ACTIVITY API")
                                         } else {
-                                            XLog.d("Stock/AddCurrentStock : ERROR " + error.localizedMessage)
+                                            Timber.d("Stock/AddCurrentStock : ERROR " + error.localizedMessage)
                                             error.printStackTrace()
                                         }
                                         callShopCompetetorProductStockApi()
@@ -407,7 +451,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             (mContext as DashboardActivity).showSnackMessage(getString(R.string.no_internet))
             }
         }catch (ex:Exception){
-            XLog.d("LogoutSync : Stock/AddCurrentStock : ERROR " )
+            Timber.d("LogoutSync : Stock/AddCurrentStock : ERROR " )
         callShopCompetetorProductStockApi()
         }
 
@@ -447,7 +491,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribeOn(Schedulers.io())
                                     .subscribe({ result ->
-                                        XLog.d("CompetitorStock/AddCompetitorStock : RESPONSE " + result.status)
+                                        Timber.d("CompetitorStock/AddCompetitorStock : RESPONSE " + result.status)
                                         if (result.status == NetworkConstant.SUCCESS){
                                             AppDatabase.getDBInstance()?.competetorStockEntryDao()?.syncShopCompStocktable(currentStock?.competitor_stock_id.toString())
                                             AppDatabase.getDBInstance()?.competetorStockEntryProductDao()?.syncShopCompProductable(currentStock?.competitor_stock_id.toString())
@@ -458,9 +502,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                         }
                                     },{error ->
                                         if (error == null) {
-                                            XLog.d("CompetitorStock/AddCompetitorStock : ERROR " + "UNEXPECTED ERROR IN Add Stock ACTIVITY API")
+                                            Timber.d("CompetitorStock/AddCompetitorStock : ERROR " + "UNEXPECTED ERROR IN Add Stock ACTIVITY API")
                                         } else {
-                                            XLog.d("CompetitorStock/AddCompetitorStock : ERROR " + error.localizedMessage)
+                                            Timber.d("CompetitorStock/AddCompetitorStock : ERROR " + error.localizedMessage)
                                             error.printStackTrace()
                                         }
                                         //checkToCallActivity()
@@ -483,6 +527,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             syncNewOrderScr()
         }
     }
+
 
     data class NewOrderRoomDataLogoutPurpose(var order_id: String, var shop_id: String,var order_date:String)
     //08-09-2021
@@ -512,7 +557,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             unsyncListttt!!.get(l).product_name!!, unsyncList!!.get(l).gender!!,
                             unsyncListttt!!.get(l).color_id!!, unsyncList!!.get(l).color_name!!,
                             unsyncListttt!!.get(l).size!!,
-                            unsyncListttt!!.get(l).qty!!)
+                            unsyncListttt!!.get(l).qty!!,unsyncListttt!!.get(l).rate!!)
                     newOrderRoomDataListttt.add(newOrderRoomDataa)
                 }
                 newOrderSaveApiModel.product_list=newOrderRoomDataListttt
@@ -537,10 +582,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                 addOrder.patient_no = ""
                 addOrder.remarks = ""
 
-                if (!TextUtils.isEmpty(Pref.latitude) && !TextUtils.isEmpty(Pref.longitude))
+                if (!TextUtils.isEmpty(Pref.latitude) && !TextUtils.isEmpty(Pref.longitude)) {
                     addOrder.address = LocationWizard.getLocationName(mContext, Pref.latitude!!.toDouble(), Pref.longitude!!.toDouble())
-                else
+                }
+                else {
                     addOrder.address = ""
+                    }
 
                 val productList = ArrayList<AddOrderInputProductList>()
                 for(i in 0..newOrderRoomDataListttt.size-1){
@@ -564,7 +611,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribeOn(Schedulers.io())
                                 .subscribe({ result ->
-                                    XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : RESPONSE " + result.status)
+                                    Timber.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : RESPONSE " + result.status)
                                     if (result.status == NetworkConstant.SUCCESS){
 
                                         doAsync {
@@ -579,16 +626,18 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     }
                                 },{error ->
                                     if (error == null) {
-                                        XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR " )
+                                        Timber.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR " )
                                     } else {
-                                        XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR " + error.localizedMessage)
+                                        Timber.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR " + error.localizedMessage)
                                         error.printStackTrace()
                                     }
-                                    checkToCallActivity()
+                                    //checkToCallActivity()
+                                    syncQuesSubmit()
                                 })
                 )
             } else{
-                checkToCallActivity()
+                //checkToCallActivity()
+                syncQuesSubmit()
             }
 
 
@@ -616,7 +665,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribeOn(Schedulers.io())
                                 .subscribe({ result ->
-                                    XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : RESPONSE " + result.status)
+                                    Timber.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : RESPONSE " + result.status)
                                     if (result.status == NetworkConstant.SUCCESS){
 
                                         doAsync {
@@ -632,9 +681,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     }
                                 },{error ->
                                     if (error == null) {
-                                        XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR " )
+                                        Timber.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR " )
                                     } else {
-                                        XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR " + error.localizedMessage)
+                                        Timber.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR " + error.localizedMessage)
                                         error.printStackTrace()
                                     }
                                     checkToCallActivity()
@@ -647,10 +696,222 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             }*/
         }catch (ex:Exception){
             ex.printStackTrace()
-            checkToCallActivity()
+            //checkToCallActivity()
+            syncQuesSubmit()
         }
     }
 
+
+
+
+    //8-12-2021
+    private fun syncQuesSubmit(){
+        try{
+            var questionSubmit : AddQuestionSubmitRequestData = AddQuestionSubmitRequestData()
+
+            var uniqUnsyncShopID=AppDatabase.getDBInstance()?.questionSubmitDao()?.getUnSyncUniqShopID(false)
+
+            if(uniqUnsyncShopID != null && uniqUnsyncShopID.isNotEmpty() && uniqUnsyncShopID.size!=0){
+
+                questionSubmit.user_id=Pref.user_id
+                questionSubmit.session_token=Pref.session_token
+                questionSubmit.shop_id=uniqUnsyncShopID?.get(0)
+
+                var questionList=AppDatabase.getDBInstance()?.questionSubmitDao()?.getQsAnsByShopID(questionSubmit.shop_id!!,false) as ArrayList<QuestionSubmit>
+                questionSubmit.Question_list=questionList
+
+                val repository = AddShopRepositoryProvider.provideAddShopWithoutImageRepository()
+                BaseActivity.compositeDisposable.add(
+                        repository.addQues(questionSubmit)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe({ result ->
+                                    val questionSubmitResponse= result as BaseResponse
+                                    Timber.d("QuestionSubmit : RESPONSE " + result.status)
+                                    if (result.status == NetworkConstant.SUCCESS){
+
+                                        doAsync {
+                                            AppDatabase.getDBInstance()!!.questionSubmitDao().updateIsUploaded(true,questionSubmit.shop_id!!)
+                                            uiThread {
+                                                syncQuesSubmit()
+                                            }
+                                        }
+                                    }
+                                },{error ->
+                                    if (error == null) {
+                                        Timber.d("QuestionSubmit : ERROR " )
+                                    } else {
+                                        Timber.d("QuestionSubmit : ERROR " + error.localizedMessage)
+                                        error.printStackTrace()
+                                    }
+                                    syncUpdatedQuesSubmit()
+//                                    checkToCallActivity()
+                                })
+                )
+            }else{
+                syncUpdatedQuesSubmit()
+//                checkToCallActivity()
+            }
+        }catch (ex:Exception){
+            Timber.d("QuestionSubmit : ERROR " + ex.toString())
+            ex.printStackTrace()
+            syncUpdatedQuesSubmit()
+//            checkToCallActivity()
+        }
+    }
+
+
+    private fun syncUpdatedQuesSubmit(){
+        try{
+            var questionSubmit : AddQuestionSubmitRequestData = AddQuestionSubmitRequestData()
+
+            var uniqUnsyncShopID=AppDatabase.getDBInstance()?.questionSubmitDao()?.getUnSyncUpdatedUniqShopID(false)
+
+            if(uniqUnsyncShopID != null && uniqUnsyncShopID.isNotEmpty() && uniqUnsyncShopID.size!=0){
+
+                questionSubmit.user_id=Pref.user_id
+                questionSubmit.session_token=Pref.session_token
+                questionSubmit.shop_id=uniqUnsyncShopID?.get(0)
+
+                var questionList=AppDatabase.getDBInstance()?.questionSubmitDao()?.getQsAnsUpdatedByShopID(questionSubmit.shop_id!!,false) as ArrayList<QuestionSubmit>
+                questionSubmit.Question_list=questionList
+
+                val repository = AddShopRepositoryProvider.provideAddShopWithoutImageRepository()
+                BaseActivity.compositeDisposable.add(
+                        repository.addQuesUpdate(questionSubmit)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe({ result ->
+                                    val questionSubmitResponse= result as BaseResponse
+                                    Timber.d("QuestionSubmit : RESPONSE " + result.status)
+                                    if (result.status == NetworkConstant.SUCCESS){
+
+                                        doAsync {
+                                            AppDatabase.getDBInstance()!!.questionSubmitDao().updateIsUpdateUploaded(true,questionSubmit.shop_id!!)
+                                            uiThread {
+                                                syncUpdatedQuesSubmit()
+                                            }
+                                        }
+                                    }
+                                },{error ->
+                                    if (error == null) {
+                                        Timber.d("QuestionSubmit : ERROR " )
+                                    } else {
+                                        Timber.d("QuestionSubmit : ERROR " + error.localizedMessage)
+                                        error.printStackTrace()
+                                    }
+                                    addShopSeconaryUploadImg()
+//                                    checkToCallActivity()
+                                })
+                )
+            }else{
+                addShopSeconaryUploadImg()
+//                checkToCallActivity()
+            }
+        }catch (ex:Exception){
+            Timber.d("QuestionSubmit : ERROR " + ex.toString())
+            ex.printStackTrace()
+            addShopSeconaryUploadImg()
+//            checkToCallActivity()
+        }
+    }
+
+    /*9-12-2021*/
+    data class SecondaryShopImg1(var lead_shop_id:String,var rubylead_image1 :String)
+    private fun addShopSeconaryUploadImg() {
+
+        println("sec-image addShopSeconaryUploadImg")
+        var objCompetetor: AddShopUploadImg = AddShopUploadImg()
+        var secondaryImgShopID=AppDatabase.getDBInstance()?.addShopSecondaryImgDao()!!.getUnsnycShopImage1(false) as ArrayList<SecondaryShopImg1>
+
+        if(secondaryImgShopID != null && secondaryImgShopID.isNotEmpty() && secondaryImgShopID.size!=0){
+            var shopId=secondaryImgShopID.get(0).lead_shop_id
+            var imagePathupload=secondaryImgShopID.get(0).rubylead_image1
+
+            objCompetetor.session_token = Pref.session_token!!
+            objCompetetor.lead_shop_id = shopId
+            objCompetetor.user_id = Pref.user_id
+
+            val repository = AddShopRepositoryProvider.provideAddShopRepository()
+            BaseActivity.compositeDisposable.add(
+                    repository.addShopWithImageuploadImg1(objCompetetor, imagePathupload, mContext)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe({ result ->
+                                val response = result as BaseResponse
+                                println("sec-image addShopSeconaryUploadImg "+response.status.toString())
+                                if (response.status == NetworkConstant.SUCCESS) {
+                                    AppDatabase.getDBInstance()!!.addShopSecondaryImgDao().updateisUploaded1(true, shopId)
+                                    addShopSeconaryUploadImg()
+                                    Timber.d("AddShop : Img1" + ", SHOP: " + shopId + ", Success: ")
+                                } else {
+                                    Timber.d("AddShop : Img1" + ", SHOP: " + shopId + ", Failed: ")
+                                    checkToCallActivity()
+                                }
+                            }, { error ->
+                                println("sec-image addShopSeconaryUploadImg error")
+                                if (error != null) {
+                                    Timber.d("AddShop : Img1" + ", SHOP: " + shopId + ", ERROR: " + error.localizedMessage)
+                                }
+                                checkToCallActivity()
+                            })
+            )
+
+        }else{
+            addShopSeconaryUploadImg2()
+        }
+
+    }
+
+    data class SecondaryShopImg2(var lead_shop_id:String,var rubylead_image2 :String)
+    private fun addShopSeconaryUploadImg2() {
+        println("sec-image addShopSeconaryUploadImg2")
+        var objCompetetor: AddShopUploadImg = AddShopUploadImg()
+        var secondaryImgShopID2=AppDatabase.getDBInstance()?.addShopSecondaryImgDao()!!.getUnsnycShopImage2(false) as ArrayList<SecondaryShopImg2>
+
+        if(secondaryImgShopID2 != null && secondaryImgShopID2.isNotEmpty() && secondaryImgShopID2.size!=0){
+            var shopId=secondaryImgShopID2.get(0).lead_shop_id
+            var imagePathupload2=secondaryImgShopID2.get(0).rubylead_image2
+
+            objCompetetor.session_token = Pref.session_token
+            objCompetetor.lead_shop_id = shopId
+            objCompetetor.user_id = Pref.user_id
+
+            val repository = AddShopRepositoryProvider.provideAddShopRepository()
+            BaseActivity.compositeDisposable.add(
+                    repository.addShopWithImageuploadImg2(objCompetetor, imagePathupload2, mContext)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe({ result ->
+                                val response = result as BaseResponse
+                                println("sec-image addShopSeconaryUploadImg2 "+response.status.toString())
+                                if (response.status == NetworkConstant.SUCCESS) {
+                                    AppDatabase.getDBInstance()!!.addShopSecondaryImgDao().updateisUploaded2(true, shopId)
+                                    addShopSeconaryUploadImg2()
+                                    Timber.d("AddShop : Img2" + ", SHOP: " + shopId + ", Success: ")
+                                } else {
+                                    Timber.d("AddShop : Img2" + ", SHOP: " + shopId + ", Failed: ")
+                                    /*call return*/
+                                    callReturnApi()
+//                                    checkToCallActivity()
+                                }
+                            }, { error ->
+                                println("sec-image addShopSeconaryUploadImg2 error")
+                                if (error != null) {
+                                    Timber.d("AddShop : Img2" + ", SHOP: " + shopId + ", ERROR: " + error.localizedMessage)
+                                }
+                                /*call return*/
+                                callReturnApi()
+//                                checkToCallActivity()
+                            })
+            )
+        }else{
+            /*call return*/
+            callReturnApi()
+//            checkToCallActivity()
+        }
+
+    }
 
     ////*
     private fun updateSecondaryOrderApi(addOrder:AddOrderInputParamsModel){
@@ -670,7 +931,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             error.printStackTrace()
                             //(mContext as DashboardActivity).showSnackMessage("Something went wrong.")
                             //(mContext as DashboardActivity).showSnackMessage("Order added successfully")
-                            XLog.d("LogoutSync OrderWithProductAttribute/updateSecondaryOrderApi : ERROR "+ error.toString())
+                            Timber.d("LogoutSync OrderWithProductAttribute/updateSecondaryOrderApi : ERROR "+ error.toString())
                             syncNewOrderScr()
                         })
         )
@@ -679,13 +940,11 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
 
 
-
-
-
 ///////////////////////////////////////////////
 
     private fun checkToCallAddShopApi() {
 
+        Timber.d("logout check else ${Pref.IsAutoLogoutFromBatteryCheck} ${AppUtils.isOnline(mContext)}")
         stopAnimation(addCompetetorStockSyncImg)
         addCompetetorStockSyncImg.visibility=View.GONE
         addCompetetorStockTickImg.visibility=View.VISIBLE
@@ -701,10 +960,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                     checkToCallSyncEditShop()
                 }
 
-            } else
+            } else {
                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.no_internet))
-        } else
+            }
+        } else {
             checkToCallSyncOrder()
+        }
     }
 
     private fun initView(view: View) {
@@ -713,6 +974,8 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
         addShopTickImg = view.findViewById(R.id.add_shop_tick_img)
         addShopSyncImg = view.findViewById(R.id.add_shop_sync_img)
+        addReturnSyncImg = view.findViewById(R.id.add_return_sync_img)
+        addReturnTickImg = view.findViewById(R.id.add_return_tick_img)
         addCurrentStockSyncImg = view.findViewById(R.id.add_current_stock_sync_img)
         addCurrentStockTickImg = view.findViewById(R.id.add_current_stock_tick_img)
         addCompetetorStockSyncImg = view.findViewById(R.id.add_competetor_stock_sync_img)
@@ -767,6 +1030,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         rl_shop = view.findViewById(R.id.rl_shop)
         rl_currentStock = view.findViewById(R.id.rl_current_stock)
         rl_competitorStock = view.findViewById(R.id.rl_competetor_stock)
+        rl_return =  view.findViewById(R.id.rl_return)
         rl_order = view.findViewById(R.id.rl_order)
         rl_collection = view.findViewById(R.id.rl_collection)
         rl_quot = view.findViewById(R.id.rl_quot)
@@ -820,8 +1084,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         rl_stock.apply {
             visibility = if (Pref.willStockShow)
                 View.VISIBLE
-            else
+            else 
                 View.GONE
+
         }
 
         meeting_sync_tv.text = Pref.meetingText
@@ -843,6 +1108,14 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
         rl_currentStock.apply {
             visibility = if (Pref.isCurrentStockEnable)
+                View.VISIBLE
+            else
+                View.GONE
+        }
+
+        /*17-12-2021*/
+        rl_return.apply {
+            visibility = if (Pref.IsReturnEnableforParty)
                 View.VISIBLE
             else
                 View.GONE
@@ -949,14 +1222,18 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         animateSyncImage(task_sync_img)
         animateSyncImage(activity_sync_img)
         animateSyncImage(doc_sync_img)
+        animateSyncImage(addReturnSyncImg)
 
-        if ((mContext as DashboardActivity).isChangedPassword)
+        if ((mContext as DashboardActivity).isChangedPassword) {
             tv_logout.visibility = View.GONE
+        }
         else {
-            if ((mContext as DashboardActivity).isClearData)
+            if ((mContext as DashboardActivity).isClearData) {
                 tv_logout.visibility = View.GONE
-            else
+            }
+            else {
                 tv_logout.visibility = View.VISIBLE
+            }
         }
     }
 
@@ -1038,8 +1315,89 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         addShopData.actual_address = mAddShopDBModelEntity.actual_address
 
 
-        var uniqKeyObj=AppDatabase.getDBInstance()!!.shopActivityDao().getNewShopActivityKey(mAddShopDBModelEntity.shop_id,false)
-        addShopData.shop_revisit_uniqKey=uniqKeyObj?.shop_revisit_uniqKey!!
+        try{
+            var uniqKeyObj=AppDatabase.getDBInstance()!!.shopActivityDao().getNewShopActivityKey(mAddShopDBModelEntity.shop_id,false)
+            addShopData.shop_revisit_uniqKey=uniqKeyObj?.shop_revisit_uniqKey!!
+        }catch (ex:Exception){
+            addShopData.shop_revisit_uniqKey= ""
+        }
+
+        if (!TextUtils.isEmpty(mAddShopDBModelEntity.agency_name)) {
+            addShopData.agency_name = mAddShopDBModelEntity.agency_name
+        }
+        else {
+            addShopData.agency_name = mAddShopDBModelEntity.ownerName
+        }
+        if (!TextUtils.isEmpty(mAddShopDBModelEntity.lead_contact_number)) {
+            addShopData.lead_contact_number = mAddShopDBModelEntity.lead_contact_number
+        }
+        else {
+            addShopData.lead_contact_number = mAddShopDBModelEntity.ownerContactNumber
+        }
+
+        if (!TextUtils.isEmpty(mAddShopDBModelEntity.project_name)) {
+            addShopData.project_name = mAddShopDBModelEntity.project_name
+        }
+        else {
+            addShopData.project_name = ""
+        }
+
+        if (!TextUtils.isEmpty(mAddShopDBModelEntity.landline_number)) {
+            addShopData.landline_number = mAddShopDBModelEntity.landline_number
+        }
+        else {
+            addShopData.landline_number = ""
+        }
+
+        if (!TextUtils.isEmpty(mAddShopDBModelEntity.alternateNoForCustomer)) {
+            addShopData.alternateNoForCustomer = mAddShopDBModelEntity.alternateNoForCustomer
+        }
+        else {
+            addShopData.alternateNoForCustomer = ""
+        }
+
+        if (!TextUtils.isEmpty(mAddShopDBModelEntity.whatsappNoForCustomer)) {
+            addShopData.whatsappNoForCustomer = mAddShopDBModelEntity.whatsappNoForCustomer
+        }
+        else {
+            addShopData.whatsappNoForCustomer = ""
+        }
+
+        // duplicate shop api call
+        addShopData.isShopDuplicate=mAddShopDBModelEntity.isShopDuplicate
+
+        addShopData.purpose=mAddShopDBModelEntity.purpose
+//start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+        try {
+            addShopData.FSSAILicNo = mAddShopDBModelEntity.FSSAILicNo
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            addShopData.FSSAILicNo = ""
+        }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+
+        addShopData.GSTN_Number=mAddShopDBModelEntity.gstN_Number
+        addShopData.ShopOwner_PAN=mAddShopDBModelEntity.shopOwner_PAN
+
+        //contact shop sync
+        try{
+            addShopData.actual_address = mAddShopDBModelEntity.address
+            addShopData.shop_firstName=  mAddShopDBModelEntity.crm_firstName
+            addShopData.shop_lastName=  mAddShopDBModelEntity.crm_lastName
+            addShopData.crm_companyID=  if(mAddShopDBModelEntity.companyName_id.equals("")) "0" else mAddShopDBModelEntity.companyName_id
+            addShopData.crm_jobTitle=  mAddShopDBModelEntity.jobTitle
+            addShopData.crm_typeID=  if(mAddShopDBModelEntity.crm_type_ID.equals("")) "0" else mAddShopDBModelEntity.crm_type_ID
+            addShopData.crm_statusID=  if(mAddShopDBModelEntity.crm_status_ID.equals("")) "0" else mAddShopDBModelEntity.crm_status_ID
+            addShopData.crm_sourceID= if(mAddShopDBModelEntity.crm_source_ID.equals("")) "0" else mAddShopDBModelEntity.crm_source_ID
+            addShopData.crm_reference=  mAddShopDBModelEntity.crm_reference
+            addShopData.crm_referenceID=  if(mAddShopDBModelEntity.crm_reference_ID.equals("")) "0" else mAddShopDBModelEntity.crm_reference_ID
+            addShopData.crm_referenceID_type=  mAddShopDBModelEntity.crm_reference_ID_type
+            addShopData.crm_stage_ID=  if(mAddShopDBModelEntity.crm_stage_ID.equals("")) "0" else mAddShopDBModelEntity.crm_stage_ID
+            addShopData.assign_to=  mAddShopDBModelEntity.crm_assignTo_ID
+            addShopData.saved_from_status=  mAddShopDBModelEntity.crm_saved_from
+        }catch (ex:Exception){
+            ex.printStackTrace()
+        }
 
         callAddShopApi(addShopData, mAddShopDBModelEntity.shopImageLocalPath, mAddShopDBModelEntity.doc_degree, shopList)
         //callAddShopApi(addShopData, "")
@@ -1059,73 +1417,73 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
         progress_wheel.spin()
 
-        XLog.d("=======SyncShop Input Params (Logout sync)======")
-        XLog.d("shop id====> " + addShop.shop_id)
+        Timber.d("=======SyncShop Input Params (Logout sync)======")
+        Timber.d("shop id====> " + addShop.shop_id)
         val index = addShop.shop_id!!.indexOf("_")
-        XLog.d("decoded shop id====> " + addShop.user_id + "_" + AppUtils.getDate(addShop.shop_id!!.substring(index + 1, addShop.shop_id!!.length).toLong()))
-        XLog.d("shop added date====> " + addShop.added_date)
-        XLog.d("shop address====> " + addShop.address)
-        XLog.d("assigned to dd id=====> " + addShop.assigned_to_dd_id)
-        XLog.d("assigned to pp id=====> " + addShop.assigned_to_pp_id)
-        XLog.d("date aniversery====> " + addShop.date_aniversary)
-        XLog.d("dob====> " + addShop.dob)
-        XLog.d("shop owner phn no====> " + addShop.owner_contact_no)
-        XLog.d("shop owner email====> " + addShop.owner_email)
-        XLog.d("shop owner name====> " + addShop.owner_name)
-        XLog.d("shop pincode====> " + addShop.pin_code)
-        XLog.d("session token====> " + addShop.session_token)
-        XLog.d("shop lat====> " + addShop.shop_lat)
-        XLog.d("shop long====> " + addShop.shop_long)
-        XLog.d("shop name====> " + addShop.shop_name)
-        XLog.d("shop type====> " + addShop.type)
-        XLog.d("user id====> " + addShop.user_id)
-        XLog.d("amount=====> " + addShop.amount)
-        XLog.d("area id=======> " + addShop.area_id)
-        XLog.d("model id=======> " + addShop.model_id)
-        XLog.d("primary app id=======> " + addShop.primary_app_id)
-        XLog.d("secondary app id=======> " + addShop.secondary_app_id)
-        XLog.d("lead id=======> " + addShop.lead_id)
-        XLog.d("stage id=======> " + addShop.stage_id)
-        XLog.d("funnel stage id=======> " + addShop.funnel_stage_id)
-        XLog.d("booking amount=======> " + addShop.booking_amount)
-        XLog.d("type id=======> " + addShop.type_id)
+        Timber.d("decoded shop id====> " + addShop.user_id + "_" + AppUtils.getDate(addShop.shop_id!!.substring(index + 1, addShop.shop_id!!.length).toLong()))
+        Timber.d("shop added date====> " + addShop.added_date)
+        Timber.d("shop address====> " + addShop.address)
+        Timber.d("assigned to dd id=====> " + addShop.assigned_to_dd_id)
+        Timber.d("assigned to pp id=====> " + addShop.assigned_to_pp_id)
+        Timber.d("date aniversery====> " + addShop.date_aniversary)
+        Timber.d("dob====> " + addShop.dob)
+        Timber.d("shop owner phn no====> " + addShop.owner_contact_no)
+        Timber.d("shop owner email====> " + addShop.owner_email)
+        Timber.d("shop owner name====> " + addShop.owner_name)
+        Timber.d("shop pincode====> " + addShop.pin_code)
+        Timber.d("session token====> " + addShop.session_token)
+        Timber.d("shop lat====> " + addShop.shop_lat)
+        Timber.d("shop long====> " + addShop.shop_long)
+        Timber.d("shop name====> " + addShop.shop_name)
+        Timber.d("shop type====> " + addShop.type)
+        Timber.d("user id====> " + addShop.user_id)
+        Timber.d("amount=====> " + addShop.amount)
+        Timber.d("area id=======> " + addShop.area_id)
+        Timber.d("model id=======> " + addShop.model_id)
+        Timber.d("primary app id=======> " + addShop.primary_app_id)
+        Timber.d("secondary app id=======> " + addShop.secondary_app_id)
+        Timber.d("lead id=======> " + addShop.lead_id)
+        Timber.d("stage id=======> " + addShop.stage_id)
+        Timber.d("funnel stage id=======> " + addShop.funnel_stage_id)
+        Timber.d("booking amount=======> " + addShop.booking_amount)
+        Timber.d("type id=======> " + addShop.type_id)
 
         if (shop_imgPath != null)
-            XLog.d("shop image path====> $shop_imgPath")
+            Timber.d("shop image path====> $shop_imgPath")
 
-        XLog.d("director name=======> " + addShop.director_name)
-        XLog.d("family member dob=======> " + addShop.family_member_dob)
-        XLog.d("key person's name=======> " + addShop.key_person_name)
-        XLog.d("phone no=======> " + addShop.phone_no)
-        XLog.d("additional dob=======> " + addShop.addtional_dob)
-        XLog.d("additional doa=======> " + addShop.addtional_doa)
-        XLog.d("doctor family member dob=======> " + addShop.doc_family_member_dob)
-        XLog.d("specialization=======> " + addShop.specialization)
-        XLog.d("average patient count per day=======> " + addShop.average_patient_per_day)
-        XLog.d("category=======> " + addShop.category)
-        XLog.d("doctor address=======> " + addShop.doc_address)
-        XLog.d("doctor pincode=======> " + addShop.doc_pincode)
-        XLog.d("chambers or hospital under same headquarter=======> " + addShop.is_chamber_same_headquarter)
-        XLog.d("chamber related remarks=======> " + addShop.is_chamber_same_headquarter_remarks)
-        XLog.d("chemist name=======> " + addShop.chemist_name)
-        XLog.d("chemist name=======> " + addShop.chemist_address)
-        XLog.d("chemist pincode=======> " + addShop.chemist_pincode)
-        XLog.d("assistant name=======> " + addShop.assistant_name)
-        XLog.d("assistant contact no=======> " + addShop.assistant_contact_no)
-        XLog.d("assistant dob=======> " + addShop.assistant_dob)
-        XLog.d("assistant date of anniversary=======> " + addShop.assistant_doa)
-        XLog.d("assistant family dob=======> " + addShop.assistant_family_dob)
-        XLog.d("entity id=======> " + addShop.entity_id)
-        XLog.d("party status id=======> " + addShop.party_status_id)
-        XLog.d("retailer id=======> " + addShop.retailer_id)
-        XLog.d("dealer id=======> " + addShop.dealer_id)
-        XLog.d("beat id=======> " + addShop.beat_id)
-        XLog.d("assigned to shop id=======> " + addShop.assigned_to_shop_id)
-        XLog.d("actual address=======> " + addShop.actual_address)
+        Timber.d("director name=======> " + addShop.director_name)
+        Timber.d("family member dob=======> " + addShop.family_member_dob)
+        Timber.d("key person's name=======> " + addShop.key_person_name)
+        Timber.d("phone no=======> " + addShop.phone_no)
+        Timber.d("additional dob=======> " + addShop.addtional_dob)
+        Timber.d("additional doa=======> " + addShop.addtional_doa)
+        Timber.d("doctor family member dob=======> " + addShop.doc_family_member_dob)
+        Timber.d("specialization=======> " + addShop.specialization)
+        Timber.d("average patient count per day=======> " + addShop.average_patient_per_day)
+        Timber.d("category=======> " + addShop.category)
+        Timber.d("doctor address=======> " + addShop.doc_address)
+        Timber.d("doctor pincode=======> " + addShop.doc_pincode)
+        Timber.d("chambers or hospital under same headquarter=======> " + addShop.is_chamber_same_headquarter)
+        Timber.d("chamber related remarks=======> " + addShop.is_chamber_same_headquarter_remarks)
+        Timber.d("chemist name=======> " + addShop.chemist_name)
+        Timber.d("chemist name=======> " + addShop.chemist_address)
+        Timber.d("chemist pincode=======> " + addShop.chemist_pincode)
+        Timber.d("assistant name=======> " + addShop.assistant_name)
+        Timber.d("assistant contact no=======> " + addShop.assistant_contact_no)
+        Timber.d("assistant dob=======> " + addShop.assistant_dob)
+        Timber.d("assistant date of anniversary=======> " + addShop.assistant_doa)
+        Timber.d("assistant family dob=======> " + addShop.assistant_family_dob)
+        Timber.d("entity id=======> " + addShop.entity_id)
+        Timber.d("party status id=======> " + addShop.party_status_id)
+        Timber.d("retailer id=======> " + addShop.retailer_id)
+        Timber.d("dealer id=======> " + addShop.dealer_id)
+        Timber.d("beat id=======> " + addShop.beat_id)
+        Timber.d("assigned to shop id=======> " + addShop.assigned_to_shop_id)
+        Timber.d("actual address=======> " + addShop.actual_address)
 
         if (degree_imgPath != null)
-            XLog.d("doctor degree image path=======> $degree_imgPath")
-        XLog.d("=================================================")
+            Timber.d("doctor degree image path=======> $degree_imgPath")
+        Timber.d("=================================================")
 
         if (TextUtils.isEmpty(shop_imgPath) && TextUtils.isEmpty(degree_imgPath)) {
             val repository = AddShopRepositoryProvider.provideAddShopWithoutImageRepository()
@@ -1135,10 +1493,15 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val addShopResult = result as AddShopResponse
-                                XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
+                                Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
                                 if (addShopResult.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
-
+                                    if(AppUtils.isOnline(mContext)){
+//                                        if(Pref.isMultipleVisitEnable)
+                                        // Shop duartion Issue mantis 25597
+//                                            AppDatabase.getDBInstance()!!.shopActivityDao().updateIsUploaded(true, addShop.shop_id!!,AppUtils.getCurrentDateForShopActi())
+                                            AppDatabase.getDBInstance()!!.shopActivityDao().updateIsNewshopUploaded(true, addShop.shop_id!!,AppUtils.getCurrentDateForShopActi())
+                                    }
                                     doAsync {
                                         val resultAs = runLongTask(addShop.shop_id)
                                         uiThread {
@@ -1160,7 +1523,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     }
 
                                 } else if (addShopResult.status == NetworkConstant.DUPLICATE_SHOP_ID) {
-                                    XLog.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
+                                    Timber.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
                                     AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
                                     progress_wheel.stopSpinning()
 
@@ -1220,7 +1583,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 }
 
                                 if (error != null)
-                                    XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + "ERROR: " + error.localizedMessage)
+                                    Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + "ERROR: " + error.localizedMessage)
                             })
             )
         }
@@ -1232,10 +1595,15 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val addShopResult = result as AddShopResponse
-                                XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
+                                Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
                                 if (addShopResult.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
-
+                                    if(AppUtils.isOnline(mContext)){
+//                                        if(Pref.isMultipleVisitEnable)
+                                        // Shop duartion Issue mantis 25597
+//                                        AppDatabase.getDBInstance()!!.shopActivityDao().updateIsUploaded(true, addShop.shop_id!!,AppUtils.getCurrentDateForShopActi())
+                                        AppDatabase.getDBInstance()!!.shopActivityDao().updateIsNewshopUploaded(true, addShop.shop_id!!,AppUtils.getCurrentDateForShopActi())
+                                    }
                                     doAsync {
                                         val resultAs = runLongTask(addShop.shop_id)
                                         uiThread {
@@ -1257,7 +1625,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     }
 
                                 } else if (addShopResult.status == NetworkConstant.DUPLICATE_SHOP_ID) {
-                                    XLog.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
+                                    Timber.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
                                     AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
                                     progress_wheel.stopSpinning()
 
@@ -1317,7 +1685,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 }
 
                                 if (error != null)
-                                    XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + "ERROR: " + error.localizedMessage)
+                                    Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + "ERROR: " + error.localizedMessage)
                             })
             )
         }
@@ -1325,6 +1693,10 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
 
     private fun runLongTask(shop_id: String?): Any {
+//       var shopActivitynewIsuploaded = AppDatabase.getDBInstance()!!.shopActivityDao().IsnewShop(shop_id!!, true, true)
+//        if(shopActivitynewIsuploaded!=null){
+//            return true
+//        }
         val shopActivity = AppDatabase.getDBInstance()!!.shopActivityDao().durationAvailableForShop(shop_id!!, true, false)
         if (shopActivity != null)
             callShopActivitySubmit(shop_id)
@@ -1333,6 +1705,8 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
     private fun callShopActivitySubmit(shopId: String) {
         var list = AppDatabase.getDBInstance()!!.shopActivityDao().getShopForDay(shopId, AppUtils.getCurrentDateForShopActi())
+//        var list = AppDatabase.getDBInstance()!!.shopActivityDao().getShopForDayisUploaded(shopId, AppUtils.getCurrentDateForShopActi(),false)
+
         if (list.isEmpty())
             return
         var shopDataList: MutableList<ShopDurationRequestData> = java.util.ArrayList()
@@ -1365,19 +1739,23 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             if (sList != null && sList.isNotEmpty())
                 shopDurationData.total_visit_count = sList[0].totalVisitCount
 
-            if (!TextUtils.isEmpty(shopActivity.feedback))
+            if (!TextUtils.isEmpty(shopActivity.feedback)) {
                 shopDurationData.feedback = shopActivity.feedback
-            else
+                }
+            else {
                 shopDurationData.feedback = ""
+                }
 
             shopDurationData.isFirstShopVisited = shopActivity.isFirstShopVisited
             shopDurationData.distanceFromHomeLoc = shopActivity.distance_from_home_loc
             shopDurationData.next_visit_date = shopActivity.next_visit_date
 
-            if (!TextUtils.isEmpty(shopActivity.early_revisit_reason))
+            if (!TextUtils.isEmpty(shopActivity.early_revisit_reason)) {
                 shopDurationData.early_revisit_reason = shopActivity.early_revisit_reason
-            else
+                }
+            else {
                 shopDurationData.early_revisit_reason = ""
+                }
 
             shopDurationData.device_model = shopActivity.device_model
             shopDurationData.android_version = shopActivity.android_version
@@ -1390,6 +1768,56 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             shopDurationData.in_location = shopActivity.in_loc
             shopDurationData.out_location = shopActivity.out_loc
             shopDurationData.shop_revisit_uniqKey = shopActivity.shop_revisit_uniqKey!!
+
+            /*8-12-2021*/
+            shopDurationData.updated_by = Pref.user_id
+            try{
+                shopDurationData.updated_on = shopActivity.updated_on!!
+            }catch (ex:Exception){
+                shopDurationData.updated_on = ""
+            }
+
+
+            if (!TextUtils.isEmpty(shopActivity.pros_id!!)) {
+                shopDurationData.pros_id = shopActivity.pros_id!!
+            }
+            else {
+                shopDurationData.pros_id = ""
+                }
+
+            if (!TextUtils.isEmpty(shopActivity.agency_name!!)) {
+                shopDurationData.agency_name = shopActivity.agency_name!!
+            }
+            else {
+                shopDurationData.agency_name = ""
+                }
+
+            if (!TextUtils.isEmpty(shopActivity.approximate_1st_billing_value)) {
+                shopDurationData.approximate_1st_billing_value =
+                    shopActivity.approximate_1st_billing_value!!
+            }
+            else {
+                shopDurationData.approximate_1st_billing_value = ""
+                }
+            //duration garbage fix
+            try{
+                if(shopDurationData.spent_duration!!.contains("-") || shopDurationData.spent_duration!!.length != 8)
+                {
+                    shopDurationData.spent_duration="00:00:10"
+                }
+            }catch (ex:Exception){
+                shopDurationData.spent_duration="00:00:10"
+            }
+            //New shop Create issue
+            shopDurationData.isnewShop = shopActivity.isnewShop!!
+
+            shopDurationData.multi_contact_name = shopActivity.multi_contact_name
+            shopDurationData.multi_contact_number = shopActivity.multi_contact_number
+
+            //Begin Rev 17 DashboardActivity AppV 4.0.8 Suman    24/04/2023 distanct+station calculation 25806
+            shopDurationData.distFromProfileAddrKms = shopActivity.distFromProfileAddrKms
+            shopDurationData.stationCode = shopActivity.stationCode
+            //End of Rev 17 DashboardActivity AppV 4.0.8 Suman    24/04/2023 distanct+station calculation 25806
 
             shopDataList.add(shopDurationData)
         }
@@ -1422,19 +1850,23 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                 if (sList != null && sList.isNotEmpty())
                     shopDurationData.total_visit_count = sList[0].totalVisitCount
 
-                if (!TextUtils.isEmpty(shopActivity.feedback))
+                if (!TextUtils.isEmpty(shopActivity.feedback)) {
                     shopDurationData.feedback = shopActivity.feedback
-                else
+                }
+                else{
                     shopDurationData.feedback = ""
+                }
 
                 shopDurationData.isFirstShopVisited = shopActivity.isFirstShopVisited
                 shopDurationData.distanceFromHomeLoc = shopActivity.distance_from_home_loc
                 shopDurationData.next_visit_date = shopActivity.next_visit_date
 
-                if (!TextUtils.isEmpty(shopActivity.early_revisit_reason))
+                if (!TextUtils.isEmpty(shopActivity.early_revisit_reason)) {
                     shopDurationData.early_revisit_reason = shopActivity.early_revisit_reason
-                else
+                }
+                else {
                     shopDurationData.early_revisit_reason = ""
+                    }
 
                 shopDurationData.device_model = shopActivity.device_model
                 shopDurationData.android_version = shopActivity.android_version
@@ -1447,6 +1879,58 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                 shopDurationData.in_location = shopActivity.in_loc
                 shopDurationData.out_location = shopActivity.out_loc
                 shopDurationData.shop_revisit_uniqKey = shopActivity.shop_revisit_uniqKey!!
+
+                /*8-12-2021*/
+                shopDurationData.updated_by = Pref.user_id
+                try{
+                    shopDurationData.updated_on = shopActivity.updated_on!!
+                }
+                catch (ex:Exception){
+                    shopDurationData.updated_on = ""
+                }
+
+
+                if (!TextUtils.isEmpty(shopActivity.pros_id!!)) {
+                    shopDurationData.pros_id = shopActivity.pros_id!!
+                }
+                else {
+                    shopDurationData.pros_id = ""
+                    }
+
+                if (!TextUtils.isEmpty(shopActivity.agency_name!!)) {
+                    shopDurationData.agency_name = shopActivity.agency_name!!
+                }
+                else {
+                    shopDurationData.agency_name = ""
+                    }
+
+                if (!TextUtils.isEmpty(shopActivity.approximate_1st_billing_value)) {
+                    shopDurationData.approximate_1st_billing_value =
+                        shopActivity.approximate_1st_billing_value!!
+                }
+                else {
+                    shopDurationData.approximate_1st_billing_value = ""
+                    }
+
+                //duration garbage fix
+                try{
+                    if(shopDurationData.spent_duration!!.contains("-") || shopDurationData.spent_duration!!.length != 8)
+                    {
+                        shopDurationData.spent_duration="00:00:10"
+                    }
+                }catch (ex:Exception){
+                    shopDurationData.spent_duration="00:00:10"
+                }
+                //New shop Create issue
+                shopDurationData.isnewShop = shopActivity.isnewShop!!
+
+                shopDurationData.multi_contact_name = shopActivity.multi_contact_name
+                shopDurationData.multi_contact_number = shopActivity.multi_contact_number
+
+                //Begin Rev 17 DashboardActivity AppV 4.0.8 Suman    24/04/2023 distanct+station calculation 25806
+                shopDurationData.distFromProfileAddrKms = shopActivity.distFromProfileAddrKms
+                shopDurationData.stationCode = shopActivity.stationCode
+                //End of Rev 17 DashboardActivity AppV 4.0.8 Suman    24/04/2023 distanct+station calculation 25806
 
                 shopDataList.add(shopDurationData)
             }
@@ -1464,7 +1948,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
-                            XLog.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + ", RESPONSE:" + result.message)
+                            Timber.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + ", RESPONSE:" + result.message)
                             if (result.status == NetworkConstant.SUCCESS) {
                                 if (!Pref.isMultipleVisitEnable) {
                                     if (list[0].isVisited && list[0].isDurationCalculated) {
@@ -1482,7 +1966,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         }, { error ->
                             error.printStackTrace()
                             if (error != null)
-                                XLog.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + "ERROR:" + error.localizedMessage)
+                                Timber.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + "ERROR:" + error.localizedMessage)
 //                                (mContext as DashboardActivity).showSnackMessage("ERROR")
                         })
         )
@@ -1511,8 +1995,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
             if (!isRetryShop) {
                 checkToCallSyncOrder()
-            } else
+            } else {
                 isRetryShop = false
+            }
         }
 
     }
@@ -1600,70 +2085,135 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         addShopData.assigned_to_shop_id = mAddShopDBModelEntity.assigned_to_shop_id
         addShopData.actual_address = mAddShopDBModelEntity.actual_address
 
-        XLog.d("=====SyncEditShop Input Params (Logout sync)======")
-        XLog.d("shop id====> " + addShopData.shop_id)
+        /*14-12-2021*/
+        if (addShopData.agency_name!=null && !addShopData.agency_name.equals("")) {
+            addShopData.agency_name = addShopData.agency_name!!
+        }
+        else {
+            addShopData.agency_name = ""
+            }
+
+       /*11-02-2022*/
+        addShopData.landline_number = mAddShopDBModelEntity.landline_number
+        addShopData.alternateNoForCustomer = mAddShopDBModelEntity.alternateNoForCustomer
+        addShopData.whatsappNoForCustomer = mAddShopDBModelEntity.whatsappNoForCustomer
+
+        /*GSTIN & PAN NUMBER*/
+        if (addShopData.GSTN_Number!=null && !addShopData.GSTN_Number.equals("")) {
+            mAddShopDBModelEntity.gstN_Number = addShopData.GSTN_Number!!
+        }
+        else {
+            mAddShopDBModelEntity.gstN_Number = ""
+            }
+
+        if (addShopData.ShopOwner_PAN!=null && !addShopData.ShopOwner_PAN.equals("")) {
+            mAddShopDBModelEntity.shopOwner_PAN = addShopData.ShopOwner_PAN!!
+        }
+        else {
+            mAddShopDBModelEntity.shopOwner_PAN = ""
+            }
+
+        try{
+            if(mAddShopDBModelEntity.isUpdateAddressFromShopMaster!!){
+                addShopData.isUpdateAddressFromShopMaster = true
+            }else{
+                addShopData.isUpdateAddressFromShopMaster = false
+            }
+            Timber.d("tag_update addr ${mAddShopDBModelEntity.isUpdateAddressFromShopMaster} ${addShopData.isUpdateAddressFromShopMaster}")
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            addShopData.isUpdateAddressFromShopMaster = false
+            Timber.d("tag_update addr ex ${addShopData.isUpdateAddressFromShopMaster}")
+        }
+
+        // contact module
+        try{
+            addShopData.address = mAddShopDBModelEntity.address
+            addShopData.actual_address = mAddShopDBModelEntity.address
+            addShopData.shop_firstName= mAddShopDBModelEntity.crm_firstName
+            addShopData.shop_lastName=  mAddShopDBModelEntity.crm_lastName
+            addShopData.crm_companyID=  if(mAddShopDBModelEntity.companyName_id.equals("")) "0" else mAddShopDBModelEntity.companyName_id
+            addShopData.crm_jobTitle=  mAddShopDBModelEntity.jobTitle
+            addShopData.crm_typeID=  if(mAddShopDBModelEntity.crm_type_ID.equals("")) "0" else mAddShopDBModelEntity.crm_type_ID
+            addShopData.crm_statusID=  if(mAddShopDBModelEntity.crm_status_ID.equals("")) "0" else mAddShopDBModelEntity.crm_status_ID
+            addShopData.crm_sourceID= if(mAddShopDBModelEntity.crm_source_ID.equals("")) "0" else mAddShopDBModelEntity.crm_source_ID
+            addShopData.crm_reference=  mAddShopDBModelEntity.crm_reference
+            addShopData.crm_referenceID=  if(mAddShopDBModelEntity.crm_reference_ID.equals("")) "0" else mAddShopDBModelEntity.crm_reference_ID
+            addShopData.crm_referenceID_type=  mAddShopDBModelEntity.crm_reference_ID_type
+            addShopData.crm_stage_ID=  if(mAddShopDBModelEntity.crm_stage_ID.equals("")) "0" else mAddShopDBModelEntity.crm_stage_ID
+            addShopData.assign_to=  mAddShopDBModelEntity.crm_assignTo_ID
+            addShopData.saved_from_status=  mAddShopDBModelEntity.crm_saved_from
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            Timber.d("Logout edit sync err ${ex.message}")
+        }
+
+
+
+        Timber.d("=====SyncEditShop Input Params (Logout sync)======")
+        Timber.d("shop id====> " + addShopData.shop_id)
         val index = addShopData.shop_id!!.indexOf("_")
-        XLog.d("decoded shop id====> " + addShopData.user_id + "_" + AppUtils.getDate(addShopData.shop_id!!.substring(index + 1, addShopData.shop_id!!.length).toLong()))
-        XLog.d("shop added date====> " + addShopData.added_date)
-        XLog.d("shop address====> " + addShopData.address)
-        XLog.d("assigned to dd id====> " + addShopData.assigned_to_dd_id)
-        XLog.d("assigned to pp id=====> " + addShopData.assigned_to_pp_id)
-        XLog.d("date aniversery=====> " + addShopData.date_aniversary)
-        XLog.d("dob====> " + addShopData.dob)
-        XLog.d("shop owner phn no===> " + addShopData.owner_contact_no)
-        XLog.d("shop owner email====> " + addShopData.owner_email)
-        XLog.d("shop owner name====> " + addShopData.owner_name)
-        XLog.d("shop pincode====> " + addShopData.pin_code)
-        XLog.d("session token====> " + addShopData.session_token)
-        XLog.d("shop lat====> " + addShopData.shop_lat)
-        XLog.d("shop long===> " + addShopData.shop_long)
-        XLog.d("shop name====> " + addShopData.shop_name)
-        XLog.d("shop type===> " + addShopData.type)
-        XLog.d("user id====> " + addShopData.user_id)
-        XLog.d("amount=======> " + addShopData.amount)
-        XLog.d("area id=======> " + addShopData.area_id)
-        XLog.d("model id=======> " + addShopData.model_id)
-        XLog.d("primary app id=======> " + addShopData.primary_app_id)
-        XLog.d("secondary app id=======> " + addShopData.secondary_app_id)
-        XLog.d("lead id=======> " + addShopData.lead_id)
-        XLog.d("stage id=======> " + addShopData.stage_id)
-        XLog.d("funnel stage id=======> " + addShopData.funnel_stage_id)
-        XLog.d("booking amount=======> " + addShopData.booking_amount)
-        XLog.d("type id=======> " + addShopData.type_id)
+        Timber.d("decoded shop id====> " + addShopData.user_id + "_" + AppUtils.getDate(addShopData.shop_id!!.substring(index + 1, addShopData.shop_id!!.length).toLong()))
+        Timber.d("shop added date====> " + addShopData.added_date)
+        Timber.d("shop address====> " + addShopData.address)
+        Timber.d("assigned to dd id====> " + addShopData.assigned_to_dd_id)
+        Timber.d("assigned to pp id=====> " + addShopData.assigned_to_pp_id)
+        Timber.d("date aniversery=====> " + addShopData.date_aniversary)
+        Timber.d("dob====> " + addShopData.dob)
+        Timber.d("shop owner phn no===> " + addShopData.owner_contact_no)
+        Timber.d("shop owner email====> " + addShopData.owner_email)
+        Timber.d("shop owner name====> " + addShopData.owner_name)
+        Timber.d("shop pincode====> " + addShopData.pin_code)
+        Timber.d("session token====> " + addShopData.session_token)
+        Timber.d("shop lat====> " + addShopData.shop_lat)
+        Timber.d("shop long===> " + addShopData.shop_long)
+        Timber.d("shop name====> " + addShopData.shop_name)
+        Timber.d("shop type===> " + addShopData.type)
+        Timber.d("user id====> " + addShopData.user_id)
+        Timber.d("amount=======> " + addShopData.amount)
+        Timber.d("area id=======> " + addShopData.area_id)
+        Timber.d("model id=======> " + addShopData.model_id)
+        Timber.d("primary app id=======> " + addShopData.primary_app_id)
+        Timber.d("secondary app id=======> " + addShopData.secondary_app_id)
+        Timber.d("lead id=======> " + addShopData.lead_id)
+        Timber.d("stage id=======> " + addShopData.stage_id)
+        Timber.d("funnel stage id=======> " + addShopData.funnel_stage_id)
+        Timber.d("booking amount=======> " + addShopData.booking_amount)
+        Timber.d("type id=======> " + addShopData.type_id)
         if (mAddShopDBModelEntity.shopImageLocalPath != null)
-            XLog.d("shop image path====> " + mAddShopDBModelEntity.shopImageLocalPath)
-        XLog.d("family member dob=======> " + addShopData.family_member_dob)
-        XLog.d("director name=======> " + addShopData.director_name)
-        XLog.d("key person's name=======> " + addShopData.key_person_name)
-        XLog.d("phone no=======> " + addShopData.phone_no)
-        XLog.d("additional dob=======> " + addShopData.addtional_dob)
-        XLog.d("additional doa=======> " + addShopData.addtional_doa)
-        XLog.d("doctor family member dob=======> " + addShopData.doc_family_member_dob)
-        XLog.d("specialization=======> " + addShopData.specialization)
-        XLog.d("average patient count per day=======> " + addShopData.average_patient_per_day)
-        XLog.d("category=======> " + addShopData.category)
-        XLog.d("doctor address=======> " + addShopData.doc_address)
-        XLog.d("doctor pincode=======> " + addShopData.doc_pincode)
-        XLog.d("chambers or hospital under same headquarter=======> " + addShopData.is_chamber_same_headquarter)
-        XLog.d("chamber related remarks=======> " + addShopData.is_chamber_same_headquarter_remarks)
-        XLog.d("chemist name=======> " + addShopData.chemist_name)
-        XLog.d("chemist name=======> " + addShopData.chemist_address)
-        XLog.d("chemist pincode=======> " + addShopData.chemist_pincode)
-        XLog.d("assistant name=======> " + addShopData.assistant_name)
-        XLog.d("assistant contact no=======> " + addShopData.assistant_contact_no)
-        XLog.d("assistant dob=======> " + addShopData.assistant_dob)
-        XLog.d("assistant date of anniversary=======> " + addShopData.assistant_doa)
-        XLog.d("assistant family dob=======> " + addShopData.assistant_family_dob)
-        XLog.d("entity id=======> " + addShopData.entity_id)
-        XLog.d("party status id=======> " + addShopData.party_status_id)
-        XLog.d("retailer id=======> " + addShopData.retailer_id)
-        XLog.d("dealer id=======> " + addShopData.dealer_id)
-        XLog.d("beat id=======> " + addShopData.beat_id)
+            Timber.d("shop image path====> " + mAddShopDBModelEntity.shopImageLocalPath)
+        Timber.d("family member dob=======> " + addShopData.family_member_dob)
+        Timber.d("director name=======> " + addShopData.director_name)
+        Timber.d("key person's name=======> " + addShopData.key_person_name)
+        Timber.d("phone no=======> " + addShopData.phone_no)
+        Timber.d("additional dob=======> " + addShopData.addtional_dob)
+        Timber.d("additional doa=======> " + addShopData.addtional_doa)
+        Timber.d("doctor family member dob=======> " + addShopData.doc_family_member_dob)
+        Timber.d("specialization=======> " + addShopData.specialization)
+        Timber.d("average patient count per day=======> " + addShopData.average_patient_per_day)
+        Timber.d("category=======> " + addShopData.category)
+        Timber.d("doctor address=======> " + addShopData.doc_address)
+        Timber.d("doctor pincode=======> " + addShopData.doc_pincode)
+        Timber.d("chambers or hospital under same headquarter=======> " + addShopData.is_chamber_same_headquarter)
+        Timber.d("chamber related remarks=======> " + addShopData.is_chamber_same_headquarter_remarks)
+        Timber.d("chemist name=======> " + addShopData.chemist_name)
+        Timber.d("chemist name=======> " + addShopData.chemist_address)
+        Timber.d("chemist pincode=======> " + addShopData.chemist_pincode)
+        Timber.d("assistant name=======> " + addShopData.assistant_name)
+        Timber.d("assistant contact no=======> " + addShopData.assistant_contact_no)
+        Timber.d("assistant dob=======> " + addShopData.assistant_dob)
+        Timber.d("assistant date of anniversary=======> " + addShopData.assistant_doa)
+        Timber.d("assistant family dob=======> " + addShopData.assistant_family_dob)
+        Timber.d("entity id=======> " + addShopData.entity_id)
+        Timber.d("party status id=======> " + addShopData.party_status_id)
+        Timber.d("retailer id=======> " + addShopData.retailer_id)
+        Timber.d("dealer id=======> " + addShopData.dealer_id)
+        Timber.d("beat id=======> " + addShopData.beat_id)
         if (mAddShopDBModelEntity.doc_degree != null)
-            XLog.d("doctor degree image path=======> " + mAddShopDBModelEntity.doc_degree)
-        XLog.d("assigned to shop id=======> " + addShopData.assigned_to_shop_id)
-        XLog.d("actual_address=======> " + addShopData.actual_address)
-        XLog.d("================================================")
+            Timber.d("doctor degree image path=======> " + mAddShopDBModelEntity.doc_degree)
+        Timber.d("assigned to shop id=======> " + addShopData.assigned_to_shop_id)
+        Timber.d("actual_address=======> " + addShopData.actual_address)
+        Timber.d("================================================")
 
         progress_wheel.spin()
 
@@ -1675,7 +2225,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val addShopResult = result as AddShopResponse
-                                XLog.d("Edit Shop : " + ", SHOP: " + addShopData.shop_name + ", STATUS: " + addShopResult.status + ",RESPONSE:" + result.message)
+                                Timber.d("Edit Shop : " + ", SHOP: " + addShopData.shop_name + ", STATUS: " + addShopResult.status + ",RESPONSE:" + result.message)
                                 if (addShopResult.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsEditUploaded(1, addShopData.shop_id)
                                     progress_wheel.stopSpinning()
@@ -1692,8 +2242,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                         } else {
 
                                             val list_ = AppDatabase.getDBInstance()!!.addShopEntryDao().getUnsyncEditShop(0, true)
-                                            if (list_ != null && list_.size > 0)
+                                            if (list_ != null && list_.size > 0) {
                                                 tv_shop_retry.visibility = View.VISIBLE
+                                            }
                                             else {
                                                 tv_shop_retry.visibility = View.GONE
                                                 addShopTickImg.visibility = View.VISIBLE
@@ -1704,8 +2255,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                                         if (!isRetryShop) {
                                             checkToCallSyncOrder()
-                                        } else
+                                        } else {
                                             isRetryShop = false
+                                            }
                                     }
 
 
@@ -1730,8 +2282,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                         i = 0
                                         if (!isRetryShop) {
                                             checkToCallSyncOrder()
-                                        } else
+                                        } else {
                                             isRetryShop = false
+                                        }
                                     }
                                 }
                                 BaseActivity.isApiInitiated = false
@@ -1740,7 +2293,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 progress_wheel.stopSpinning()
                                 //(mContext as DashboardActivity).showSnackMessage(getString(R.string.unable_to_sync))
                                 try {
-                                    XLog.d("Edit Shop : " + ", SHOP: " + addShopData.shop_name + ", ERROR: " + error.message)
+                                    Timber.d("Edit Shop : " + ", SHOP: " + addShopData.shop_name + ", ERROR: " + error.message)
                                 } catch (e: Exception) {
                                     e.printStackTrace()
                                 }
@@ -1755,8 +2308,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     i = 0
                                     if (!isRetryShop) {
                                         checkToCallSyncOrder()
-                                    } else
+                                    } else {
                                         isRetryShop = false
+                                        }
                                 }
                             })
             )
@@ -1769,7 +2323,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val addShopResult = result as AddShopResponse
-                                XLog.d("Edit Shop : " + ", SHOP: " + addShopData.shop_name + ", STATUS: " + addShopResult.status + ",RESPONSE:" + result.message)
+                                Timber.d("Edit Shop : " + ", SHOP: " + addShopData.shop_name + ", STATUS: " + addShopResult.status + ",RESPONSE:" + result.message)
                                 if (addShopResult.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsEditUploaded(1, addShopData.shop_id)
                                     progress_wheel.stopSpinning()
@@ -1786,8 +2340,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                         } else {
 
                                             val list_ = AppDatabase.getDBInstance()!!.addShopEntryDao().getUnsyncEditShop(0, true)
-                                            if (list_ != null && list_.size > 0)
+                                            if (list_ != null && list_.size > 0) {
                                                 tv_shop_retry.visibility = View.VISIBLE
+                                                }
                                             else {
                                                 tv_shop_retry.visibility = View.GONE
                                                 addShopTickImg.visibility = View.VISIBLE
@@ -1798,8 +2353,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                                         if (!isRetryShop) {
                                             checkToCallSyncOrder()
-                                        } else
+                                        } else {
                                             isRetryShop = false
+                                            }
                                     }
 
 
@@ -1824,8 +2380,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                         i = 0
                                         if (!isRetryShop) {
                                             checkToCallSyncOrder()
-                                        } else
+                                        } else {
                                             isRetryShop = false
+                                        }
                                     }
                                 }
                                 BaseActivity.isApiInitiated = false
@@ -1834,7 +2391,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 progress_wheel.stopSpinning()
                                 //(mContext as DashboardActivity).showSnackMessage(getString(R.string.unable_to_sync))
                                 try {
-                                    XLog.d("Edit Shop : " + ", SHOP: " + addShopData.shop_name + ", ERROR: " + error.message)
+                                    Timber.d("Edit Shop : " + ", SHOP: " + addShopData.shop_name + ", ERROR: " + error.message)
                                 } catch (e: Exception) {
                                     e.printStackTrace()
                                 }
@@ -1849,8 +2406,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     i = 0
                                     if (!isRetryShop) {
                                         checkToCallSyncOrder()
-                                    } else
+                                    } else {
                                         isRetryShop = false
+                                    }
                                 }
                             })
             )
@@ -1882,23 +2440,28 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                     addOrderTickImg.visibility = View.VISIBLE
                     addOrderSyncImg.visibility = View.GONE
 
-                    if (!isRetryOrder)
+                    if (!isRetryOrder) {
                         checkToGpsStatus()
-                    else
+                    }
+                    else {
                         isRetryOrder = false
+                        }
                 }
             } else {
                 stopAnimation(addOrderSyncImg)
                 addOrderTickImg.visibility = View.VISIBLE
                 addOrderSyncImg.visibility = View.GONE
 
-                if (!isRetryOrder)
+                if (!isRetryOrder) {
                     checkToGpsStatus()
-                else
+                    }
+                else {
                     isRetryOrder = false
+                    }
             }
-        } else
+        } else {
             checkToGpsStatus()
+            }
     }
 
     //===================================================Add Order==============================================================//
@@ -1922,47 +2485,92 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         addOrder.latitude = order.order_lat
         addOrder.longitude = order.order_long
 
-        if (order.remarks != null)
+        try{
+            if (order.scheme_amount != null) {
+                if(order.scheme_amount.equals("")){
+                    addOrder.scheme_amount = "0"
+                }else{
+                    addOrder.scheme_amount = order.scheme_amount
+                }
+            }
+            else {
+                addOrder.scheme_amount = "0"
+            }
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            addOrder.scheme_amount = "0"
+        }
+
+        if (order.remarks != null) {
             addOrder.remarks = order.remarks
-        else
+            }
+        else {
             addOrder.remarks = ""
+            }
 
-        if (order.patient_name != null)
+        if (order.patient_name != null) {
             addOrder.patient_name = order.patient_name
-        else
+        }
+        else {
             addOrder.patient_name = ""
+            }
 
-        if (order.patient_address != null)
+        if (order.patient_address != null) {
             addOrder.patient_address = order.patient_address
-        else
+            }
+        else {
             addOrder.patient_address = ""
+            }
 
-        if (order.patient_no != null)
+        if (order.patient_no != null) {
             addOrder.patient_no = order.patient_no
-        else
+            }
+        else {
             addOrder.patient_no = ""
+            }
 
         val shopActivity = AppDatabase.getDBInstance()!!.shopActivityDao().getShopActivityForId(order.shop_id!!)
         if (shopActivity != null) {
             if (shopActivity.isVisited && !shopActivity.isDurationCalculated && shopActivity.date == AppUtils.getCurrentDateForShopActi()) {
                 val shopDetail = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(order.shop_id)
 
-                if (!TextUtils.isEmpty(shopDetail.address))
+                if (!TextUtils.isEmpty(shopDetail.address)) {
                     addOrder.address = shopDetail.address
-                else
+                }
+                else {
                     addOrder.address = ""
+                    }
             } else {
-                if (!TextUtils.isEmpty(order.order_lat) && !TextUtils.isEmpty(order.order_long))
+                if (!TextUtils.isEmpty(order.order_lat) && !TextUtils.isEmpty(order.order_long)) {
                     addOrder.address = LocationWizard.getLocationName(mContext, order.order_lat!!.toDouble(), order.order_long!!.toDouble())
-                else
+                }
+                else {
                     addOrder.address = ""
+                    }
             }
         } else {
-            if (!TextUtils.isEmpty(order.order_lat) && !TextUtils.isEmpty(order.order_long))
+            if (!TextUtils.isEmpty(order.order_lat) && !TextUtils.isEmpty(order.order_long)){
                 addOrder.address = LocationWizard.getLocationName(mContext, order.order_lat!!.toDouble(), order.order_long!!.toDouble())
-            else
+                }
+            else {
                 addOrder.address = ""
+                }
         }
+
+        /*06-01-2022*/
+        if (order.Hospital != null) {
+            addOrder.Hospital = order.Hospital
+            }
+        else {
+            addOrder.Hospital = ""
+        }
+
+        if (order.Email_Address != null) {
+            addOrder.Email_Address = order.Email_Address
+            }
+        else {
+            addOrder.Email_Address = ""
+            }
 
 
         val list = AppDatabase.getDBInstance()!!.orderProductListDao().getDataAccordingToShopAndOrderId(order.order_id!!, order.shop_id!!)
@@ -1975,6 +2583,16 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             product.rate = list[j].rate
             product.total_price = list[j].total_price
             product.product_name = list[j].product_name
+            product.scheme_qty = list[j].scheme_qty
+            product.scheme_rate = list[j].scheme_rate
+            product.total_scheme_price = list[j].total_scheme_price
+
+            product.MRP = list[j].MRP
+
+            //mantis 25601
+            product.order_mrp = list[j].order_mrp
+            product.order_discount = list[j].order_discount
+
             productList.add(product)
         }
 
@@ -1990,7 +2608,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val orderListResponse = result as BaseResponse
-                                XLog.e("Add Order : \n" + ", SHOP ID===> " + orderList[i].shop_id + ", STATUS====> " + orderListResponse.status + ",RESPONSE MESSAGE:" + orderListResponse.message)
+                                Timber.e("Add Order : \n" + ", SHOP ID===> " + orderList[i].shop_id + ", STATUS====> " + orderListResponse.status + ",RESPONSE MESSAGE:" + orderListResponse.message)
                                 if (orderListResponse.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()!!.orderDetailsListDao().updateIsUploaded(true, order.order_id!!)
 
@@ -2027,10 +2645,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                                         progress_wheel.stopSpinning()
                                         i = 0
-                                        if (!isRetryOrder)
+                                        if (!isRetryOrder) {
                                             checkToGpsStatus()
-                                        else
+                                        }
+                                        else {
                                             isRetryOrder = false
+                                            }
                                     }
                                 } else {
                                     //progress_wheel.stopSpinning()
@@ -2047,10 +2667,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                                         progress_wheel.stopSpinning()
                                         i = 0
-                                        if (!isRetryOrder)
+                                        if (!isRetryOrder) {
                                             checkToGpsStatus()
-                                        else
+                                            }
+                                        else {
                                             isRetryOrder = false
+                                            }
                                     }
                                 }
 
@@ -2061,7 +2683,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 //(mContext as DashboardActivity).showSnackMessage(mContext.getString(R.string.unable_to_sync))
 
                                 try {
-                                    XLog.d("Add Order : \n" + ", SHOP ID===> " + orderList[i].shop_id + ", ERROR====> " + error.message)
+                                    Timber.d("Add Order : \n" + ", SHOP ID===> " + orderList[i].shop_id + ", ERROR====> " + error.message)
                                 } catch (e: Exception) {
                                     e.printStackTrace()
                                 }
@@ -2077,10 +2699,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                                     progress_wheel.stopSpinning()
                                     i = 0
-                                    if (!isRetryOrder)
+                                    if (!isRetryOrder) {
                                         checkToGpsStatus()
-                                    else
+                                        }
+                                    else {
                                         isRetryOrder = false
+                                        }
                                 }
                             })
             )
@@ -2093,7 +2717,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val orderListResponse = result as BaseResponse
-                                XLog.e("Add Order : \n" + ", SHOP ID===> " + orderList[i].shop_id + ", STATUS====> " + orderListResponse.status + ",RESPONSE MESSAGE:" + orderListResponse.message)
+                                Timber.e("Add Order : \n" + ", SHOP ID===> " + orderList[i].shop_id + ", STATUS====> " + orderListResponse.status + ",RESPONSE MESSAGE:" + orderListResponse.message)
                                 if (orderListResponse.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()!!.orderDetailsListDao().updateIsUploaded(true, order.order_id!!)
 
@@ -2130,10 +2754,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                                         progress_wheel.stopSpinning()
                                         i = 0
-                                        if (!isRetryOrder)
+                                        if (!isRetryOrder) {
                                             checkToGpsStatus()
-                                        else
+                                        }
+                                        else {
                                             isRetryOrder = false
+                                            }
                                     }
                                 } else {
                                     //progress_wheel.stopSpinning()
@@ -2150,10 +2776,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                                         progress_wheel.stopSpinning()
                                         i = 0
-                                        if (!isRetryOrder)
+                                        if (!isRetryOrder) {
                                             checkToGpsStatus()
-                                        else
+                                            }
+                                        else {
                                             isRetryOrder = false
+                                            }
                                     }
                                 }
 
@@ -2164,7 +2792,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 //(mContext as DashboardActivity).showSnackMessage(mContext.getString(R.string.unable_to_sync))
 
                                 try {
-                                    XLog.d("Add Order : \n" + ", SHOP ID===> " + orderList[i].shop_id + ", ERROR====> " + error.message)
+                                    Timber.d("Add Order : \n" + ", SHOP ID===> " + orderList[i].shop_id + ", ERROR====> " + error.message)
                                 } catch (e: Exception) {
                                     e.printStackTrace()
                                 }
@@ -2180,10 +2808,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                                     progress_wheel.stopSpinning()
                                     i = 0
-                                    if (!isRetryOrder)
+                                    if (!isRetryOrder) {
                                         checkToGpsStatus()
-                                    else
+                                        }
+                                    else {
                                         isRetryOrder = false
+                                        }
                                 }
                             })
             )
@@ -2205,15 +2835,17 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             gpsSyncImg.visibility = View.GONE
 
 
-            if (!isRetryGps)
+            if (!isRetryGps) {
                 checkToCallCollectionApi()
-            else
+            }
+            else {
                 isRetryGps = false
+                }
         }
     }
 
     //============================================================Update Gps Status============================================================//
-    private fun callUpdateGpsStatusApi(list: List<GpsStatusEntity>) {
+    /*private fun callUpdateGpsStatusApi(list: List<GpsStatusEntity>) {
 
         //(mContext as DashboardActivity).showSnackMessage("Syncing Gps")
 
@@ -2226,15 +2858,15 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         updateGps.session_token = Pref.session_token
         updateGps.duration = AppUtils.getTimeInHourMinuteFormat(list[i].duration?.toLong()!!)
 
-        XLog.d("========SYNC GPS INPUT PARAMS========")
-        XLog.d("date====> " + updateGps.date)
-        XLog.d("gps_id====> " + updateGps.gps_id)
-        XLog.d("gps_off_time====> " + updateGps.gps_off_time)
-        XLog.d("gps_on_time====> " + updateGps.gps_on_time)
-        XLog.d("user_id====> " + updateGps.user_id)
-        XLog.d("session_token====> " + updateGps.session_token)
-        XLog.d("duration====> " + updateGps.duration)
-        XLog.d("=====================================")
+        Timber.d("========SYNC GPS INPUT PARAMS========")
+        Timber.d("date====> " + updateGps.date)
+        Timber.d("gps_id====> " + updateGps.gps_id)
+        Timber.d("gps_off_time====> " + updateGps.gps_off_time)
+        Timber.d("gps_on_time====> " + updateGps.gps_on_time)
+        Timber.d("user_id====> " + updateGps.user_id)
+        Timber.d("session_token====> " + updateGps.session_token)
+        Timber.d("duration====> " + updateGps.duration)
+        Timber.d("=====================================")
 
         progress_wheel.spin()
 
@@ -2245,7 +2877,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             val gpsStatusResponse = result as BaseResponse
-                            XLog.d("SYNC GPS : " + "RESPONSE : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name
+                            Timber.d("SYNC GPS : " + "RESPONSE : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name
                                     + ",MESSAGE : " + gpsStatusResponse.message)
                             if (gpsStatusResponse.status == NetworkConstant.SUCCESS) {
                                 AppDatabase.getDBInstance()!!.gpsStatusDao().updateIsUploadedAccordingToId(true, list[i].id)
@@ -2301,7 +2933,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                         }, { error ->
                             //
-                            XLog.d("SYNC GPS : " + "RESPONSE ERROR: " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                            Timber.d("SYNC GPS : " + "RESPONSE ERROR: " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                             error.printStackTrace()
                             i++
                             if (i < list.size) {
@@ -2321,6 +2953,143 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     isRetryGps = false
                             }
                         })
+        )
+    }*/
+
+    // 3.0 LogoutSyncFragment AppV 4.0.7 saheli 21-01-2023  mantis 0025685 start
+    private fun callUpdateGpsStatusApi(list: List<GpsStatusEntity>) {
+        var updateGpsReq = UpdateGpsInputListParamsModel()
+        for(i in 0..list.size-1){
+            var obj = Gps_status_list()
+            obj.session_token = Pref.session_token.toString()
+            obj.user_id = Pref.user_id.toString()
+            obj.gps_id = list.get(i).gps_id.toString()
+            obj.date = list.get(i).date.toString()
+            obj.gps_off_time = list.get(i).gps_off_time.toString()
+            obj.gps_on_time = list.get(i).gps_on_time.toString()
+            obj.duration = AppUtils.getTimeInHourMinuteFormat(list[i].duration?.toLong()!!)
+            updateGpsReq.gps_status_list.add(obj)
+        }
+
+        //(mContext as DashboardActivity).showSnackMessage("Syncing Gps")
+
+//        val updateGps = UpdateGpsInputParamsModel()
+//        updateGps.date = list[i].date
+//        updateGps.gps_id = list[i].gps_id
+//        updateGps.gps_off_time = list[i].gps_off_time
+//        updateGps.gps_on_time = list[i].gps_on_time
+//        updateGps.user_id = Pref.user_id
+//        updateGps.session_token = Pref.session_token
+//        updateGps.duration = AppUtils.getTimeInHourMinuteFormat(list[i].duration?.toLong()!!)
+//
+//        Timber.d("========SYNC GPS INPUT PARAMS========")
+//        Timber.d("date====> " + updateGps.date)
+//        Timber.d("gps_id====> " + updateGps.gps_id)
+//        Timber.d("gps_off_time====> " + updateGps.gps_off_time)
+//        Timber.d("gps_on_time====> " + updateGps.gps_on_time)
+//        Timber.d("user_id====> " + updateGps.user_id)
+//        Timber.d("session_token====> " + updateGps.session_token)
+//        Timber.d("duration====> " + updateGps.duration)
+//        Timber.d("=====================================")
+
+        progress_wheel.spin()
+
+        val repository = UpdateGpsStatusRepoProvider.updateGpsStatusRepository()
+        BaseActivity.compositeDisposable.add(
+            repository.updateGpsStatuswithList(updateGpsReq)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe({ result ->
+                    val gpsStatusResponse = result as BaseResponse
+                    Timber.d("SYNC GPS : " + "RESPONSE : ${gpsStatusResponse.status} " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name
+                            + ",MESSAGE : " + gpsStatusResponse.message)
+                    if (gpsStatusResponse.status == NetworkConstant.SUCCESS) {
+                        // 4.0 LogoutSyncFragment mantis v 4.0.8 saheli 03-05-2023 0026013 work
+                        for (i in 0 until list.size) {
+                            AppDatabase.getDBInstance()!!.gpsStatusDao().updateIsUploadedAccordingToId(true, list[i].id)
+                        }
+                        //4.0 end 0026013
+
+//                        i++
+//                        if (i < list.size) {
+//                            callUpdateGpsStatusApi(list)
+//                        }
+//                        else {
+                            //(mContext as DashboardActivity).showSnackMessage("Gps sync succesful")
+                            stopAnimation(gpsSyncImg)
+                            val list_ = AppDatabase.getDBInstance()!!.gpsStatusDao().getDataSyncStateWise(false)
+                            if (list_ != null && list_.isNotEmpty()) {
+                                tv_gps_retry.visibility = View.VISIBLE
+                                }
+                            else {
+                                tv_gps_retry.visibility = View.GONE
+                                gpsTickImg.visibility = View.VISIBLE
+                            }
+                            gpsSyncImg.visibility = View.GONE
+
+
+                            i = 0
+                            progress_wheel.stopSpinning()
+                            //calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+                            if (!isRetryGps) {
+                                checkToCallCollectionApi()
+                                }
+                            else {
+                                isRetryGps = false
+                            }
+//                        }
+
+                    } else {
+
+//                        i++
+//                        if (i < list.size) {
+//                            callUpdateGpsStatusApi(list)
+//                        }
+//                                                else {
+                            //(mContext as DashboardActivity).showSnackMessage("Gps sync succesful")
+                            stopAnimation(gpsSyncImg)
+                            tv_gps_retry.visibility = View.VISIBLE
+                            gpsSyncImg.visibility = View.GONE
+
+                            i = 0
+                            progress_wheel.stopSpinning()
+                            //calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+                            if (!isRetryGps) {
+                                checkToCallCollectionApi()
+                            }
+                            else {
+                                isRetryGps = false
+                                }
+//                        }
+
+                    }
+
+
+                }, { error ->
+                    //
+                    Timber.d("SYNC GPS : " + "RESPONSE ERROR: " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                    error.printStackTrace()
+//                    i++
+//                    if (i < list.size) {
+//                        callUpdateGpsStatusApi(list)
+//                    }
+//                    else {
+                        //(mContext as DashboardActivity).showSnackMessage("Gps sync succesful")
+                        stopAnimation(gpsSyncImg)
+                        tv_gps_retry.visibility = View.VISIBLE
+                        gpsSyncImg.visibility = View.GONE
+
+                        i = 0
+                        progress_wheel.stopSpinning()
+                        //calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+                        if (!isRetryGps) {
+                            checkToCallCollectionApi()
+                        }
+                        else {
+                            isRetryGps = false
+                            }
+//                    }
+                })
         )
     }
     //============================================================Update Gps Status============================================================//
@@ -2349,29 +3118,35 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                     syncAddCollectionApi(collectionList[i].shop_id, collectionList[i].collection_id, collectionList[i].collection!!, collectionDateTime,
                             collectionList, collectionList[i].bill_id, collectionList[i].order_id, collectionList[i].payment_id,
                             collectionList[i].instrument_no, collectionList[i].bank, collectionList[i].feedback, collectionList[i].file_path,
-                            collectionList[i].patient_name, collectionList[i].patient_address, collectionList[i].patient_no)
+                            collectionList[i].patient_name, collectionList[i].patient_address, collectionList[i].patient_no,list[i].Hospital,
+                            list[i].Email_Address)
                 } else {
                     stopAnimation(collectionSyncImg)
                     collectionTickImg.visibility = View.VISIBLE
                     collectionSyncImg.visibility = View.GONE
 
-                    if (!isRetryCollection)
+                    if (!isRetryCollection) {
                         checkToCallVisitShopApi()
-                    else
+                        }
+                    else {
                         isRetryCollection = false
+                        }
                 }
             } else {
                 stopAnimation(collectionSyncImg)
                 collectionTickImg.visibility = View.VISIBLE
                 collectionSyncImg.visibility = View.GONE
 
-                if (!isRetryCollection)
+                if (!isRetryCollection) {
                     checkToCallVisitShopApi()
-                else
+                    }
+                else {
                     isRetryCollection = false
+                    }
             }
-        } else
+        } else {
             checkToCallVisitShopApi()
+            }
     }
 
 
@@ -2379,7 +3154,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
     private fun syncAddCollectionApi(shop_id: String?, collection_id: String?, collection: String, date: String,
                                      list: List<CollectionDetailsEntity>, billId: String?, orderId: String?, paymentId: String?,
                                      instrumentNo: String?, bank: String?, feedback: String?, filePath: String?, patientName: String?,
-                                     patientAddress: String?, patientNo: String?) {
+                                     patientAddress: String?, patientNo: String?,hospital:String?,emailAddress:String?) {
 
         val addCollection = AddCollectionInputParamsModel()
         addCollection.collection = collection
@@ -2397,29 +3172,34 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         addCollection.patient_name = if (TextUtils.isEmpty(patientName)) "" else patientName!!
         addCollection.patient_address = if (TextUtils.isEmpty(patientAddress)) "" else patientAddress!!
         addCollection.patient_no = if (TextUtils.isEmpty(patientNo)) "" else patientNo!!
+        /*06-01-2022*/
+        addCollection.Hospital = if (TextUtils.isEmpty(hospital)) "" else hospital!!
+        addCollection.Email_Address = if (TextUtils.isEmpty(emailAddress)) "" else emailAddress!!
 
-        XLog.d("===SYNC COLLECTION INPUT PARAMS (Logout Sync)====")
-        XLog.d("Collection Amount===> " + addCollection.collection)
-        XLog.d("Collection Date==> " + addCollection.collection_date)
-        XLog.d("ColLection ID===> " + addCollection.collection_id)
-        XLog.d("Shop ID===> " + addCollection.shop_id)
-        XLog.d("user_id==> " + addCollection.user_id)
-        XLog.d("session_token===> " + addCollection.session_token)
-        XLog.d("billId===> " + addCollection.bill_id)
-        XLog.d("order_id===> " + addCollection.order_id)
-        XLog.d("payment_id===> " + addCollection.payment_id)
-        XLog.d("instrument_no===> " + addCollection.instrument_no)
-        XLog.d("bank===> " + addCollection.bank)
-        XLog.d("remarks===> " + addCollection.remarks)
-        XLog.d("patient_name===> " + addCollection.patient_name)
-        XLog.d("patient_address===> " + addCollection.patient_address)
-        XLog.d("patient_no===> " + addCollection.patient_no)
+        Timber.d("===SYNC COLLECTION INPUT PARAMS (Logout Sync)====")
+        Timber.d("Collection Amount===> " + addCollection.collection)
+        Timber.d("Collection Date==> " + addCollection.collection_date)
+        Timber.d("ColLection ID===> " + addCollection.collection_id)
+        Timber.d("Shop ID===> " + addCollection.shop_id)
+        Timber.d("user_id==> " + addCollection.user_id)
+        Timber.d("session_token===> " + addCollection.session_token)
+        Timber.d("billId===> " + addCollection.bill_id)
+        Timber.d("order_id===> " + addCollection.order_id)
+        Timber.d("payment_id===> " + addCollection.payment_id)
+        Timber.d("instrument_no===> " + addCollection.instrument_no)
+        Timber.d("bank===> " + addCollection.bank)
+        Timber.d("remarks===> " + addCollection.remarks)
+        Timber.d("patient_name===> " + addCollection.patient_name)
+        Timber.d("patient_address===> " + addCollection.patient_address)
+        Timber.d("patient_no===> " + addCollection.patient_no)
+        Timber.d("Hospital===> " + addCollection.Hospital)
+        Timber.d("Email Address===> " + addCollection.Email_Address)
 
         if (filePath != null)
-            XLog.d("filePath===> $filePath")
+            Timber.d("filePath===> $filePath")
         else
-            XLog.d("filePath===> ")
-        XLog.d("=====================================================")
+            Timber.d("filePath===> ")
+        Timber.d("=====================================================")
 
         progress_wheel.spin()
 
@@ -2432,7 +3212,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribe({ result ->
                                 val orderList = result as BaseResponse
 
-                                XLog.d("SYNC COLLECTION : " + "RESPONSE : " + "\n" + "STATUS : " + orderList.status + ",MESSAGE : " + orderList.message
+                                Timber.d("SYNC COLLECTION : " + "RESPONSE : " + "\n" + "STATUS : " + orderList.status + ",MESSAGE : " + orderList.message
                                         + ", COLLECTION ID : " + addCollection.collection_id)
                                 progress_wheel.stopSpinning()
                                 if (orderList.status == NetworkConstant.SUCCESS) {
@@ -2443,7 +3223,8 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                         val collectionDateTime = AppUtils.getCurrentDateFormatInTa(list[i].date!!) + "T" + list[i].only_time
                                         syncAddCollectionApi(list[i].shop_id, list[i].collection_id, list[i].collection!!,
                                                 collectionDateTime, list, list[i].bill_id, orderId, list[i].payment_id,
-                                                list[i].instrument_no, list[i].bank, list[i].feedback, list[i].file_path, list[i].patient_name, list[i].patient_address, list[i].patient_no)
+                                                list[i].instrument_no, list[i].bank, list[i].feedback, list[i].file_path, list[i].patient_name, list[i].patient_address, list[i].patient_no,list[i].Hospital,
+                                                list[i].Email_Address)
                                     } else {
 
 
@@ -2472,10 +3253,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                         collectionSyncImg.visibility = View.GONE
 
                                         i = 0
-                                        if (!isRetryCollection)
+                                        if (!isRetryCollection) {
                                             checkToCallVisitShopApi()
-                                        else
+                                        }
+                                        else {
                                             isRetryCollection = false
+                                            }
                                     }
                                 } else {
                                     i++
@@ -2484,23 +3267,27 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                         syncAddCollectionApi(list[i].shop_id, list[i].collection_id, list[i].collection!!,
                                                 collectionDateTime, list, list[i].bill_id, orderId, list[i].payment_id,
                                                 list[i].instrument_no, list[i].bank, list[i].feedback, list[i].file_path,
-                                                list[i].patient_name, list[i].patient_address, list[i].patient_no)
+                                                list[i].patient_name, list[i].patient_address, list[i].patient_no,
+                                                list[i].Hospital,
+                                                list[i].Email_Address)
                                     } else {
                                         stopAnimation(collectionSyncImg)
                                         tv_collection_retry.visibility = View.VISIBLE
                                         collectionSyncImg.visibility = View.GONE
 
                                         i = 0
-                                        if (!isRetryCollection)
+                                        if (!isRetryCollection) {
                                             checkToCallVisitShopApi()
-                                        else
+                                        }
+                                        else {
                                             isRetryCollection = false
+                                            }
                                     }
                                 }
                             }, { error ->
 
                                 try {
-                                    XLog.d("SYNC COLLECTION : ERROR : " + error.message + ", COLLECTION ID : " + addCollection.collection_id)
+                                    Timber.d("SYNC COLLECTION : ERROR : " + error.message + ", COLLECTION ID : " + addCollection.collection_id)
                                 } catch (e: Exception) {
                                     e.printStackTrace()
                                 }
@@ -2512,17 +3299,20 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     syncAddCollectionApi(list[i].shop_id, list[i].collection_id, list[i].collection!!,
                                             collectionDateTime, list, list[i].bill_id, orderId, list[i].payment_id,
                                             list[i].instrument_no, list[i].bank, list[i].feedback, list[i].file_path,
-                                            list[i].patient_name, list[i].patient_address, list[i].patient_no)
+                                            list[i].patient_name, list[i].patient_address, list[i].patient_no,list[i].Hospital,
+                                            list[i].Email_Address)
                                 } else {
                                     stopAnimation(collectionSyncImg)
                                     tv_collection_retry.visibility = View.VISIBLE
                                     collectionSyncImg.visibility = View.GONE
 
                                     i = 0
-                                    if (!isRetryCollection)
+                                    if (!isRetryCollection) {
                                         checkToCallVisitShopApi()
-                                    else
+                                    }
+                                    else {
                                         isRetryCollection = false
+                                        }
                                 }
                             })
             )
@@ -2536,7 +3326,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribe({ result ->
                                 val orderList = result as BaseResponse
 
-                                XLog.d("SYNC COLLECTION : " + "RESPONSE : " + "\n" + "STATUS : " + orderList.status + ",MESSAGE : " + orderList.message
+                                Timber.d("SYNC COLLECTION : " + "RESPONSE : " + "\n" + "STATUS : " + orderList.status + ",MESSAGE : " + orderList.message
                                         + ", COLLECTION ID : " + addCollection.collection_id)
                                 progress_wheel.stopSpinning()
                                 if (orderList.status == NetworkConstant.SUCCESS) {
@@ -2548,7 +3338,8 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                         syncAddCollectionApi(list[i].shop_id, list[i].collection_id, list[i].collection!!,
                                                 collectionDateTime, list, list[i].bill_id, orderId, list[i].payment_id,
                                                 list[i].instrument_no, list[i].bank, list[i].feedback, list[i].file_path,
-                                                list[i].patient_name, list[i].patient_address, list[i].patient_no)
+                                                list[i].patient_name, list[i].patient_address, list[i].patient_no,list[i].Hospital,
+                                                list[i].Email_Address)
                                     } else {
 
 
@@ -2577,10 +3368,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                         collectionSyncImg.visibility = View.GONE
 
                                         i = 0
-                                        if (!isRetryCollection)
+                                        if (!isRetryCollection) {
                                             checkToCallVisitShopApi()
-                                        else
+                                        }
+                                        else {
                                             isRetryCollection = false
+                                            }
                                     }
                                 } else {
                                     i++
@@ -2589,23 +3382,26 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                         syncAddCollectionApi(list[i].shop_id, list[i].collection_id, list[i].collection!!,
                                                 collectionDateTime, list, list[i].bill_id, orderId, list[i].payment_id,
                                                 list[i].instrument_no, list[i].bank, list[i].feedback, list[i].file_path,
-                                                list[i].patient_name, list[i].patient_address, list[i].patient_no)
+                                                list[i].patient_name, list[i].patient_address, list[i].patient_no,list[i].Hospital,
+                                                list[i].Email_Address)
                                     } else {
                                         stopAnimation(collectionSyncImg)
                                         tv_collection_retry.visibility = View.VISIBLE
                                         collectionSyncImg.visibility = View.GONE
 
                                         i = 0
-                                        if (!isRetryCollection)
+                                        if (!isRetryCollection) {
                                             checkToCallVisitShopApi()
-                                        else
+                                        }
+                                        else {
                                             isRetryCollection = false
+                                            }
                                     }
                                 }
                             }, { error ->
 
                                 try {
-                                    XLog.d("SYNC COLLECTION : ERROR : " + error.message + ", COLLECTION ID : " + addCollection.collection_id)
+                                    Timber.d("SYNC COLLECTION : ERROR : " + error.message + ", COLLECTION ID : " + addCollection.collection_id)
                                 } catch (e: Exception) {
                                     e.printStackTrace()
                                 }
@@ -2617,17 +3413,20 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     syncAddCollectionApi(list[i].shop_id, list[i].collection_id, list[i].collection!!,
                                             collectionDateTime, list, list[i].bill_id, orderId, list[i].payment_id,
                                             list[i].instrument_no, list[i].bank, list[i].feedback, list[i].file_path,
-                                            list[i].patient_name, list[i].patient_address, list[i].patient_no)
+                                            list[i].patient_name, list[i].patient_address, list[i].patient_no,list[i].Hospital,
+                                            list[i].Email_Address)
                                 } else {
                                     stopAnimation(collectionSyncImg)
                                     tv_collection_retry.visibility = View.VISIBLE
                                     collectionSyncImg.visibility = View.GONE
 
                                     i = 0
-                                    if (!isRetryCollection)
+                                    if (!isRetryCollection) {
                                         checkToCallVisitShopApi()
-                                    else
+                                        }
+                                    else {
                                         isRetryCollection = false
+                                        }
                                 }
                             })
             )
@@ -2638,6 +3437,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
     //==========================================Revisit Shop============================================================//
     private fun checkToCallVisitShopApi() {
+        //AppDatabase.getDBInstance()!!.shopActivityDao().updateTest(true,"11984_1672046682954746",AppUtils.getCurrentDateForShopActi(), false)
 
         if (Pref.user_id.isNullOrEmpty() || BaseActivity.isShopActivityUpdating)
             return
@@ -2690,19 +3490,24 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         shopVisitDate = shopActivity.date!!
                         previousShopVisitDateNumber = currentShopVisitDateNumber
 
-                        if (!TextUtils.isEmpty(shopActivity.feedback))
+                        if (!TextUtils.isEmpty(shopActivity.feedback)) {
                             shopDurationData.feedback = shopActivity.feedback
-                        else
+                        }
+                        else {
                             shopDurationData.feedback = ""
+                            }
 
                         shopDurationData.isFirstShopVisited = shopActivity.isFirstShopVisited
                         shopDurationData.distanceFromHomeLoc = shopActivity.distance_from_home_loc
                         shopDurationData.next_visit_date = shopActivity.next_visit_date
 
-                        if (!TextUtils.isEmpty(shopActivity.early_revisit_reason))
-                            shopDurationData.early_revisit_reason = shopActivity.early_revisit_reason
-                        else
+                        if (!TextUtils.isEmpty(shopActivity.early_revisit_reason)) {
+                            shopDurationData.early_revisit_reason =
+                                shopActivity.early_revisit_reason
+                        }
+                        else {
                             shopDurationData.early_revisit_reason = ""
+                            }
 
                         shopDurationData.device_model = shopActivity.device_model
                         shopDurationData.android_version = shopActivity.android_version
@@ -2715,6 +3520,52 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         shopDurationData.in_location = shopActivity.in_loc
                         shopDurationData.out_location = shopActivity.out_loc
                         shopDurationData.shop_revisit_uniqKey=shopActivity.shop_revisit_uniqKey
+
+                        /*8-12-2021*/
+                        shopDurationData.updated_by = Pref.user_id
+                        //shopDurationData.updated_on = shopActivity.updated_on!!
+                        shopDurationData.updated_on = AppUtils.getCurrentDateForShopActi()
+
+                        if (shopActivity.pros_id!=null && !shopActivity.pros_id.equals("")) {
+                            shopDurationData.pros_id = shopActivity.pros_id!!
+                            }
+                        else {
+                            shopDurationData.pros_id = ""
+                            }
+
+                        if (shopActivity.agency_name!=null && !shopActivity.agency_name.equals("")) {
+                            shopDurationData.agency_name = shopActivity.agency_name!!
+                        }
+                        else {
+                            shopDurationData.agency_name = ""
+                        }
+
+                        if (shopActivity.approximate_1st_billing_value!=null && !shopActivity.approximate_1st_billing_value.equals("")) {
+                            shopDurationData.approximate_1st_billing_value = shopActivity.approximate_1st_billing_value!!
+                        }
+                        else {
+                            shopDurationData.approximate_1st_billing_value = ""
+                        }
+
+                        //duration garbage fix
+                        try{
+                            if(shopDurationData.spent_duration!!.contains("-") || shopDurationData.spent_duration!!.length != 8) {
+                                shopDurationData.spent_duration = "00:00:10"
+                            }
+                        }catch (ex:Exception){
+                            shopDurationData.spent_duration="00:00:10"
+                        }
+
+                        //New shop Create issue
+                        shopDurationData.isnewShop = shopActivity.isnewShop!!
+
+                        shopDurationData.multi_contact_name = shopActivity.multi_contact_name
+                        shopDurationData.multi_contact_number = shopActivity.multi_contact_number
+
+                        //Begin Rev 17 DashboardActivity AppV 4.0.8 Suman    24/04/2023 distanct+station calculation 25806
+                        shopDurationData.distFromProfileAddrKms = shopActivity.distFromProfileAddrKms
+                        shopDurationData.stationCode = shopActivity.stationCode
+                        //End of Rev 17 DashboardActivity AppV 4.0.8 Suman    24/04/2023 distanct+station calculation 25806
 
                         shopDataList.add(shopDurationData)
 
@@ -2750,20 +3601,24 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             it.distance_travelled = "0.0"
                         shopDurationData.distance_travelled = it.distance_travelled
 
-                        if (!TextUtils.isEmpty(it.feedback))
+                        if (!TextUtils.isEmpty(it.feedback)) {
                             shopDurationData.feedback = it.feedback
-                        else
+                            }
+                        else {
                             shopDurationData.feedback = ""
+                        }
 
                         shopDurationData.isFirstShopVisited = it.isFirstShopVisited
                         shopDurationData.distanceFromHomeLoc = it.distance_from_home_loc
 
                         shopDurationData.next_visit_date = it.next_visit_date
 
-                        if (!TextUtils.isEmpty(it.early_revisit_reason))
+                        if (!TextUtils.isEmpty(it.early_revisit_reason)) {
                             shopDurationData.early_revisit_reason = it.early_revisit_reason
-                        else
+                            }
+                        else {
                             shopDurationData.early_revisit_reason = ""
+                            }
 
                         shopDurationData.device_model = it.device_model
                         shopDurationData.android_version = it.android_version
@@ -2776,6 +3631,51 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         shopDurationData.in_location = it.in_loc
                         shopDurationData.out_location = it.out_loc
                         shopDurationData.shop_revisit_uniqKey=it.shop_revisit_uniqKey
+
+                        /*8-12-2021*/
+                        shopDurationData.updated_by = Pref.user_id
+                        //shopDurationData.updated_on = it.updated_on!!
+                        shopDurationData.updated_on = AppUtils.getCurrentDateForShopActi()
+
+
+                        if (it.pros_id!=null && !it.pros_id.equals("")) {
+                            shopDurationData.pros_id = it.pros_id!!
+                        }
+                        else {
+                            shopDurationData.pros_id = ""
+                            }
+
+                        if (it.agency_name!=null && !it.agency_name.equals("")) {
+                            shopDurationData.agency_name = it.agency_name!!
+                        }
+                        else {
+                            shopDurationData.agency_name = ""
+                            }
+
+                        if (it.approximate_1st_billing_value!=null && !it.approximate_1st_billing_value.equals("")) {
+                            shopDurationData.approximate_1st_billing_value =
+                                it.approximate_1st_billing_value!!
+                        }
+                        else {
+                            shopDurationData.approximate_1st_billing_value = ""
+                            }
+
+                        //duration garbage fix
+                        try{
+                            if(shopDurationData.spent_duration!!.contains("-") || shopDurationData.spent_duration!!.length != 8)
+                            {
+                                shopDurationData.spent_duration="00:00:10"
+                            }
+                        }catch (ex:Exception){
+                            shopDurationData.spent_duration="00:00:10"
+                        }
+                        //New shop Create issue
+                        shopDurationData.isnewShop = it.isnewShop!!
+
+                        //Begin Rev 17 DashboardActivity AppV 4.0.8 Suman    24/04/2023 distanct+station calculation 25806
+                        shopDurationData.distFromProfileAddrKms = it.distFromProfileAddrKms
+                        shopDurationData.stationCode = it.stationCode
+                        //End of Rev 17 DashboardActivity AppV 4.0.8 Suman    24/04/2023 distanct+station calculation 25806
 
                         shopDataList.add(shopDurationData)
 
@@ -2827,8 +3727,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             i = 0
                             BaseActivity.isShopActivityUpdating = false
                             callShopVisitAudioUploadApi(unSyncedAudioList)
-                        } else
+                        } else {
                             checkToRetryVisitButton()
+                        }
                     }
                 } else {
 
@@ -2840,10 +3741,11 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                     checkToRetryVisitButton()
                 }
-            } else {
+            }
+            else {
 
-                XLog.e("====SYNC VISITED SHOP (LOGOUT SYNC)====")
-                XLog.e("ShopData List size===> " + shopDataList.size)
+                Timber.e("====SYNC VISITED SHOP (LOGOUT SYNC)====")
+                Timber.e("ShopData List size===> " + shopDataList.size)
 
                 //val newShopList = FTStorageUtils.removeDuplicateData(shopDataList)
 
@@ -2861,14 +3763,14 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                 shopDurationApiReq.user_id = Pref.user_id
                 shopDurationApiReq.session_token = Pref.session_token
                 if (newShopList.size > 0) {
-                    XLog.e("Unique ShopData List size===> " + newShopList.size)
+                    Timber.e("Unique ShopData List size===> " + newShopList.size)
                     shopDurationApiReq.shop_list = newShopList
                 } else
                     shopDurationApiReq.shop_list = shopDataList
 
                 val repository = ShopDurationRepositoryProvider.provideShopDurationRepository()
 
-                XLog.d("callShopDurationApi (Logout Sync): REQUEST")
+                Timber.d("callShopDurationApi (Logout Sync): REQUEST")
 
                 revisitStatusList.clear()
                 var data=AppDatabase.getDBInstance()?.shopVisitOrderStatusRemarksDao()!!.getUnsyncedList()
@@ -2883,13 +3785,33 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                     }
                 }
 
-                BaseActivity.compositeDisposable.add(
-                        repository.shopDuration(shopDurationApiReq)
+                var shopDurationApiReqForNewShop = ShopDurationRequest()
+                var shopDurationApiReqForOldShop = ShopDurationRequest()
+                shopDurationApiReqForNewShop.user_id = Pref.user_id
+                shopDurationApiReqForNewShop.session_token = Pref.session_token
+                shopDurationApiReqForOldShop.user_id = Pref.user_id
+                shopDurationApiReqForOldShop.session_token = Pref.session_token
+                shopDurationApiReqForNewShop.shop_list = ArrayList()
+                shopDurationApiReqForOldShop.shop_list = ArrayList()
+                shopDurationApiReqForNewShop.shop_list = shopDurationApiReq!!.shop_list!!.filter { it.isnewShop!! == true } as ArrayList<ShopDurationRequestData>
+                shopDurationApiReqForOldShop.shop_list = shopDurationApiReq!!.shop_list!!.filter { it.isnewShop!! == false } as ArrayList<ShopDurationRequestData>
+
+                if(shopDurationApiReqForNewShop.shop_list!!.size>0){
+                    uploadNewShopVisit(shopDurationApiReqForNewShop,newShopList,shopDataList as ArrayList<ShopDurationRequestData>)
+                    if(!revisitStatusList.isEmpty()){
+                        callRevisitStatusUploadApi(revisitStatusList!!)
+                    }
+                }
+                Handler().postDelayed(Runnable {
+                    if(shopDurationApiReqForOldShop.shop_list!!.size>0){
+                        shopDurationApiReq!!.shop_list = shopDurationApiReqForOldShop.shop_list
+                        shopDurationApiReq.isnewShop = 0
+                        BaseActivity.compositeDisposable.add(
+                            repository.shopDuration(shopDurationApiReq)
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribeOn(Schedulers.io())
-//                        .timeout(60 * 1, TimeUnit.SECONDS)
                                 .subscribe({ result ->
-                                    XLog.d("callShopDurationApi : RESPONSE " + result.status)
+                                    Timber.d("callShopDurationApi : RESPONSE " + result.status)
                                     if (result.status == NetworkConstant.SUCCESS) {
 
 
@@ -2922,16 +3844,14 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                                     AppDatabase.getDBInstance()!!.shopActivityDao().updateisUploaded(true, shopDataList[i].shop_id!!, AppUtils.changeAttendanceDateFormatToCurrent(shopDataList[i].visited_date!!), shopDataList[i].start_timestamp!!)
                                                 }
 
-                                                checkToRetryVisitButton()
+                                                // multivisit test
+                                                syncShopVisitImage(shopDataList)
+
+                                                //checkToRetryVisitButton()
                                             }
                                         }
-
-
-
-
-
-
-                                    } else {
+                                    }
+                                    else {
                                         BaseActivity.isShopActivityUpdating = false
                                         /*revisitTickImg.visibility = View.VISIBLE
                                         revisitSyncImg.visibility = View.GONE
@@ -2945,17 +3865,26 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     BaseActivity.isShopActivityUpdating = false
                                     //calllogoutApi(Pref.user_id!!, Pref.session_token!!)
                                     if (error == null) {
-                                        XLog.d("callShopDurationApi : ERROR " + "UNEXPECTED ERROR IN SHOP ACTIVITY API")
+                                        Timber.d("callShopDurationApi : ERROR " + "UNEXPECTED ERROR IN SHOP ACTIVITY API")
                                     } else {
-                                        XLog.d("callShopDurationApi : ERROR " + error.localizedMessage)
+                                        Timber.d("callShopDurationApi : ERROR " + error.localizedMessage)
                                         error.printStackTrace()
                                     }
                                     checkToRetryVisitButton()
-//                                (mContext as DashboardActivity).showSnackMessage("ERROR")
                                 })
-                )
+                        )
+                    }
+                    else{
+                        stopAnimation(revisitSyncImg)
+                        revisitTickImg.visibility = View.VISIBLE
+                        revisitSyncImg.visibility = View.GONE
+                        checkToCallBillingApi()
+                    }
+                }, 1500)
+
             }
-        } else {
+        }
+        else {
             stopAnimation(revisitSyncImg)
             revisitTickImg.visibility = View.VISIBLE
             revisitSyncImg.visibility = View.GONE
@@ -2964,34 +3893,83 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         }
     }
 
-
-    private fun callRevisitStatusUploadApi(revisitStatusList : MutableList<ShopRevisitStatusRequestData>){
-        val revisitStatus = ShopRevisitStatusRequest()
-        revisitStatus.user_id=Pref.user_id
-        revisitStatus.session_token=Pref.session_token
-        revisitStatus.ordernottaken_list=revisitStatusList
-
-        val repository = ShopRevisitStatusRepositoryProvider.provideShopRevisitStatusRepository()
-        compositeDisposable.add(
-                repository.shopRevisitStatus(revisitStatus)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.io())
-                        .subscribe({ result ->
-                            XLog.d("callRevisitStatusUploadApi : RESPONSE " + result.status)
-                            if (result.status == NetworkConstant.SUCCESS){
-                                for(i in revisitStatusList.indices){
-                                    AppDatabase.getDBInstance()?.shopVisitOrderStatusRemarksDao()!!.updateOrderStatus(revisitStatusList[i]!!.shop_revisit_uniqKey!!)
+    fun uploadNewShopVisit(shopDurationApiReqCus :ShopDurationRequest ,  newShopList : ArrayList<ShopDurationRequestData> ,  shopDataList: ArrayList<ShopDurationRequestData>){
+        shopDurationApiReqCus.isnewShop = 1
+        val repository = ShopDurationRepositoryProvider.provideShopDurationRepository()
+        BaseActivity.compositeDisposable.add(
+            repository.shopDuration(shopDurationApiReqCus)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe({ result ->
+                    Timber.d("callShopDurationApi : RESPONSE " + result.status)
+                    if (result.status == NetworkConstant.SUCCESS) {
+                        if (newShopList.size > 0) {
+                            for (i in 0 until newShopList.size) {
+                                AppDatabase.getDBInstance()!!.shopActivityDao().updateisUploaded(true, newShopList[i].shop_id!!, AppUtils.changeAttendanceDateFormatToCurrent(newShopList[i].visited_date!!) /*AppUtils.getCurrentDateForShopActi()*/)
+                            }
+                            BaseActivity.isShopActivityUpdating = false
+                        }
+                        else {
+                            BaseActivity.isShopActivityUpdating = false
+                            if (!Pref.isMultipleVisitEnable) {
+                                for (i in 0 until shopDataList.size) {
+                                    AppDatabase.getDBInstance()!!.shopActivityDao().updateisUploaded(true, shopDataList[i].shop_id!!, AppUtils.changeAttendanceDateFormatToCurrent(shopDataList[i].visited_date!!) /*AppUtils.getCurrentDateForShopActi()*/)
                                 }
                             }
-                        },{error ->
-                            if (error == null) {
-                                XLog.d("callRevisitStatusUploadApi : ERROR " + "UNEXPECTED ERROR IN SHOP ACTIVITY API")
-                            } else {
-                                XLog.d("callRevisitStatusUploadApi : ERROR " + error.localizedMessage)
-                                error.printStackTrace()
+                            else {
+                                for (i in 0 until shopDataList.size) {
+                                    AppDatabase.getDBInstance()!!.shopActivityDao().updateisUploaded(true, shopDataList[i].shop_id!!, AppUtils.changeAttendanceDateFormatToCurrent(shopDataList[i].visited_date!!), shopDataList[i].start_timestamp!!)
+                                }
                             }
-                        })
+                        }
+                    }
+                    else {
+                        BaseActivity.isShopActivityUpdating = false
+                    }
+                }, { error ->
+                    BaseActivity.isShopActivityUpdating = false
+                    if (error == null) {
+                        Timber.d("callShopDurationApi : ERROR " + "UNEXPECTED ERROR IN SHOP ACTIVITY API")
+                    } else {
+                        Timber.d("callShopDurationApi : ERROR " + error.localizedMessage)
+                        error.printStackTrace()
+                    }
+                })
         )
+    }
+
+
+    private fun callRevisitStatusUploadApi(revisitStatusList : MutableList<ShopRevisitStatusRequestData>){
+        try{
+            val revisitStatus = ShopRevisitStatusRequest()
+            revisitStatus.user_id=Pref.user_id
+            revisitStatus.session_token=Pref.session_token
+            revisitStatus.ordernottaken_list=revisitStatusList
+
+            val repository = ShopRevisitStatusRepositoryProvider.provideShopRevisitStatusRepository()
+            compositeDisposable.add(
+                repository.shopRevisitStatus(revisitStatus)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({ result ->
+                        Timber.d("callRevisitStatusUploadApi : RESPONSE " + result.status)
+                        if (result.status == NetworkConstant.SUCCESS){
+                            for(i in revisitStatusList.indices){
+                                AppDatabase.getDBInstance()?.shopVisitOrderStatusRemarksDao()!!.updateOrderStatus(revisitStatusList[i]!!.shop_revisit_uniqKey!!)
+                            }
+                        }
+                    },{error ->
+                        if (error == null) {
+                            Timber.d("callRevisitStatusUploadApi : ERROR " + "UNEXPECTED ERROR IN SHOP ACTIVITY API")
+                        } else {
+                            Timber.d("callRevisitStatusUploadApi : ERROR " + error.localizedMessage)
+                            error.printStackTrace()
+                        }
+                    })
+            )
+        }catch (ex:Exception){
+            ex.printStackTrace()
+        }
     }
 
 
@@ -3020,14 +3998,14 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 if(response.status==NetworkConstant.SUCCESS){
                                     AppDatabase.getDBInstance()!!.shopVisitCompetetorImageDao().updateisUploaded(true,shop_id)
                                     callCompetetorImgUploadApi()
-                                    XLog.d("FUSED LOCATION : CompetetorImg" + ", SHOP: " + shopId + ", Success: ")
+                                    Timber.d("FUSED LOCATION : CompetetorImg" + ", SHOP: " + shopId + ", Success: ")
                                 }else{
-                                    XLog.d("FUSED LOCATION : CompetetorImg" + ", SHOP: " + shopId + ", Failed: ")
+                                    Timber.d("FUSED LOCATION : CompetetorImg" + ", SHOP: " + shopId + ", Failed: ")
                                 }
                             },{
                                 error ->
                                 if (error != null) {
-                                    XLog.d("FUSED LOCATION : CompetetorImg" + ", SHOP: " + shopId + ", ERROR: " + error.localizedMessage)
+                                    Timber.d("FUSED LOCATION : CompetetorImg" + ", SHOP: " + shopId + ", ERROR: " + error.localizedMessage)
                                 }
                             })
             )
@@ -3080,8 +4058,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             if (unSyncAudioList.isNotEmpty()) {
                 i = 0
                 callShopVisitAudioUploadApi(unSyncAudioList)
-            } else
+            } else {
                 checkToRetryVisitButton()
+            }
         }
     }
 
@@ -3116,17 +4095,20 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         shopDurationData.spent_duration = shopActivity?.duration_spent
                         shopDurationData.visited_date = shopActivity?.visited_date
                         shopDurationData.visited_time = shopActivity?.visited_date
-                        if (AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(shopActivity?.shopid) != null)
-                            shopDurationData.total_visit_count = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(shopActivity?.shopid).totalVisitCount
-                        else
+                        if (AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(shopActivity?.shopid) != null) {
+                            shopDurationData.total_visit_count =
+                                AppDatabase.getDBInstance()!!.addShopEntryDao()
+                                    .getShopByIdN(shopActivity?.shopid).totalVisitCount
+                        } else {
                             shopDurationData.total_visit_count = "1"
-                        shopDurationData.shop_revisit_uniqKey=shopActivity?.shop_revisit_uniqKey
-                        shopDataList.add(shopDurationData)
+                        }
+                            shopDurationData.shop_revisit_uniqKey =
+                                shopActivity?.shop_revisit_uniqKey
+                            shopDataList.add(shopDurationData)
                     }
                 }
                 else {
-                    val shopActivity = AppDatabase.getDBInstance()!!.shopActivityDao().durationAvailableForShopList(syncedShopList[k].shop_id, true,
-                            false)
+                    val shopActivity = AppDatabase.getDBInstance()!!.shopActivityDao().durationAvailableForShopList(syncedShopList[k].shop_id, true, false)
 
                     shopActivity?.forEach {
                         val shopDurationData = ShopDurationRequestData()
@@ -3134,10 +4116,13 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         shopDurationData.spent_duration = it.duration_spent
                         shopDurationData.visited_date = it.visited_date
                         shopDurationData.visited_time = it.visited_date
-                        if (AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(it.shopid) != null)
-                            shopDurationData.total_visit_count = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(it.shopid).totalVisitCount
-                        else
+                        if (AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(it.shopid) != null) {
+                            shopDurationData.total_visit_count =
+                                AppDatabase.getDBInstance()!!.addShopEntryDao()
+                                    .getShopByIdN(it.shopid).totalVisitCount
+                        }else {
                             shopDurationData.total_visit_count = "1"
+                            }
                         shopDurationData.shop_revisit_uniqKey=it?.shop_revisit_uniqKey
                         shopDataList.add(shopDurationData)
                     }
@@ -3156,10 +4141,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                     if (unSyncedList != null && unSyncedList.isNotEmpty()) {
                         tv_revisit_retry.visibility = View.VISIBLE
 
-                        if (!isRetryVisit)
+                        if (!isRetryVisit) {
                             checkToCallBillingApi()
-                        else
+                        }
+                        else {
                             isRetryVisit = true
+                        }
 
                     } else {
                         val unSyncAudioList = ArrayList<ShopVisitAudioEntity>()
@@ -3173,45 +4160,55 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         if (unSyncAudioList.isNotEmpty()) {
                             tv_revisit_retry.visibility = View.VISIBLE
 
-                            if (!isRetryVisit)
+                            if (!isRetryVisit) {
                                 checkToCallBillingApi()
-                            else
+                            }
+                            else {
                                 isRetryVisit = true
+                                }
                         } else {
                             tv_revisit_retry.visibility = View.GONE
                             revisitTickImg.visibility = View.VISIBLE
 
-                            if (!isRetryVisit)
+                            if (!isRetryVisit) {
                                 checkToCallBillingApi()
-                            else
+                                }
+                            else {
                                 isRetryVisit = true
+                                }
                         }
                     }
                 } else {
                     tv_revisit_retry.visibility = View.GONE
                     revisitTickImg.visibility = View.VISIBLE
 
-                    if (!isRetryVisit)
+                    if (!isRetryVisit) {
                         checkToCallBillingApi()
-                    else
+                        }
+                    else {
                         isRetryVisit = true
+                        }
                 }
             } else {
                 tv_revisit_retry.visibility = View.VISIBLE
 
-                if (!isRetryVisit)
+                if (!isRetryVisit) {
                     checkToCallBillingApi()
-                else
+                    }
+                else {
                     isRetryVisit = true
+                }
             }
         } else {
             tv_revisit_retry.visibility = View.GONE
             revisitTickImg.visibility = View.VISIBLE
 
-            if (!isRetryVisit)
+            if (!isRetryVisit) {
                 checkToCallBillingApi()
-            else
+            }
+            else {
                 isRetryVisit = true
+                }
         }
     }
 
@@ -3230,13 +4227,13 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             visitImageShop.shop_id = unSyncedList[i].shop_id
             visitImageShop.visit_datetime = unSyncedList[i].visit_datetime
 
-            XLog.d("====UPLOAD REVISIT ALL IMAGE INPUT PARAMS (Logout Sync)======")
-            XLog.d("USER ID====> " + visitImageShop.user_id)
-            XLog.d("SESSION ID====> " + visitImageShop.session_token)
-            XLog.d("SHOP ID====> " + visitImageShop.shop_id)
-            XLog.d("VISIT DATE TIME=====> " + visitImageShop.visit_datetime)
-            XLog.d("IMAGE=====> " + unSyncedList[i].shop_image)
-            XLog.d("===============================================================")
+            Timber.d("====UPLOAD REVISIT ALL IMAGE INPUT PARAMS (Logout Sync)======")
+            Timber.d("USER ID====> " + visitImageShop.user_id)
+            Timber.d("SESSION ID====> " + visitImageShop.session_token)
+            Timber.d("SHOP ID====> " + visitImageShop.shop_id)
+            Timber.d("VISIT DATE TIME=====> " + visitImageShop.visit_datetime)
+            Timber.d("IMAGE=====> " + unSyncedList[i].shop_image)
+            Timber.d("===============================================================")
 
             val repository = ShopVisitImageUploadRepoProvider.provideAddShopRepository()
 
@@ -3246,7 +4243,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val logoutResponse = result as BaseResponse
-                                XLog.d("UPLOAD REVISIT ALL IMAGE : " + "RESPONSE : " + logoutResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + logoutResponse.message)
+                                Timber.d("UPLOAD REVISIT ALL IMAGE : " + "RESPONSE : " + logoutResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + logoutResponse.message)
                                 if (logoutResponse.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()!!.shopVisitImageDao().updateisUploaded(true, unSyncedList.get(i).shop_id!!)
                                     BaseActivity.isShopActivityUpdating = false
@@ -3266,7 +4263,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                             }, { error ->
                                 progress_wheel.stopSpinning()
-                                XLog.d("UPLOAD REVISIT ALL IMAGE : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                                Timber.d("UPLOAD REVISIT ALL IMAGE : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                                 error.printStackTrace()
                                 BaseActivity.isShopActivityUpdating = false
                                 //checkToCallSyncOrder()
@@ -3294,8 +4291,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         if (unSyncAudioList.isNotEmpty()) {
             i = 0
             callShopVisitAudioUploadApi(unSyncAudioList)
-        } else
+        } else {
             checkToRetryVisitButton()
+        }
     }
 
 
@@ -3314,13 +4312,13 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             visitImageShop.shop_id = unSyncedList[i].shop_id
             visitImageShop.visit_datetime = unSyncedList[i].visit_datetime
 
-            XLog.d("====UPLOAD REVISIT ALL AUDIO INPUT PARAMS (Logout Sync)======")
-            XLog.d("USER ID====> " + visitImageShop.user_id)
-            XLog.d("SESSION ID====> " + visitImageShop.session_token)
-            XLog.d("SHOP ID====> " + visitImageShop.shop_id)
-            XLog.d("VISIT DATE TIME=====> " + visitImageShop.visit_datetime)
-            XLog.d("AUDIO=====> " + unSyncedList[i].audio)
-            XLog.d("===============================================================")
+            Timber.d("====UPLOAD REVISIT ALL AUDIO INPUT PARAMS (Logout Sync)======")
+            Timber.d("USER ID====> " + visitImageShop.user_id)
+            Timber.d("SESSION ID====> " + visitImageShop.session_token)
+            Timber.d("SHOP ID====> " + visitImageShop.shop_id)
+            Timber.d("VISIT DATE TIME=====> " + visitImageShop.visit_datetime)
+            Timber.d("AUDIO=====> " + unSyncedList[i].audio)
+            Timber.d("===============================================================")
 
             val repository = ShopVisitImageUploadRepoProvider.provideAddShopRepository()
 
@@ -3330,13 +4328,14 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val logoutResponse = result as BaseResponse
-                                XLog.d("UPLOAD REVISIT ALL AUDIO : " + "RESPONSE : " + logoutResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + logoutResponse.message)
+                                Timber.d("UPLOAD REVISIT ALL AUDIO : " + "RESPONSE : " + logoutResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + logoutResponse.message)
                                 if (logoutResponse.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()!!.shopVisitAudioDao().updateisUploaded(true, unSyncedList.get(i).shop_id!!)
                                     BaseActivity.isShopActivityUpdating = false
                                     i++
-                                    if (i < unSyncedList.size)
+                                    if (i < unSyncedList.size) {
                                         callShopVisitAudioUploadApi(unSyncedList)
+                                    }
                                     else {
 
                                         checkToRetryVisitButton()
@@ -3355,7 +4354,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                             }, { error ->
                                 progress_wheel.stopSpinning()
-                                XLog.d("UPLOAD REVISIT ALL AUDIO : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                                Timber.d("UPLOAD REVISIT ALL AUDIO : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                                 error.printStackTrace()
                                 BaseActivity.isShopActivityUpdating = false
                                 //checkToCallSyncOrder()
@@ -3384,10 +4383,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             tv_bill_retry.visibility = View.GONE
             bill_sync_img.visibility = View.GONE
 
-            if (!isBiilingEntry)
+            if (!isBiilingEntry) {
                 checkToCallAddStockApi()
-            else
+                }
+            else {
                 isBiilingEntry = false
+            }
         }
     }
 
@@ -3427,30 +4428,30 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
         addBill.product_list = productList
 
-        XLog.d("======SYNC BILLING DETAILS INPUT PARAMS (SYNC ALL)======")
-        XLog.d("USER ID===> " + addBill.user_id)
-        XLog.d("SESSION ID====> " + addBill.session_token)
-        XLog.d("BILL ID====> " + addBill.bill_id)
-        XLog.d("INVOICE NO.====> " + addBill.invoice_no)
-        XLog.d("INVOICE DATE====> " + addBill.invoice_date)
-        XLog.d("INVOICE AMOUNT====> " + addBill.invoice_amount)
-        XLog.d("REMARKS====> " + addBill.remarks)
-        XLog.d("ORDER ID====> " + addBill.order_id)
+        Timber.d("======SYNC BILLING DETAILS INPUT PARAMS (SYNC ALL)======")
+        Timber.d("USER ID===> " + addBill.user_id)
+        Timber.d("SESSION ID====> " + addBill.session_token)
+        Timber.d("BILL ID====> " + addBill.bill_id)
+        Timber.d("INVOICE NO.====> " + addBill.invoice_no)
+        Timber.d("INVOICE DATE====> " + addBill.invoice_date)
+        Timber.d("INVOICE AMOUNT====> " + addBill.invoice_amount)
+        Timber.d("REMARKS====> " + addBill.remarks)
+        Timber.d("ORDER ID====> " + addBill.order_id)
 
         try {
-            XLog.d("PATIENT NO====> " + addBill.patient_no)
-            XLog.d("PATIENT NAME====> " + addBill.patient_name)
-            XLog.d("PATIENT ADDRESS====> " + addBill.patient_address)
+            Timber.d("PATIENT NO====> " + addBill.patient_no)
+            Timber.d("PATIENT NAME====> " + addBill.patient_name)
+            Timber.d("PATIENT ADDRESS====> " + addBill.patient_address)
         }
         catch (e: Exception) {
             e.printStackTrace()
         }
 
         if (!TextUtils.isEmpty(billing.attachment))
-            XLog.d("ATTACHMENT=======> " + billing.attachment)
+            Timber.d("ATTACHMENT=======> " + billing.attachment)
 
-        XLog.d("PRODUCT LIST SIZE====> " + addBill.product_list?.size)
-        XLog.d("=========================================================")
+        Timber.d("PRODUCT LIST SIZE====> " + addBill.product_list?.size)
+        Timber.d("=========================================================")
 
         if (!TextUtils.isEmpty(billing.attachment)) {
             val repository = AddBillingRepoProvider.addBillImageRepository()
@@ -3461,7 +4462,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val baseResponse = result as BaseResponse
-                                XLog.d("SYNC BILLING DETAILS : " + "RESPONSE : " + baseResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + baseResponse.message)
+                                Timber.d("SYNC BILLING DETAILS : " + "RESPONSE : " + baseResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + baseResponse.message)
                                 BaseActivity.isApiInitiated = false
 
                                 if (baseResponse.status == NetworkConstant.SUCCESS) {
@@ -3473,8 +4474,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     } else {
                                         stopAnimation(bill_sync_img)
                                         val list_ = AppDatabase.getDBInstance()!!.billingDao().getDataSyncWise(false)
-                                        if (list_ != null && list_.isNotEmpty())
+                                        if (list_ != null && list_.isNotEmpty()) {
                                             tv_bill_retry.visibility = View.VISIBLE
+                                        }
                                         else {
                                             tv_bill_retry.visibility = View.GONE
                                             bill_tick_img.visibility = View.VISIBLE
@@ -3483,10 +4485,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                                         i = 0
                                         progress_wheel.stopSpinning()
-                                        if (!isBiilingEntry)
+                                        if (!isBiilingEntry) {
                                             checkToCallAddStockApi()
-                                        else
+                                            }
+                                        else {
                                             isBiilingEntry = false
+                                            }
                                     }
                                 } else {
                                     i++
@@ -3498,17 +4502,19 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                         bill_sync_img.visibility = View.GONE
                                         i = 0
                                         progress_wheel.stopSpinning()
-                                        if (!isBiilingEntry)
+                                        if (!isBiilingEntry) {
                                             checkToCallAddStockApi()
-                                        else
+                                            }
+                                        else {
                                             isBiilingEntry = false
+                                        }
                                     }
                                 }
 
                                 progress_wheel.stopSpinning()
 
                             }, { error ->
-                                XLog.d("SYNC BILLING DETAILS : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + error.localizedMessage)
+                                Timber.d("SYNC BILLING DETAILS : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + error.localizedMessage)
                                 error.printStackTrace()
                                 BaseActivity.isApiInitiated = false
 
@@ -3521,10 +4527,13 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     bill_sync_img.visibility = View.GONE
                                     i = 0
                                     progress_wheel.stopSpinning()
-                                    if (!isBiilingEntry)
+                                    if (!isBiilingEntry) {
                                         checkToCallAddStockApi()
-                                    else
+                                        }
+
+                                    else {
                                         isBiilingEntry = false
+                                        }
                                 }
 
                             })
@@ -3538,7 +4547,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val baseResponse = result as BaseResponse
-                                XLog.d("SYNC BILLING DETAILS : " + "RESPONSE : " + baseResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + baseResponse.message)
+                                Timber.d("SYNC BILLING DETAILS : " + "RESPONSE : " + baseResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + baseResponse.message)
                                 BaseActivity.isApiInitiated = false
 
                                 if (baseResponse.status == NetworkConstant.SUCCESS) {
@@ -3550,8 +4559,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     } else {
                                         stopAnimation(bill_sync_img)
                                         val list_ = AppDatabase.getDBInstance()!!.billingDao().getDataSyncWise(false)
-                                        if (list_ != null && list_.isNotEmpty())
+                                        if (list_ != null && list_.isNotEmpty()) {
                                             tv_bill_retry.visibility = View.VISIBLE
+                                            }
                                         else {
                                             tv_bill_retry.visibility = View.GONE
                                             bill_tick_img.visibility = View.VISIBLE
@@ -3560,10 +4570,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                                         i = 0
                                         progress_wheel.stopSpinning()
-                                        if (!isBiilingEntry)
+                                        if (!isBiilingEntry) {
                                             checkToCallAddStockApi()
-                                        else
+                                            }
+                                        else {
                                             isBiilingEntry = false
+                                            }
                                     }
                                 } else {
                                     i++
@@ -3575,17 +4587,19 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                         bill_sync_img.visibility = View.GONE
                                         i = 0
                                         progress_wheel.stopSpinning()
-                                        if (!isBiilingEntry)
+                                        if (!isBiilingEntry) {
                                             checkToCallAddStockApi()
-                                        else
+                                        }
+                                        else {
                                             isBiilingEntry = false
+                                            }
                                     }
                                 }
 
                                 progress_wheel.stopSpinning()
 
                             }, { error ->
-                                XLog.d("SYNC BILLING DETAILS : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + error.localizedMessage)
+                                Timber.d("SYNC BILLING DETAILS : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + error.localizedMessage)
                                 error.printStackTrace()
                                 BaseActivity.isApiInitiated = false
 
@@ -3598,10 +4612,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     bill_sync_img.visibility = View.GONE
                                     i = 0
                                     progress_wheel.stopSpinning()
-                                    if (!isBiilingEntry)
+                                    if (!isBiilingEntry) {
                                         checkToCallAddStockApi()
-                                    else
+                                    }
+                                    else {
                                         isBiilingEntry = false
+                                    }
                                 }
 
                             })
@@ -3623,13 +4639,16 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                 tv_stock_retry.visibility = View.GONE
                 stock_sync_img.visibility = View.GONE
 
-                if (!isRetryStock)
+                if (!isRetryStock) {
                     checkToCallMeetingApi()
-                else
+                    }
+                else {
                     isRetryStock = false
+                    }
             }
-        } else
+        } else {
             checkToCallMeetingApi()
+        }
     }
 
     //===============================================Add Stock============================================================//
@@ -3650,21 +4669,29 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             if (shopActivity.isVisited && !shopActivity.isDurationCalculated && shopActivity.date == AppUtils.getCurrentDateForShopActi()) {
                 val shopDetail = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(addStock.shop_id)
 
-                if (!TextUtils.isEmpty(shopDetail.address))
+                if (!TextUtils.isEmpty(shopDetail.address)) {
                     addStock.address = shopDetail.address
-                else
+                }
+                else {
                     addStock.address = ""
+                }
             } else {
-                if (!TextUtils.isEmpty(stockDetailsListEntity.stock_lat) && !TextUtils.isEmpty(stockDetailsListEntity.stock_long))
+                if (!TextUtils.isEmpty(stockDetailsListEntity.stock_lat) && !TextUtils.isEmpty(stockDetailsListEntity.stock_long)) {
                     addStock.address = LocationWizard.getLocationName(mContext, stockDetailsListEntity.stock_lat!!.toDouble(), stockDetailsListEntity.stock_long!!.toDouble())
-                else
+                }else {
                     addStock.address = ""
+                    }
             }
         } else {
-            if (!TextUtils.isEmpty(stockDetailsListEntity.stock_lat) && !TextUtils.isEmpty(stockDetailsListEntity.stock_long))
-                addStock.address = LocationWizard.getLocationName(mContext, stockDetailsListEntity.stock_lat!!.toDouble(), stockDetailsListEntity.stock_long!!.toDouble())
-            else
+            if (!TextUtils.isEmpty(stockDetailsListEntity.stock_lat) && !TextUtils.isEmpty(stockDetailsListEntity.stock_long)) {
+                addStock.address = LocationWizard.getLocationName(
+                    mContext,
+                    stockDetailsListEntity.stock_lat!!.toDouble(),
+                    stockDetailsListEntity.stock_long!!.toDouble()
+                )
+            }else {
                 addStock.address = ""
+                }
         }
 
         val addShop = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(stockDetailsListEntity.shop_id)
@@ -3695,7 +4722,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             val orderList = result as BaseResponse
                             progress_wheel.stopSpinning()
 
-                            XLog.e("Add STOCK : \n" + ", SHOP ID===> " + stockList[i].shop_id + ", STOCK ID===> " + stockList[i].stock_id + ", STATUS====> " + orderList.status + ",RESPONSE MESSAGE:" + orderList.message)
+                            Timber.e("Add STOCK : \n" + ", SHOP ID===> " + stockList[i].shop_id + ", STOCK ID===> " + stockList[i].stock_id + ", STATUS====> " + orderList.status + ",RESPONSE MESSAGE:" + orderList.message)
 
                             if (orderList.status == NetworkConstant.SUCCESS) {
                                 AppDatabase.getDBInstance()!!.stockDetailsListDao().updateIsUploaded(true, stockDetailsListEntity.stock_id!!)
@@ -3707,8 +4734,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             } else {
                                 stopAnimation(stock_sync_img)
                                 val list_ = AppDatabase.getDBInstance()!!.stockDetailsListDao().getUnsyncedData(false)
-                                if (list_ != null && list_.isNotEmpty())
+                                if (list_ != null && list_.isNotEmpty()) {
                                     tv_stock_retry.visibility = View.VISIBLE
+                                    }
                                 else {
                                     tv_stock_retry.visibility = View.GONE
                                     stock_tick_img.visibility = View.VISIBLE
@@ -3718,17 +4746,19 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 i = 0
                                 progress_wheel.stopSpinning()
 
-                                if (!isRetryStock)
+                                if (!isRetryStock) {
                                     checkToCallMeetingApi()
-                                else
+                                    }
+                                else {
                                     isRetryStock = false
+                                    }
                             }
 
 
                         }, { error ->
                             error.printStackTrace()
 
-                            XLog.d("Add STOCK : \n" + ", SHOP ID===> " + stockList[i].shop_id + ", STOCK ID===> " + stockList[i].stock_id + ", ERROR====> " + error.message)
+                            Timber.d("Add STOCK : \n" + ", SHOP ID===> " + stockList[i].shop_id + ", STOCK ID===> " + stockList[i].stock_id + ", ERROR====> " + error.message)
 
                             i++
                             if (i < list.size) {
@@ -3736,8 +4766,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             } else {
                                 stopAnimation(stock_sync_img)
                                 val list_ = AppDatabase.getDBInstance()!!.stockDetailsListDao().getUnsyncedData(false)
-                                if (list_ != null && list_.isNotEmpty())
+                                if (list_ != null && list_.isNotEmpty()) {
                                     tv_stock_retry.visibility = View.VISIBLE
+                                }
                                 else {
                                     tv_stock_retry.visibility = View.GONE
                                     stock_tick_img.visibility = View.VISIBLE
@@ -3747,10 +4778,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 i = 0
                                 progress_wheel.stopSpinning()
 
-                                if (!isRetryStock)
+                                if (!isRetryStock) {
                                     checkToCallMeetingApi()
-                                else
+                                    }
+                                else {
                                     isRetryStock = false
+                                }
                             }
                         })
         )
@@ -3773,16 +4806,20 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                 tv_meeting_retry.visibility = View.GONE
                 meeting_sync_img.visibility = View.GONE
 
-                if (!isRetryMeeting)
+                if (!isRetryMeeting) {
                     checkToCallAddQuotApi()
-                else
+                }
+                else {
                     isRetryMeeting = false
+                }
             }
         } else {
-            if (!isRetryMeeting)
+            if (!isRetryMeeting) {
                 checkToCallAddQuotApi()
-            else
+                }
+            else {
                 isRetryMeeting = false
+            }
         }
     }
 
@@ -3790,7 +4827,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
     //==========================================================Upload Meeting====================================================//
     private fun callMeetingUploadApi(list: List<MeetingEntity>) {
 
-        XLog.e("IS MEETING UPDATING (LOGOUT SYNC)===========> ${BaseActivity.isMeetingUpdating}")
+        Timber.e("IS MEETING UPDATING (LOGOUT SYNC)===========> ${BaseActivity.isMeetingUpdating}")
 
         if (BaseActivity.isMeetingUpdating) {
 
@@ -3801,10 +4838,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                 meeting_sync_img.visibility = View.GONE
                 //tv_logout.isEnabled = true
 
-                if (!isRetryMeeting)
+                if (!isRetryMeeting) {
                     checkToCallAddQuotApi()
-                else
+                }
+                else {
                     isRetryMeeting = false
+                    }
             }
 
             return
@@ -3836,11 +4875,11 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
         meeting.meeting_list = meetingDataList
 
-        XLog.d("========UPLOAD MEETING DATA INPUT PARAMS (LOGOUT SYNC)======")
-        XLog.d("USER ID======> " + meeting.user_id)
-        XLog.d("SESSION ID======> " + meeting.session_token)
-        XLog.d("MEETING LIST SIZE=========> " + meeting.meeting_list.size)
-        XLog.d("=============================================================")
+        Timber.d("========UPLOAD MEETING DATA INPUT PARAMS (LOGOUT SYNC)======")
+        Timber.d("USER ID======> " + meeting.user_id)
+        Timber.d("SESSION ID======> " + meeting.session_token)
+        Timber.d("MEETING LIST SIZE=========> " + meeting.meeting_list.size)
+        Timber.d("=============================================================")
 
         val repository = ShopDurationRepositoryProvider.provideShopDurationRepository()
         BaseActivity.compositeDisposable.add(
@@ -3849,7 +4888,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             val response = result as BaseResponse
-                            XLog.d("UPLOAD MEETING DATA : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
+                            Timber.d("UPLOAD MEETING DATA : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
                             if (response.status == NetworkConstant.SUCCESS) {
 
                                 doAsync {
@@ -3864,10 +4903,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                         tv_meeting_retry.visibility = View.GONE
                                         meeting_sync_img.visibility = View.GONE
 
-                                        if (!isRetryMeeting)
+                                        if (!isRetryMeeting) {
                                             checkToCallAddQuotApi()
-                                        else
+                                        }
+                                        else {
                                             isRetryMeeting = false
+                                        }
                                     }
                                 }
                             } else {
@@ -3876,14 +4917,16 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 tv_meeting_retry.visibility = View.VISIBLE
                                 meeting_sync_img.visibility = View.GONE
 
-                                if (!isRetryMeeting)
+                                if (!isRetryMeeting) {
                                     checkToCallAddQuotApi()
-                                else
+                                }
+                                else {
                                     isRetryMeeting = false
+                                }
                             }
 
                         }, { error ->
-                            XLog.d("UPLOAD MEETING DATA : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                            Timber.d("UPLOAD MEETING DATA : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                             error.printStackTrace()
                             BaseActivity.isMeetingUpdating = false
 
@@ -3933,35 +4976,35 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
     //=====================================================ADD QUOTATION===========================================================
     private fun callAddQuotApi(quotEntity: QuotationEntity, quotList: ArrayList<QuotationEntity>) {
-        XLog.d("==============Sync Add Quot. Input Params (Logout Sync)====================")
-        XLog.d("shop id=======> " + quotEntity.shop_id)
-        XLog.d("quot. date=======> " + quotEntity.date)
-        XLog.d("quot. id=======> " + quotEntity.quo_id)
-        XLog.d("quot. no=======> " + quotEntity.quo_no)
-        XLog.d("hypothecation=======> " + quotEntity.hypothecation)
-        XLog.d("account_no=======> " + quotEntity.account_no)
-        XLog.d("model_id=======> " + quotEntity.model_id)
-        XLog.d("bs_id=======> " + quotEntity.bs_id)
-        XLog.d("gearbox=======> " + quotEntity.gearbox)
-        XLog.d("number1=======> " + quotEntity.number1)
-        XLog.d("value1=======> " + quotEntity.value1)
-        XLog.d("value2=======> " + quotEntity.value2)
-        XLog.d("tyres1=======> " + quotEntity.tyres1)
-        XLog.d("number2=======> " + quotEntity.number2)
-        XLog.d("value3=======> " + quotEntity.value3)
-        XLog.d("value4=======> " + quotEntity.value4)
-        XLog.d("tyres2=======> " + quotEntity.tyres2)
-        XLog.d("amount=======> " + quotEntity.amount)
-        XLog.d("discount=======> " + quotEntity.discount)
-        XLog.d("cgst=======> " + quotEntity.cgst)
-        XLog.d("sgst=======> " + quotEntity.sgst)
-        XLog.d("tcs=======> " + quotEntity.tcs)
-        XLog.d("insurance=======> " + quotEntity.insurance)
-        XLog.d("net_amount=======> " + quotEntity.net_amount)
-        XLog.d("remarks=======> " + quotEntity.remarks)
-        XLog.d("session_token=======> " + Pref.session_token)
-        XLog.d("user_id=======> " + Pref.user_id)
-        XLog.d("=====================================================================")
+        Timber.d("==============Sync Add Quot. Input Params (Logout Sync)====================")
+        Timber.d("shop id=======> " + quotEntity.shop_id)
+        Timber.d("quot. date=======> " + quotEntity.date)
+        Timber.d("quot. id=======> " + quotEntity.quo_id)
+        Timber.d("quot. no=======> " + quotEntity.quo_no)
+        Timber.d("hypothecation=======> " + quotEntity.hypothecation)
+        Timber.d("account_no=======> " + quotEntity.account_no)
+        Timber.d("model_id=======> " + quotEntity.model_id)
+        Timber.d("bs_id=======> " + quotEntity.bs_id)
+        Timber.d("gearbox=======> " + quotEntity.gearbox)
+        Timber.d("number1=======> " + quotEntity.number1)
+        Timber.d("value1=======> " + quotEntity.value1)
+        Timber.d("value2=======> " + quotEntity.value2)
+        Timber.d("tyres1=======> " + quotEntity.tyres1)
+        Timber.d("number2=======> " + quotEntity.number2)
+        Timber.d("value3=======> " + quotEntity.value3)
+        Timber.d("value4=======> " + quotEntity.value4)
+        Timber.d("tyres2=======> " + quotEntity.tyres2)
+        Timber.d("amount=======> " + quotEntity.amount)
+        Timber.d("discount=======> " + quotEntity.discount)
+        Timber.d("cgst=======> " + quotEntity.cgst)
+        Timber.d("sgst=======> " + quotEntity.sgst)
+        Timber.d("tcs=======> " + quotEntity.tcs)
+        Timber.d("insurance=======> " + quotEntity.insurance)
+        Timber.d("net_amount=======> " + quotEntity.net_amount)
+        Timber.d("remarks=======> " + quotEntity.remarks)
+        Timber.d("session_token=======> " + Pref.session_token)
+        Timber.d("user_id=======> " + Pref.user_id)
+        Timber.d("=====================================================================")
 
         progress_wheel.spin()
         val repository = QuotationRepoProvider.provideBSListRepository()
@@ -3979,7 +5022,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             val response = result as BaseResponse
-                            XLog.d("ADD QUOT. DATA : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
+                            Timber.d("ADD QUOT. DATA : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
                             if (response.status == NetworkConstant.SUCCESS) {
                                 AppDatabase.getDBInstance()?.quotDao()?.updateIsUploaded(true, quotEntity.quo_id!!)
                             }
@@ -3990,8 +5033,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             } else {
                                 stopAnimation(quot_sync_img)
                                 val list_ = AppDatabase.getDBInstance()?.quotDao()?.getQuotSyncWise(false)
-                                if (list_ != null && list_.isNotEmpty())
+                                if (list_ != null && list_.isNotEmpty()) {
                                     tv_quot_retry.visibility = View.VISIBLE
+                                    }
                                 else {
                                     tv_quot_retry.visibility = View.GONE
                                     quot_tick_img.visibility = View.VISIBLE
@@ -4007,7 +5051,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                         }, { error ->
                             progress_wheel.stopSpinning()
-                            XLog.d("ADD QUOT. DATA : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                            Timber.d("ADD QUOT. DATA : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                             error.printStackTrace()
 
                             i++
@@ -4016,8 +5060,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             } else {
                                 stopAnimation(quot_sync_img)
                                 val list_ = AppDatabase.getDBInstance()?.quotDao()?.getQuotSyncWise(false)
-                                if (list_ != null && list_.isNotEmpty())
+                                if (list_ != null && list_.isNotEmpty()) {
                                     tv_quot_retry.visibility = View.VISIBLE
+                                    }
                                 else {
                                     tv_quot_retry.visibility = View.GONE
                                     quot_tick_img.visibility = View.VISIBLE
@@ -4056,10 +5101,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                 tv_quot_retry.visibility = View.GONE
                 quot_sync_img.visibility = View.GONE
 
-                if (!isRetryQuotation)
+                if (!isRetryQuotation) {
                     checkToCallUpdateAddress()
-                else
+                    }
+                else {
                     isRetryQuotation = false
+                }
             }
         } else {
             stopAnimation(quot_sync_img)
@@ -4067,44 +5114,46 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             tv_quot_retry.visibility = View.GONE
             quot_sync_img.visibility = View.GONE
 
-            if (!isRetryQuotation)
+            if (!isRetryQuotation) {
                 checkToCallUpdateAddress()
-            else
+                }
+            else {
                 isRetryQuotation = false
+                }
         }
     }
 
     //=====================================================EDIT QUOTATION===========================================================
     private fun callEditQuotApi(quotEntity: QuotationEntity, quotList: ArrayList<QuotationEntity>) {
-        XLog.d("==============Sync Edit Quot. Input Params (Logout Sync)====================")
-        XLog.d("shop id=======> " + quotEntity.shop_id)
-        XLog.d("quot. date=======> " + quotEntity.date)
-        XLog.d("quot. id=======> " + quotEntity.quo_id)
-        XLog.d("quot. no=======> " + quotEntity.quo_no)
-        XLog.d("hypothecation=======> " + quotEntity.hypothecation)
-        XLog.d("account_no=======> " + quotEntity.account_no)
-        XLog.d("model_id=======> " + quotEntity.model_id)
-        XLog.d("bs_id=======> " + quotEntity.bs_id)
-        XLog.d("gearbox=======> " + quotEntity.gearbox)
-        XLog.d("number1=======> " + quotEntity.number1)
-        XLog.d("value1=======> " + quotEntity.value1)
-        XLog.d("value2=======> " + quotEntity.value2)
-        XLog.d("tyres1=======> " + quotEntity.tyres1)
-        XLog.d("number2=======> " + quotEntity.number2)
-        XLog.d("value3=======> " + quotEntity.value3)
-        XLog.d("value4=======> " + quotEntity.value4)
-        XLog.d("tyres2=======> " + quotEntity.tyres2)
-        XLog.d("amount=======> " + quotEntity.amount)
-        XLog.d("discount=======> " + quotEntity.discount)
-        XLog.d("cgst=======> " + quotEntity.cgst)
-        XLog.d("sgst=======> " + quotEntity.sgst)
-        XLog.d("tcs=======> " + quotEntity.tcs)
-        XLog.d("insurance=======> " + quotEntity.insurance)
-        XLog.d("net_amount=======> " + quotEntity.net_amount)
-        XLog.d("remarks=======> " + quotEntity.remarks)
-        XLog.d("session_token=======> " + Pref.session_token)
-        XLog.d("user_id=======> " + Pref.user_id)
-        XLog.d("=====================================================================")
+        Timber.d("==============Sync Edit Quot. Input Params (Logout Sync)====================")
+        Timber.d("shop id=======> " + quotEntity.shop_id)
+        Timber.d("quot. date=======> " + quotEntity.date)
+        Timber.d("quot. id=======> " + quotEntity.quo_id)
+        Timber.d("quot. no=======> " + quotEntity.quo_no)
+        Timber.d("hypothecation=======> " + quotEntity.hypothecation)
+        Timber.d("account_no=======> " + quotEntity.account_no)
+        Timber.d("model_id=======> " + quotEntity.model_id)
+        Timber.d("bs_id=======> " + quotEntity.bs_id)
+        Timber.d("gearbox=======> " + quotEntity.gearbox)
+        Timber.d("number1=======> " + quotEntity.number1)
+        Timber.d("value1=======> " + quotEntity.value1)
+        Timber.d("value2=======> " + quotEntity.value2)
+        Timber.d("tyres1=======> " + quotEntity.tyres1)
+        Timber.d("number2=======> " + quotEntity.number2)
+        Timber.d("value3=======> " + quotEntity.value3)
+        Timber.d("value4=======> " + quotEntity.value4)
+        Timber.d("tyres2=======> " + quotEntity.tyres2)
+        Timber.d("amount=======> " + quotEntity.amount)
+        Timber.d("discount=======> " + quotEntity.discount)
+        Timber.d("cgst=======> " + quotEntity.cgst)
+        Timber.d("sgst=======> " + quotEntity.sgst)
+        Timber.d("tcs=======> " + quotEntity.tcs)
+        Timber.d("insurance=======> " + quotEntity.insurance)
+        Timber.d("net_amount=======> " + quotEntity.net_amount)
+        Timber.d("remarks=======> " + quotEntity.remarks)
+        Timber.d("session_token=======> " + Pref.session_token)
+        Timber.d("user_id=======> " + Pref.user_id)
+        Timber.d("=====================================================================")
 
         progress_wheel.spin()
         val repository = QuotationRepoProvider.provideBSListRepository()
@@ -4122,7 +5171,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             val response = result as BaseResponse
-                            XLog.d("EDIT QUOT. DATA : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
+                            Timber.d("EDIT QUOT. DATA : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
                             if (response.status == NetworkConstant.SUCCESS) {
                                 AppDatabase.getDBInstance()?.quotDao()?.updateIsEdit(1, quotEntity.quo_id!!)
                             }
@@ -4133,8 +5182,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             } else {
                                 stopAnimation(quot_sync_img)
                                 val list_ = AppDatabase.getDBInstance()?.quotDao()?.getQuotSyncWise(false)
-                                if (list_ != null && list_.isNotEmpty())
+                                if (list_ != null && list_.isNotEmpty()) {
                                     tv_quot_retry.visibility = View.VISIBLE
+                                }
                                 else {
                                     tv_quot_retry.visibility = View.GONE
                                     quot_tick_img.visibility = View.VISIBLE
@@ -4144,16 +5194,18 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 i = 0
                                 progress_wheel.stopSpinning()
 
-                                if (!isRetryQuotation)
+                                if (!isRetryQuotation) {
                                     checkToCallUpdateAddress()
-                                else
+                                    }
+                                else {
                                     isRetryQuotation = false
+                                    }
                             }
 
 
                         }, { error ->
                             progress_wheel.stopSpinning()
-                            XLog.d("EDIT QUOT. DATA : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                            Timber.d("EDIT QUOT. DATA : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                             error.printStackTrace()
 
                             i++
@@ -4162,8 +5214,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             } else {
                                 stopAnimation(quot_sync_img)
                                 val list_ = AppDatabase.getDBInstance()?.quotDao()?.getQuotSyncWise(false)
-                                if (list_ != null && list_.isNotEmpty())
+                                if (list_ != null && list_.isNotEmpty()) {
                                     tv_quot_retry.visibility = View.VISIBLE
+                                }
                                 else {
                                     tv_quot_retry.visibility = View.GONE
                                     quot_tick_img.visibility = View.VISIBLE
@@ -4173,10 +5226,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 i = 0
                                 progress_wheel.stopSpinning()
 
-                                if (!isRetryQuotation)
+                                if (!isRetryQuotation) {
                                     checkToCallUpdateAddress()
-                                else
+                                    }
+                                else {
                                     isRetryQuotation = false
+                                }
                             }
                         })
         )
@@ -4195,10 +5250,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                 tv_team_retry.visibility = View.GONE
                 team_sync_img.visibility = View.GONE
 
-                if (!isRetryTeamShop)
+                if (!isRetryTeamShop) {
                     checkToCallTimesheet()
-                else
+                }
+                else {
                     isRetryTeamShop = false
+                }
             }
         } else {
             stopAnimation(team_sync_img)
@@ -4206,25 +5263,27 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             tv_team_retry.visibility = View.GONE
             team_sync_img.visibility = View.GONE
 
-            if (!isRetryTeamShop)
+            if (!isRetryTeamShop) {
                 checkToCallTimesheet()
-            else
+                }
+            else {
                 isRetryTeamShop = false
+                }
         }
     }
 
 
     //=====================================================UPDATE TEAM SHOP ADDRESS===========================================================
     private fun callUpdateAddressApi(team: MemberShopEntity, teamList: ArrayList<MemberShopEntity>) {
-        XLog.d("==============Sync Team Shop Input Params (Logout Sync)====================")
-        XLog.d("shop id=======> " + team.shop_id)
-        XLog.d("user_id=======> " + Pref.user_id)
-        XLog.d("shop_lat=======> " + team.shop_lat)
-        XLog.d("shop_long=======> " + team.shop_long)
-        XLog.d("shop_address=======> " + team.shop_address)
-        XLog.d("shop_pincode=======> " + team.shop_pincode)
-        XLog.d("isAddressUpdated=======> 1")
-        XLog.d("===========================================================================")
+        Timber.d("==============Sync Team Shop Input Params (Logout Sync)====================")
+        Timber.d("shop id=======> " + team.shop_id)
+        Timber.d("user_id=======> " + Pref.user_id)
+        Timber.d("shop_lat=======> " + team.shop_lat)
+        Timber.d("shop_long=======> " + team.shop_long)
+        Timber.d("shop_address=======> " + team.shop_address)
+        Timber.d("shop_pincode=======> " + team.shop_pincode)
+        Timber.d("isAddressUpdated=======> 1")
+        Timber.d("===========================================================================")
 
         progress_wheel.spin()
         val repository = ShopAddressUpdateRepoProvider.provideShopAddressUpdateRepo()
@@ -4246,7 +5305,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             val response = result as BaseResponse
-                            XLog.d("UPDATE ADDRESS DATA : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
+                            Timber.d("UPDATE ADDRESS DATA : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
                             if (response.status == NetworkConstant.SUCCESS) {
                                 AppDatabase.getDBInstance()?.memberShopDao()?.updateIsUploaded(true, team.shop_id!!)
                             }
@@ -4257,8 +5316,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             } else {
                                 stopAnimation(team_sync_img)
                                 val list_ = AppDatabase.getDBInstance()?.memberShopDao()?.getShopSyncWise(false)
-                                if (list_ != null && list_.isNotEmpty())
+                                if (list_ != null && list_.isNotEmpty()) {
                                     tv_team_retry.visibility = View.VISIBLE
+                                    }
                                 else {
                                     tv_team_retry.visibility = View.GONE
                                     team_tick_img.visibility = View.VISIBLE
@@ -4268,16 +5328,18 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 i = 0
                                 progress_wheel.stopSpinning()
 
-                                if (!isRetryTeamShop)
+                                if (!isRetryTeamShop) {
                                     checkToCallTimesheet()
-                                else
+                                }
+                                else {
                                     isRetryTeamShop = false
+                                    }
                             }
 
 
                         }, { error ->
                             progress_wheel.stopSpinning()
-                            XLog.d("UPDATE ADDRESS DATA : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                            Timber.d("UPDATE ADDRESS DATA : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                             error.printStackTrace()
 
                             i++
@@ -4286,8 +5348,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             } else {
                                 stopAnimation(team_sync_img)
                                 val list_ = AppDatabase.getDBInstance()?.memberShopDao()?.getShopSyncWise(false)
-                                if (list_ != null && list_.isNotEmpty())
+                                if (list_ != null && list_.isNotEmpty()) {
                                     tv_team_retry.visibility = View.VISIBLE
+                                }
                                 else {
                                     tv_team_retry.visibility = View.GONE
                                     team_tick_img.visibility = View.VISIBLE
@@ -4297,10 +5360,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 i = 0
                                 progress_wheel.stopSpinning()
 
-                                if (!isRetryTeamShop)
+                                if (!isRetryTeamShop) {
                                     checkToCallTimesheet()
-                                else
+                                    }
+                                else {
                                     isRetryTeamShop = false
+                                }
                             }
                         })
         )
@@ -4320,10 +5385,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                 tv_timesheet_retry.visibility = View.GONE
                 timesheet_sync_img.visibility = View.GONE
 
-                if (!isRetryTimesheet)
+                if (!isRetryTimesheet) {
                     checkToCallTask()
-                else
+                    }
+                else {
                     isRetryTimesheet = false
+                }
             }
         } else {
             stopAnimation(timesheet_sync_img)
@@ -4331,29 +5398,31 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             tv_timesheet_retry.visibility = View.GONE
             timesheet_sync_img.visibility = View.GONE
 
-            if (!isRetryTimesheet)
+            if (!isRetryTimesheet) {
                 checkToCallTask()
-            else
+                }
+            else {
                 isRetryTimesheet = false
+            }
         }
     }
 
 
     //=====================================================ADD TIMESHEET===========================================================
     private fun callAddTimesheetApi(timeSheet: TimesheetListEntity, list: List<TimesheetListEntity>) {
-        XLog.d("==============Sync Timesheet Input Params (Logout Sync)====================")
-        XLog.d("user_id=======> " + Pref.user_id)
-        XLog.d("session_token=======> " + Pref.session_token)
-        XLog.d("date=======> " + timeSheet.date)
-        XLog.d("client_id=======> " + timeSheet.client_id)
-        XLog.d("project_id=======> " + timeSheet.project_id)
-        XLog.d("activity_id=======> " + timeSheet.activity_id)
-        XLog.d("product_id=======> " + timeSheet.product_id)
-        XLog.d("time=======> " + timeSheet.time)
-        XLog.d("comments=======> " + timeSheet.comments)
-        XLog.d("timesheet_id=======> " + timeSheet.timesheet_id)
-        XLog.d("image=======> " + timeSheet.image)
-        XLog.d("===========================================================================")
+        Timber.d("==============Sync Timesheet Input Params (Logout Sync)====================")
+        Timber.d("user_id=======> " + Pref.user_id)
+        Timber.d("session_token=======> " + Pref.session_token)
+        Timber.d("date=======> " + timeSheet.date)
+        Timber.d("client_id=======> " + timeSheet.client_id)
+        Timber.d("project_id=======> " + timeSheet.project_id)
+        Timber.d("activity_id=======> " + timeSheet.activity_id)
+        Timber.d("product_id=======> " + timeSheet.product_id)
+        Timber.d("time=======> " + timeSheet.time)
+        Timber.d("comments=======> " + timeSheet.comments)
+        Timber.d("timesheet_id=======> " + timeSheet.timesheet_id)
+        Timber.d("image=======> " + timeSheet.image)
+        Timber.d("===========================================================================")
 
         progress_wheel.spin()
 
@@ -4369,7 +5438,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val response = result as BaseResponse
-                                XLog.d("ADD TIMESHEET: " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
+                                Timber.d("ADD TIMESHEET: " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
 
                                 if (response.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()?.timesheetDao()?.updateIsUploaded(true, timeSheet.timesheet_id!!)
@@ -4381,8 +5450,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 } else {
                                     stopAnimation(timesheet_sync_img)
                                     val list_ = AppDatabase.getDBInstance()?.timesheetDao()?.getTimesheetSyncWise(false)
-                                    if (list_ != null && list_.isNotEmpty())
+                                    if (list_ != null && list_.isNotEmpty()) {
                                         tv_timesheet_retry.visibility = View.VISIBLE
+                                    }
                                     else {
                                         tv_timesheet_retry.visibility = View.GONE
                                         timesheet_tick_img.visibility = View.VISIBLE
@@ -4392,16 +5462,18 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     i = 0
                                     progress_wheel.stopSpinning()
 
-                                    if (!isRetryTimesheet)
+                                    if (!isRetryTimesheet) {
                                         checkToCallTask()
-                                    else
+                                    }
+                                    else {
                                         isRetryTimesheet = false
+                                        }
                                 }
 
 
                             }, { error ->
                                 progress_wheel.stopSpinning()
-                                XLog.d("ADD TIMESHEET: " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                                Timber.d("ADD TIMESHEET: " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                                 error.printStackTrace()
 
                                 i++
@@ -4410,8 +5482,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 } else {
                                     stopAnimation(timesheet_sync_img)
                                     val list_ = AppDatabase.getDBInstance()?.timesheetDao()?.getTimesheetSyncWise(false)
-                                    if (list_ != null && list_.isNotEmpty())
+                                    if (list_ != null && list_.isNotEmpty()) {
                                         tv_timesheet_retry.visibility = View.VISIBLE
+                                    }
                                     else {
                                         tv_timesheet_retry.visibility = View.GONE
                                         timesheet_tick_img.visibility = View.VISIBLE
@@ -4421,10 +5494,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     i = 0
                                     progress_wheel.stopSpinning()
 
-                                    if (!isRetryTimesheet)
+                                    if (!isRetryTimesheet) {
                                         checkToCallTask()
-                                    else
+                                    }
+                                    else {
                                         isRetryTimesheet = false
+                                        }
                                 }
                             })
             )
@@ -4437,7 +5512,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val response = result as BaseResponse
-                                XLog.d("ADD TIMESHEET: " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
+                                Timber.d("ADD TIMESHEET: " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
 
                                 if (response.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()?.timesheetDao()?.updateIsUploaded(true, timeSheet.timesheet_id!!)
@@ -4449,8 +5524,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 } else {
                                     stopAnimation(timesheet_sync_img)
                                     val list_ = AppDatabase.getDBInstance()?.timesheetDao()?.getTimesheetSyncWise(false)
-                                    if (list_ != null && list_.isNotEmpty())
+                                    if (list_ != null && list_.isNotEmpty()) {
                                         tv_timesheet_retry.visibility = View.VISIBLE
+                                    }
                                     else {
                                         tv_timesheet_retry.visibility = View.GONE
                                         timesheet_tick_img.visibility = View.VISIBLE
@@ -4460,16 +5536,18 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     i = 0
                                     progress_wheel.stopSpinning()
 
-                                    if (!isRetryTimesheet)
+                                    if (!isRetryTimesheet) {
                                         checkToCallTask()
-                                    else
+                                    }
+                                    else {
                                         isRetryTimesheet = false
+                                        }
                                 }
 
 
                             }, { error ->
                                 progress_wheel.stopSpinning()
-                                XLog.d("ADD TIMESHEET: " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                                Timber.d("ADD TIMESHEET: " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                                 error.printStackTrace()
 
                                 i++
@@ -4478,8 +5556,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 } else {
                                     stopAnimation(timesheet_sync_img)
                                     val list_ = AppDatabase.getDBInstance()?.timesheetDao()?.getTimesheetSyncWise(false)
-                                    if (list_ != null && list_.isNotEmpty())
+                                    if (list_ != null && list_.isNotEmpty()) {
                                         tv_timesheet_retry.visibility = View.VISIBLE
+                                    }
                                     else {
                                         tv_timesheet_retry.visibility = View.GONE
                                         timesheet_tick_img.visibility = View.VISIBLE
@@ -4489,10 +5568,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                     i = 0
                                     progress_wheel.stopSpinning()
 
-                                    if (!isRetryTimesheet)
+                                    if (!isRetryTimesheet) {
                                         checkToCallTask()
-                                    else
+                                        }
+                                    else {
                                         isRetryTimesheet = false
+                                        }
                                 }
                             })
             )
@@ -4520,10 +5601,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                     tv_task_retry.visibility = View.GONE
                     task_sync_img.visibility = View.GONE
 
-                    if (!isRetryTask)
+                    if (!isRetryTask) {
                         checkToCallDocument()
-                    else
+                        }
+                    else {
                         isRetryTask = false
+                    }
                 }
             }
         } else {
@@ -4532,25 +5615,27 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             tv_task_retry.visibility = View.GONE
             task_sync_img.visibility = View.GONE
 
-            if (!isRetryTask)
+            if (!isRetryTask) {
                 checkToCallDocument()
-            else
+                }
+            else {
                 isRetryTask = false
+                }
         }
     }
     //========================================================Task================================================================//
 
     private fun callAddTaskApi(task: TaskEntity, taskList: ArrayList<TaskEntity>) {
-        XLog.d("==============Sync Add Task Input Params (Logout Sync)====================")
-        XLog.d("user_id=======> " + Pref.user_id)
-        XLog.d("session_token=======> " + Pref.session_token)
-        XLog.d("date=======> " + task.date)
-        XLog.d("task_id=======> " + task.task_id)
-        XLog.d("task_name=======> " + task.task_name)
-        XLog.d("details=======> " + task.details)
-        XLog.d("isCompleted=======> " + task.isCompleted)
-        XLog.d("eventId=======> " + task.eventId)
-        XLog.d("===================================================================")
+        Timber.d("==============Sync Add Task Input Params (Logout Sync)====================")
+        Timber.d("user_id=======> " + Pref.user_id)
+        Timber.d("session_token=======> " + Pref.session_token)
+        Timber.d("date=======> " + task.date)
+        Timber.d("task_id=======> " + task.task_id)
+        Timber.d("task_name=======> " + task.task_name)
+        Timber.d("details=======> " + task.details)
+        Timber.d("isCompleted=======> " + task.isCompleted)
+        Timber.d("eventId=======> " + task.eventId)
+        Timber.d("===================================================================")
 
         val taskInput = AddTaskInputModel(Pref.session_token!!, Pref.user_id!!, task.task_id!!, task.date!!, task.task_name!!,
                 task.details!!, task.isCompleted, task.eventId)
@@ -4563,7 +5648,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             val response = result as BaseResponse
-                            XLog.d("ADD TASK: " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
+                            Timber.d("ADD TASK: " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
 
                             progress_wheel.stopSpinning()
 
@@ -4588,47 +5673,54 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                             statusList.add(it)
                                     }
 
-                                    if (statusList.isNotEmpty())
+                                    if (statusList.isNotEmpty()) {
                                         callStatusUpdateApi(statusList[i], statusList)
+                                        }
                                     else {
                                         stopAnimation(task_sync_img)
                                         val list = AppDatabase.getDBInstance()?.taskDao()?.getTaskSyncWise(false)
-                                        if (list != null && list.isNotEmpty())
+                                        if (list != null && list.isNotEmpty()) {
                                             tv_task_retry.visibility = View.VISIBLE
+                                        }
                                         else {
                                             tv_task_retry.visibility = View.GONE
                                             task_tick_img.visibility = View.VISIBLE
                                         }
                                         task_sync_img.visibility = View.GONE
 
-                                        if (!isRetryTask)
+                                        if (!isRetryTask) {
                                             checkToCallDocument()
-                                        else
+                                        }
+                                        else {
                                             isRetryTask = false
+                                            }
                                     }
                                 }
                                 else {
                                     stopAnimation(task_sync_img)
 
                                     val list = AppDatabase.getDBInstance()?.taskDao()?.getTaskSyncWise(false)
-                                    if (list != null && list.isNotEmpty())
+                                    if (list != null && list.isNotEmpty()) {
                                         tv_task_retry.visibility = View.VISIBLE
+                                        }
                                     else {
                                         tv_task_retry.visibility = View.GONE
                                         task_tick_img.visibility = View.VISIBLE
                                     }
                                     task_sync_img.visibility = View.GONE
 
-                                    if (!isRetryTask)
+                                    if (!isRetryTask) {
                                         checkToCallDocument()
-                                    else
+                                    }
+                                    else {
                                         isRetryTask = false
+                                        }
                                 }
                             }
 
                         }, { error ->
                             progress_wheel.stopSpinning()
-                            XLog.d("ADD TASK: " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                            Timber.d("ADD TASK: " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                             error.printStackTrace()
 
                             i++
@@ -4648,38 +5740,45 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                             statusList.add(it)
                                     }
 
-                                    if (statusList.isNotEmpty())
+                                    if (statusList.isNotEmpty()) {
                                         callStatusUpdateApi(statusList[i], statusList)
+                                        }
                                     else {
                                         val list = AppDatabase.getDBInstance()?.taskDao()?.getTaskSyncWise(false)
-                                        if (list != null && list.isNotEmpty())
+                                        if (list != null && list.isNotEmpty()) {
                                             tv_task_retry.visibility = View.VISIBLE
+                                        }
                                         else {
                                             tv_task_retry.visibility = View.GONE
                                             task_tick_img.visibility = View.VISIBLE
                                         }
                                         task_sync_img.visibility = View.GONE
 
-                                        if (!isRetryTask)
+                                        if (!isRetryTask) {
                                             checkToCallDocument()
-                                        else
+                                            }
+                                        else {
                                             isRetryTask = false
+                                        }
                                     }
                                 }
                                 else {
                                     val list = AppDatabase.getDBInstance()?.taskDao()?.getTaskSyncWise(false)
-                                    if (list != null && list.isNotEmpty())
+                                    if (list != null && list.isNotEmpty()) {
                                         tv_task_retry.visibility = View.VISIBLE
+                                        }
                                     else {
                                         tv_task_retry.visibility = View.GONE
                                         task_tick_img.visibility = View.VISIBLE
                                     }
                                     task_sync_img.visibility = View.GONE
 
-                                    if (!isRetryTask)
+                                    if (!isRetryTask) {
                                         checkToCallDocument()
-                                    else
+                                    }
+                                    else {
                                         isRetryTask = false
+                                        }
                                 }
                             }
 
@@ -4688,12 +5787,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
     }
 
     private fun callStatusUpdateApi(task: TaskEntity, statusList: ArrayList<TaskEntity>) {
-        XLog.d("============Update Task Status Input Params (Task List)===========")
-        XLog.d("user_id=======> " + Pref.user_id)
-        XLog.d("session_token=======> " + Pref.session_token)
-        XLog.d("task_id=======> " + task.task_id)
-        XLog.d("isCompleted=======> " + task.isCompleted)
-        XLog.d("===================================================================")
+        Timber.d("============Update Task Status Input Params (Task List)===========")
+        Timber.d("user_id=======> " + Pref.user_id)
+        Timber.d("session_token=======> " + Pref.session_token)
+        Timber.d("task_id=======> " + task.task_id)
+        Timber.d("isCompleted=======> " + task.isCompleted)
+        Timber.d("===================================================================")
 
         progress_wheel.spin()
         val repository = TaskRepoProvider.taskRepoProvider()
@@ -4703,7 +5802,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             val response = result as BaseResponse
-                            XLog.d("UPDATE TASK STATUS: " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
+                            Timber.d("UPDATE TASK STATUS: " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
 
                             progress_wheel.stopSpinning()
 
@@ -4718,8 +5817,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 stopAnimation(task_sync_img)
                                 val list_ = AppDatabase.getDBInstance()?.taskDao()?.getTaskStatusWise(0)
 
-                                if (list_ != null && list_.isNotEmpty())
+                                if (list_ != null && list_.isNotEmpty()) {
                                     tv_task_retry.visibility = View.VISIBLE
+                                }
                                 else {
                                     tv_task_retry.visibility = View.GONE
                                     task_tick_img.visibility = View.VISIBLE
@@ -4729,15 +5829,17 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 i = 0
                                 progress_wheel.stopSpinning()
 
-                                if (!isRetryTask)
+                                if (!isRetryTask) {
                                     checkToCallDocument()
-                                else
+                                    }
+                                else {
                                     isRetryTask = false
+                                }
                             }
 
                         }, { error ->
                             progress_wheel.stopSpinning()
-                            XLog.d("UPDATE TASK STATUS: " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                            Timber.d("UPDATE TASK STATUS: " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                             error.printStackTrace()
 
                             i++
@@ -4747,8 +5849,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 stopAnimation(task_sync_img)
                                 val list_ = AppDatabase.getDBInstance()?.taskDao()?.getTaskStatusWise(0)
 
-                                if (list_ != null && list_.isNotEmpty())
+                                if (list_ != null && list_.isNotEmpty()) {
                                     tv_task_retry.visibility = View.VISIBLE
+                                }
                                 else {
                                     tv_task_retry.visibility = View.GONE
                                     task_tick_img.visibility = View.VISIBLE
@@ -4758,10 +5861,12 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 i = 0
                                 progress_wheel.stopSpinning()
 
-                                if (!isRetryTask)
+                                if (!isRetryTask) {
                                     checkToCallDocument()
-                                else
+                                    }
+                                else {
                                     isRetryTask = false
+                                }
                             }
 
                         })
@@ -4773,19 +5878,22 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
     private fun checkToCallDocument() {
         if (Pref.isDocumentRepoShow) {
             val list = AppDatabase.getDBInstance()?.documentListDao()?.getDocSyncWise(false)
-            if (list != null && list.isNotEmpty())
+            if (list != null && list.isNotEmpty()) {
                 callAddDocumentApi(list)
+                }
             else {
                 stopAnimation(doc_sync_img)
                 doc_tick_img.visibility = View.VISIBLE
                 tv_doc_retry.visibility = View.GONE
                 doc_sync_img.visibility = View.GONE
 
-                if (!isRetryDocument)
+                if (!isRetryDocument) {
                     //checkToCallActivity() // sam comm 05-07-21
                     callShopProductStockApi()
-                else
+                }
+                else {
                     isRetryDocument = false
+                }
             }
         } else {
             stopAnimation(doc_sync_img)
@@ -4793,11 +5901,13 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             tv_doc_retry.visibility = View.GONE
             doc_sync_img.visibility = View.GONE
 
-            if (!isRetryDocument)
+            if (!isRetryDocument) {
                 //checkToCallActivity() // sam comm 05-07-21
-            callShopProductStockApi()
-            else
+                callShopProductStockApi()
+            }
+            else {
                 isRetryDocument = false
+            }
         }
     }
 
@@ -4820,7 +5930,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         .subscribe({ result ->
                             progress_wheel.stopSpinning()
                             val response = result as BaseResponse
-                            XLog.d("SYNC DOCUMENT RESPONSE=======> " + response.status)
+                            Timber.d("SYNC DOCUMENT RESPONSE=======> " + response.status)
 
                             if (response.status == NetworkConstant.SUCCESS) {
                                 list.forEach {
@@ -4833,42 +5943,131 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             tv_doc_retry.visibility = View.GONE
                             doc_sync_img.visibility = View.GONE
 
-                            if (!isRetryDocument)
+                            if (!isRetryDocument) {
                                 //checkToCallActivity() // sam comm 05-07-21
-                            callShopProductStockApi()
-                            else
+                                callShopProductStockApi()
+                            }
+                            else {
                                 isRetryDocument = false
+                            }
 
                         }, { error ->
                             error.printStackTrace()
                             progress_wheel.stopSpinning()
-                            XLog.d("SYNC DOCUMENT ERROR=======> " + error.localizedMessage)
+                            Timber.d("SYNC DOCUMENT ERROR=======> " + error.localizedMessage)
 
                             stopAnimation(doc_sync_img)
                             doc_tick_img.visibility = View.VISIBLE
                             tv_doc_retry.visibility = View.GONE
                             doc_sync_img.visibility = View.GONE
 
-                            if (!isRetryDocument)
+                            if (!isRetryDocument) {
                                 //checkToCallActivity() // sam comm 05-07-21
-                            callShopProductStockApi()
-                            else
+                                callShopProductStockApi()
+                            }
+                            else {
                                 isRetryDocument = false
+                            }
                         })
         )
     }
     //===========================================================ADD DOCUMENT========================================================
 
 
+    fun isWorkerRunning(tag:String):Boolean{
+        val workInstance = WorkManager.getInstance(mContext)
+        val status: ListenableFuture<List<WorkInfo>> = WorkManager.getInstance(mContext).getWorkInfosByTag(tag)
+        try{
+            var runningStatus:Boolean = false
+            val workInfoList:List<WorkInfo> = status.get()
+            for( obj: WorkInfo in workInfoList){
+                var state : WorkInfo.State =  obj.state
+                runningStatus = state == WorkInfo.State.RUNNING || state == WorkInfo.State.ENQUEUED
+            }
+            return runningStatus
+        }
+        catch (ex: ExecutionException){
+            return false
+        }
+        catch (ex:InterruptedException){
+            return false
+        }
+    }
+
+    fun syncCallHisInfo( ) {
+        var unSyncedList= AppDatabase.getDBInstance()!!.callhisDao().getUnSyncData(false) as ArrayList<CallHisEntity>
+        if (unSyncedList.size > 0){
+
+            var syncObj: CallHisDtls = CallHisDtls()
+            syncObj.user_id = Pref.user_id.toString()
+            syncObj.call_his_list.addAll(unSyncedList)
+
+            val repository = EditShopRepoProvider.provideEditShopWithoutImageRepository()
+            BaseActivity.compositeDisposable.add(
+                repository.callLogListSaveApi(syncObj)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({ result ->
+                        val resp = result as BaseResponse
+                        if (resp.status == NetworkConstant.SUCCESS) {
+
+                            doAsync {
+
+                                for (i in 0..unSyncedList.size - 1) {
+                                    AppDatabase.getDBInstance()!!.callhisDao().updateCallHisIsUpload(
+                                        unSyncedList.get(i).shop_id,
+                                        unSyncedList.get(i).call_number,
+                                        unSyncedList.get(i).call_time,
+                                        unSyncedList.get(i).call_date,
+                                        true
+                                    )
+                                }
+
+                               uiThread {
+
+                                   checkToCallActivity()
+
+                               }
+                            }
+
+                        } else {
+                            Timber.d("syncCallHisInfo API Failure")
+                            checkToCallActivity()
+                        }
+                    }, { error ->
+                        error.printStackTrace()
+                        Timber.d("syncCallHisInfo:==>"+error.message.toString())
+
+                        checkToCallActivity()
+                    })
+            )
+
+        }
+        else{
+            checkToCallActivity()
+        }
+    }
 
 
     private fun checkToCallActivity() {
-
 
         var intent = Intent(mContext, MonitorService::class.java)
         intent.action = CustomConstants.STOP_MONITOR_SERVICE
         //mContext.startService(intent)
         mContext.stopService(intent)
+
+        SendBrod.stopBrod(mContext)
+        SendBrod.stopBrodColl(mContext)
+        SendBrod.stopBrodZeroOrder(mContext)
+        SendBrod.stopBrodDOBDOA(mContext)
+
+        try{
+            WorkManager.getInstance(mContext).cancelAllWork()
+            WorkManager.getInstance(mContext).cancelAllWorkByTag("workerTag")
+            Timber.d("Logout Sync workerservice status : " + isWorkerRunning("workerTag").toString())
+        }catch (ex:Exception){
+            ex.printStackTrace()
+        }
 
         if (Pref.willActivityShow) {
             val list = AppDatabase.getDBInstance()?.activDao()?.getDataSyncWise(false)
@@ -4896,7 +6095,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                 } else {
                     Handler().postDelayed(Runnable {
                         tv_logout.isEnabled = true
-                        if(Pref.DayEndMarked){
+                        if(Pref.DayEndMarked || Pref.IsAutoLogoutFromBatteryCheck){
                             performLogout()
                         }
 
@@ -4922,27 +6121,27 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
     //=====================================================ADD ACTIVITY===========================================================
     private fun callAddActivityApi(activity: ActivityEntity, list: ArrayList<ActivityEntity>) {
-        XLog.d("==============Sync Activity Input Params (Logout Sync)====================")
-        XLog.d("user_id=======> " + Pref.user_id)
-        XLog.d("session_token=======> " + Pref.session_token)
-        XLog.d("id=======> " + activity.activity_id)
-        XLog.d("party_id=======> " + activity.party_id)
-        XLog.d("details=======> " + activity.details)
-        XLog.d("date=======> " + activity.date)
-        XLog.d("time=======> " + activity.time)
-        XLog.d("name=======> " + activity.name)
-        XLog.d("time=======> " + activity.time)
-        XLog.d("activity_id=======> " + activity.activity_dropdown_id)
-        XLog.d("type_id=======> " + activity.type_id)
-        XLog.d("product_id=======> " + activity.product_id)
-        XLog.d("subject=======> " + activity.subject)
-        XLog.d("details=======> " + activity.details)
-        XLog.d("duration=======> " + activity.duration)
-        XLog.d("priority_id=======> " + activity.priority_id)
-        XLog.d("due_date=======> " + activity.due_date)
-        XLog.d("due_time=======> " + activity.due_time)
-        XLog.d("attachments=======> " + activity.attachments)
-        XLog.d("========================================================================")
+        Timber.d("==============Sync Activity Input Params (Logout Sync)====================")
+        Timber.d("user_id=======> " + Pref.user_id)
+        Timber.d("session_token=======> " + Pref.session_token)
+        Timber.d("id=======> " + activity.activity_id)
+        Timber.d("party_id=======> " + activity.party_id)
+        Timber.d("details=======> " + activity.details)
+        Timber.d("date=======> " + activity.date)
+        Timber.d("time=======> " + activity.time)
+        Timber.d("name=======> " + activity.name)
+        Timber.d("time=======> " + activity.time)
+        Timber.d("activity_id=======> " + activity.activity_dropdown_id)
+        Timber.d("type_id=======> " + activity.type_id)
+        Timber.d("product_id=======> " + activity.product_id)
+        Timber.d("subject=======> " + activity.subject)
+        Timber.d("details=======> " + activity.details)
+        Timber.d("duration=======> " + activity.duration)
+        Timber.d("priority_id=======> " + activity.priority_id)
+        Timber.d("due_date=======> " + activity.due_date)
+        Timber.d("due_time=======> " + activity.due_time)
+        Timber.d("attachments=======> " + activity.attachments)
+        Timber.d("========================================================================")
 
         val activityInput = AddActivityInputModel(Pref.session_token!!, Pref.user_id!!, activity.activity_id!!, activity.party_id!!,
                 activity.date!!, activity.time!!, activity.name!!, activity.activity_dropdown_id!!, activity.type_id!!,
@@ -4958,7 +6157,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val response = result as BaseResponse
-                                XLog.d("ADD ACTIVITY: " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
+                                Timber.d("ADD ACTIVITY: " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
                                 if (response.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()?.activDao()?.updateIsUploaded(true, activity.activity_id!!)
                                 }
@@ -4975,7 +6174,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 }
 
                             }, { error ->
-                                XLog.d("ADD ACTIVITY: " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                                Timber.d("ADD ACTIVITY: " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                                 //progress_wheel.stopSpinning()
                                 error.printStackTrace()
 
@@ -5010,7 +6209,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val response = result as BaseResponse
-                                XLog.d("ADD ACTIVITY: " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
+                                Timber.d("ADD ACTIVITY: " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
                                 if (response.status == NetworkConstant.SUCCESS) {
                                     AppDatabase.getDBInstance()?.activDao()?.updateIsUploaded(true, activity.activity_id!!)
                                 }
@@ -5027,7 +6226,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 }
 
                             }, { error ->
-                                XLog.d("ADD ACTIVITY: " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                                Timber.d("ADD ACTIVITY: " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                                 //progress_wheel.stopSpinning()
                                 error.printStackTrace()
 
@@ -5107,19 +6306,19 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         chemistVisit.pob_product_list = podProductList
 
 
-        XLog.d("======SYNC CHEMIST VISIT INPUT PARAMS (LOGOUT SYNC)======")
-        XLog.d("USER ID===> " + chemistVisit.user_id)
-        XLog.d("SESSION ID====> " + chemistVisit.session_token)
-        XLog.d("CHEMIST VISIT ID====> " + chemistVisit.chemist_visit_id)
-        XLog.d("SHOP_ID====> " + chemistVisit.shop_id)
-        XLog.d("IS POB====> " + chemistVisit.isPob)
-        XLog.d("NEXT VISIT DATE====> " + chemistVisit.next_visit_date)
-        XLog.d("VOLUME====> " + chemistVisit.volume)
-        XLog.d("REMARKS====> " + chemistVisit.remarks)
-        XLog.d("REMARKS MR====> " + chemistVisit.remarks_mr)
-        XLog.d("PRODUCT LIST SIZE====> " + chemistVisit.product_list.size)
-        XLog.d("POB PRODUCT LIST SIZE====> " + chemistVisit.pob_product_list.size)
-        XLog.d("=========================================================")
+        Timber.d("======SYNC CHEMIST VISIT INPUT PARAMS (LOGOUT SYNC)======")
+        Timber.d("USER ID===> " + chemistVisit.user_id)
+        Timber.d("SESSION ID====> " + chemistVisit.session_token)
+        Timber.d("CHEMIST VISIT ID====> " + chemistVisit.chemist_visit_id)
+        Timber.d("SHOP_ID====> " + chemistVisit.shop_id)
+        Timber.d("IS POB====> " + chemistVisit.isPob)
+        Timber.d("NEXT VISIT DATE====> " + chemistVisit.next_visit_date)
+        Timber.d("VOLUME====> " + chemistVisit.volume)
+        Timber.d("REMARKS====> " + chemistVisit.remarks)
+        Timber.d("REMARKS MR====> " + chemistVisit.remarks_mr)
+        Timber.d("PRODUCT LIST SIZE====> " + chemistVisit.product_list.size)
+        Timber.d("POB PRODUCT LIST SIZE====> " + chemistVisit.pob_product_list.size)
+        Timber.d("=========================================================")
 
         val repository = ActivityRepoProvider.activityRepoProvider()
         progress_wheel.spin()
@@ -5131,7 +6330,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             progress_wheel.stopSpinning()
                             val response = result as BaseResponse
 
-                            XLog.d("SYNC CHEMIST VISIT DETAILS : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + response.message)
+                            Timber.d("SYNC CHEMIST VISIT DETAILS : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + response.message)
                             BaseActivity.isApiInitiated = false
                             if (response.status == NetworkConstant.SUCCESS) {
                                 AppDatabase.getDBInstance()!!.addChemistDao().updateIsUploaded(true, chemistVisit.chemist_visit_id)
@@ -5159,7 +6358,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             progress_wheel.stopSpinning()
                             error.printStackTrace()
                             BaseActivity.isApiInitiated = false
-                            XLog.d("SYNC CHEMIST VISIT DETAILS : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + error.localizedMessage)
+                            Timber.d("SYNC CHEMIST VISIT DETAILS : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + error.localizedMessage)
 
                             i++
                             if (i < list.size) {
@@ -5197,7 +6396,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                 } else {
                     Handler().postDelayed(Runnable {
                         tv_logout.isEnabled = true
-                        if(Pref.DayEndMarked){
+                        if(Pref.DayEndMarked || Pref.IsAutoLogoutFromBatteryCheck){
                             performLogout()
                         }
 
@@ -5304,31 +6503,31 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         }
         docVisit.sample_product_list = sampleProductList
 
-        XLog.d("======SYNC DOCTOR VISIT INPUT PARAMS (SYNC ALL)======")
-        XLog.d("USER ID===> " + docVisit.user_id)
-        XLog.d("SESSION ID====> " + docVisit.session_token)
-        XLog.d("DOCTOR VISIT ID====> " + docVisit.doc_visit_id)
-        XLog.d("SHOP_ID====> " + docVisit.shop_id)
-        XLog.d("AMOUNT====> " + docVisit.amount)
-        XLog.d("NEXT VISIT DATE====> " + docVisit.next_visit_date)
-        XLog.d("VOLUME====> " + docVisit.crm_volume)
-        XLog.d("DOCTOR REMARKS====> " + docVisit.doc_remarks)
-        XLog.d("REMARKS MR====> " + docVisit.remarks_mr)
-        XLog.d("FROM DATE====> " + docVisit.from_cme_date)
-        XLog.d("TO DATE====> " + docVisit.to_crm_date)
-        XLog.d("IS GIFT====> " + docVisit.is_gift)
-        XLog.d("IS CRM====> " + docVisit.is_crm)
-        XLog.d("IS MONEY====> " + docVisit.is_money)
-        XLog.d("IS PRESCRIBER====> " + docVisit.is_prescriber)
-        XLog.d("IS QTY====> " + docVisit.is_qty)
-        XLog.d("IS SAMPLE====> " + docVisit.is_sample)
-        XLog.d("QTY VOL TEXT====> " + docVisit.qty_vol_text)
-        XLog.d("WHAT====> " + docVisit.what)
-        XLog.d("WHICH====> " + docVisit.which_kind)
-        XLog.d("PRODUCT LIST SIZE====> " + docVisit.product_list.size)
-        XLog.d("QTY PRODUCT LIST SIZE====> " + docVisit.qty_product_list.size)
-        XLog.d("SAMPLE PRODUCT LIST SIZE====> " + docVisit.sample_product_list.size)
-        XLog.d("=========================================================")
+        Timber.d("======SYNC DOCTOR VISIT INPUT PARAMS (SYNC ALL)======")
+        Timber.d("USER ID===> " + docVisit.user_id)
+        Timber.d("SESSION ID====> " + docVisit.session_token)
+        Timber.d("DOCTOR VISIT ID====> " + docVisit.doc_visit_id)
+        Timber.d("SHOP_ID====> " + docVisit.shop_id)
+        Timber.d("AMOUNT====> " + docVisit.amount)
+        Timber.d("NEXT VISIT DATE====> " + docVisit.next_visit_date)
+        Timber.d("VOLUME====> " + docVisit.crm_volume)
+        Timber.d("DOCTOR REMARKS====> " + docVisit.doc_remarks)
+        Timber.d("REMARKS MR====> " + docVisit.remarks_mr)
+        Timber.d("FROM DATE====> " + docVisit.from_cme_date)
+        Timber.d("TO DATE====> " + docVisit.to_crm_date)
+        Timber.d("IS GIFT====> " + docVisit.is_gift)
+        Timber.d("IS CRM====> " + docVisit.is_crm)
+        Timber.d("IS MONEY====> " + docVisit.is_money)
+        Timber.d("IS PRESCRIBER====> " + docVisit.is_prescriber)
+        Timber.d("IS QTY====> " + docVisit.is_qty)
+        Timber.d("IS SAMPLE====> " + docVisit.is_sample)
+        Timber.d("QTY VOL TEXT====> " + docVisit.qty_vol_text)
+        Timber.d("WHAT====> " + docVisit.what)
+        Timber.d("WHICH====> " + docVisit.which_kind)
+        Timber.d("PRODUCT LIST SIZE====> " + docVisit.product_list.size)
+        Timber.d("QTY PRODUCT LIST SIZE====> " + docVisit.qty_product_list.size)
+        Timber.d("SAMPLE PRODUCT LIST SIZE====> " + docVisit.sample_product_list.size)
+        Timber.d("=========================================================")
 
         val repository = ActivityRepoProvider.activityRepoProvider()
         progress_wheel.spin()
@@ -5339,7 +6538,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         .subscribe({ result ->
                             progress_wheel.stopSpinning()
                             val response = result as BaseResponse
-                            XLog.d("SYNC DOCTOR VISIT DETAILS : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + response.message)
+                            Timber.d("SYNC DOCTOR VISIT DETAILS : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + response.message)
 
                             if (response.status == NetworkConstant.SUCCESS) {
                                 AppDatabase.getDBInstance()!!.addDocDao().updateIsUploaded(true, docVisit.doc_visit_id)
@@ -5350,16 +6549,19 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 } else {
                                     stopAnimation(activity_sync_img)
                                     val list_ = AppDatabase.getDBInstance()?.activDao()?.getDataSyncWise(false)
-                                    if (list_ != null && list_.isNotEmpty())
+                                    if (list_ != null && list_.isNotEmpty()) {
                                         tv_activity_retry.visibility = View.VISIBLE
+                                        }
                                     else {
                                         val chemistList = AppDatabase.getDBInstance()!!.addChemistDao().getDataSyncWise(false)
-                                        if (chemistList != null && chemistList.isNotEmpty())
+                                        if (chemistList != null && chemistList.isNotEmpty()) {
                                             tv_activity_retry.visibility = View.VISIBLE
+                                        }
                                         else {
                                             val doctorList = AppDatabase.getDBInstance()!!.addDocDao().getDataSyncWise(false)
-                                            if (doctorList != null && doctorList.isNotEmpty())
+                                            if (doctorList != null && doctorList.isNotEmpty()) {
                                                 tv_activity_retry.visibility = View.VISIBLE
+                                                }
                                             else {
                                                 tv_activity_retry.visibility = View.GONE
                                                 activity_tick_img.visibility = View.VISIBLE
@@ -5471,7 +6673,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             progress_wheel.stopSpinning()
                             error.printStackTrace()
                             BaseActivity.isApiInitiated = false
-                            XLog.d("SYNC DOCTOR VISIT DETAILS : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + error.localizedMessage)
+                            Timber.d("SYNC DOCTOR VISIT DETAILS : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ", MESSAGE : " + error.localizedMessage)
 
                             i++
                             if (i < list.size) {
@@ -5538,7 +6740,86 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
     }
     //===========================================================ADD ACTIVITY========================================================
 
-
+    val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    fun syncWhatsappStatus(){
+        if(Pref.IsShowWhatsAppIconforVisit || Pref.IsAutomatedWhatsAppSendforRevisit){
+            scope.launch {
+                println("tag_supr begin")
+                var whatsL = AppDatabase.getDBInstance()?.visitRevisitWhatsappStatusDao()!!.getUnsyncList() as ArrayList<VisitRevisitWhatsappStatus>
+                for(i in 0..whatsL.size-1){
+                    val stringRequest: StringRequest = object : StringRequest(
+                        Request.Method.POST, "https://theultimate.io/WAApi/report",
+                        Response.Listener<String?> { response ->
+                            var resp = JsonParser.parseString(response)
+                            var statusCode = resp.asJsonObject.get("code").toString()
+                            var data =  resp.asJsonObject.get("data")
+                            try{
+                                var f1 = data.asJsonObject
+                                var f2 = f1.asJsonObject.get("records")
+                                var f3 =f2.asJsonArray
+                                var status = f3.get(0).asJsonObject.get("status").toString().drop(1).dropLast(1)
+                                var cause = f3.get(0).asJsonObject.get("cause").toString().drop(1).dropLast(1)
+                                if(statusCode.equals("200",ignoreCase = true)){
+                                    if(status.equals("DELIVERED")){
+                                        var msg = if(cause.contains("Read By User",ignoreCase = true)) "Read by User" else "Sent Successfully"
+                                        AppDatabase.getDBInstance()?.visitRevisitWhatsappStatusDao()!!.updateWhatsStatus(true,msg,whatsL.get(i).sl_no,whatsL.get(i).transactionId)
+                                    }else{
+                                        AppDatabase.getDBInstance()?.visitRevisitWhatsappStatusDao()!!.updateWhatsStatus(false,status.toString(),whatsL.get(i).sl_no,whatsL.get(i).transactionId)
+                                    }
+                                }
+                            }catch (ex:Exception){
+                                ex.printStackTrace()
+                            }
+                        },
+                        Response.ErrorListener { error ->
+                            Timber.d("error in whatsapp report api ${error.message}")
+                        })
+                    {
+                        override fun getParams(): Map<String, String>? {
+                            val params: MutableMap<String, String> = HashMap()
+                            params.put("userId", "eurobondwa")
+                            params.put("password", "Eurobondwa@123")
+                            params.put("wabaNumber", "917888488891")
+                            params.put("fromDate", "${AppUtils.getCurrentDateForShopActi()}")
+                            params.put("toDate", "${AppUtils.getCurrentDateForShopActi()}")
+                            params.put("uuId", whatsL.get(i).transactionId.toString())
+                            return params
+                        }
+                    }
+                    MySingleton.getInstance(mContext.applicationContext)!!.addToRequestQueue(stringRequest)
+                    delay(450)
+                }
+            }.invokeOnCompletion {
+                println("tag_supr finish")
+                var obL =AppDatabase.getDBInstance()?.visitRevisitWhatsappStatusDao()!!.getUnsyncList() as ArrayList<VisitRevisitWhatsappStatus>
+                if(obL.size!= 0){
+                    var ob = WhatsappApiData(Pref.user_id.toString(),obL)
+                    val repository = EditShopRepoProvider.provideEditShopWithoutImageRepository()
+                    BaseActivity.compositeDisposable.add(
+                        repository.whatsAppStatusSync(ob)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe({ result ->
+                                val addShopResult = result as BaseResponse
+                                if(addShopResult.status.equals("200")){
+                                    AppDatabase.getDBInstance()?.visitRevisitWhatsappStatusDao()!!.updateWhatsStatusUpload()
+                                    calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+                                }else{
+                                    calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+                                }
+                            }, { error ->
+                                error.printStackTrace()
+                                calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+                            })
+                    )
+                }else{
+                    calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+                }
+            }
+        }else{
+            calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+        }
+    }
 
     //===============================================Logout===========================================================================//
     private fun calllogoutApi(user_id: String, session_id: String) {
@@ -5565,7 +6846,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 //                    val distance = LocationWizard.getDistance(latestLat.toDouble(), latestLong.toDouble(),
 //                            Pref.latitude!!.toDouble(), Pref.longitude!!.toDouble())
 //
-//                    XLog.d("LOGOUT : DISTANCE=====> $distance")
+//                    Timber.d("LOGOUT : DISTANCE=====> $distance")
 //                }*/
 //
 //                /*val distance = LocationWizard.getDistance(previousLat.toDouble(), previousLong.toDouble(),
@@ -5598,17 +6879,17 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                 location = "Unknown"
         }
 
-        XLog.d("LOGOUT : " + "REQUEST : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name)
-        XLog.d("=========LOGOUT INPUT PARAMS========")
-        XLog.d("LOGOUT : USER ID===> $user_id")
-        XLog.d("LOGOUT : SESSION ID==> $session_id")
-        XLog.d("LOGOUT : LAT====> " + Pref.logout_latitude)
-        XLog.d("LOGOUT : LONG=====> " + Pref.logout_longitude)
-        XLog.d("LOGOUT : DISTANCE=====> $distance")
-        XLog.d("LOGOUT : LOGOUT TIME====> " + AppUtils.getCurrentDateTime())
-        XLog.d("LOGOUT : IS AUTO LOGOUT===> 0")
-        XLog.d("LOGOUT : LOCATION====> $location")
-        XLog.d("=====================================")
+        Timber.d("LOGOUT : " + "REQUEST : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name)
+        Timber.d("=========LOGOUT INPUT PARAMS========")
+        Timber.d("LOGOUT : USER ID===> $user_id")
+        Timber.d("LOGOUT : SESSION ID==> $session_id")
+        Timber.d("LOGOUT : LAT====> " + Pref.logout_latitude)
+        Timber.d("LOGOUT : LONG=====> " + Pref.logout_longitude)
+        Timber.d("LOGOUT : DISTANCE=====> $distance")
+        Timber.d("LOGOUT : LOGOUT TIME====> " + AppUtils.getCurrentDateTime())
+        Timber.d("LOGOUT : IS AUTO LOGOUT===> 0")
+        Timber.d("LOGOUT : LOCATION====> $location")
+        Timber.d("=====================================")
 
         val repository = LogoutRepositoryProvider.provideLogoutRepository()
         progress_wheel.spin()
@@ -5620,35 +6901,19 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         .subscribe({ result ->
                             progress_wheel.stopSpinning()
                             val logoutResponse = result as BaseResponse
-                            XLog.d("LOGOUT : " + "RESPONSE : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + logoutResponse.message)
+                            Timber.d("LOGOUT : " + "RESPONSE : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + logoutResponse.message)
                             if (logoutResponse.status == NetworkConstant.SUCCESS) {
                                 (mContext as DashboardActivity).isChangedPassword = false
                                 Pref.tempDistance = "0.0"
-
-                                /*if ((mContext as DashboardActivity).isForceLogout)
-                                    Pref.prevOrderCollectionCheckTimeStamp = 0L*/
-
                                 if (unSyncedList != null && unSyncedList.isNotEmpty()) {
                                     for (i in unSyncedList.indices) {
                                         AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploaded(true, unSyncedList[i].locationId)
                                     }
                                 }
-
                                 (mContext as DashboardActivity).syncShopListAndLogout()
-                            } else if (logoutResponse.status == NetworkConstant.SESSION_MISMATCH) {
-                                //clearData()
-                                (mContext as DashboardActivity).isChangedPassword = false
-                                startActivity(Intent(mContext, LoginActivity::class.java))
-                                (mContext as DashboardActivity).overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
-                                (mContext as DashboardActivity).finishAffinity()
                             } else {
                                 progress_wheel.stopSpinning()
                                 (mContext as DashboardActivity).showSnackMessage("Failed to logout")
-
-                                if ((mContext as DashboardActivity).isChangedPassword) {
-                                    (mContext as DashboardActivity).isChangedPassword = false
-                                    (mContext as DashboardActivity).onBackPressed()
-                                }
                             }
                             BaseActivity.isApiInitiated = false
 
@@ -5657,7 +6922,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             BaseActivity.isApiInitiated = false
                             progress_wheel.stopSpinning()
                             error.printStackTrace()
-                            XLog.d("LOGOUT : " + "RESPONSE ERROR: " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                            Timber.d("LOGOUT : " + "RESPONSE ERROR: " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                             (mContext as DashboardActivity).showSnackMessage(error.localizedMessage)
 
                             if ((mContext as DashboardActivity).isChangedPassword) {
@@ -5832,18 +7097,23 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
 
     private fun performLogout() {
-        if(Pref.DayEndMarked){
+        if(Pref.DayEndMarked || Pref.IsAutoLogoutFromBatteryCheck){
+            Pref.IsAutoLogoutFromBatteryCheck=false
+            println("service_battert_tag logout ${Pref.IsAutoLogoutFromBatteryCheck}")
             if (Pref.isShowLogoutReason && !TextUtils.isEmpty(Pref.approvedOutTime)) {
                 val currentTimeInLong = AppUtils.convertTimeWithMeredianToLong(AppUtils.getCurrentTimeWithMeredian())
                 val approvedOutTimeInLong = AppUtils.convertTimeWithMeredianToLong(Pref.approvedOutTime)
 
-                if (currentTimeInLong < approvedOutTimeInLong)
+                if (currentTimeInLong < approvedOutTimeInLong) {
                     showLogoutLocReasonDialog()
-                else
+                }
+                else {
                     logoutYesClick()
+                }
             }
-            else
+            else {
                 logoutYesClick()
+                }
         }else{
 
             CommonDialog.getInstance(AppUtils.hiFirstNameText()+"!", getString(R.string.confirm_logout), getString(R.string.cancel), getString(R.string.ok), object : CommonDialogClickListener {
@@ -5857,13 +7127,16 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         val currentTimeInLong = AppUtils.convertTimeWithMeredianToLong(AppUtils.getCurrentTimeWithMeredian())
                         val approvedOutTimeInLong = AppUtils.convertTimeWithMeredianToLong(Pref.approvedOutTime)
 
-                        if (currentTimeInLong < approvedOutTimeInLong)
+                        if (currentTimeInLong < approvedOutTimeInLong) {
                             showLogoutLocReasonDialog()
-                        else
+                            }
+                        else {
                             logoutYesClick()
+                            }
                     }
-                    else
+                    else {
                         logoutYesClick()
+                    }
                 }
 
             }).show((mContext as DashboardActivity).supportFragmentManager, "")
@@ -5937,7 +7210,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
     private fun syncLocationActivity(list: List<UserLocationDataEntity>) {
 
-        XLog.d("syncLocationActivity Logout : ENTER")
+        Timber.d("syncLocationActivity Logout : ENTER")
 
 
         if (Pref.user_id.isNullOrEmpty())
@@ -6136,8 +7409,8 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         for (i in apiLocationList.indices) {
             if (!apiLocationList[i].isUploaded) {
 
-                XLog.e("Final Home Duration (Location Fuzed Service)=================> ${apiLocationList[i].home_duration}")
-                XLog.e("Time (Location Fuzed Service)=================> ${apiLocationList[i].time} ${apiLocationList[i].meridiem}")
+                Timber.e("Final Home Duration (Location Fuzed Service)=================> ${apiLocationList[i].home_duration}")
+                Timber.e("Time (Location Fuzed Service)=================> ${apiLocationList[i].time} ${apiLocationList[i].meridiem}")
 
 
                 val locationData = LocationData()
@@ -6169,7 +7442,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
             locationUpdateReq.location_details = locationList
             val repository = LocationUpdateRepositoryProviders.provideLocationUpdareRepository()
 
-            XLog.d("syncLocationActivity Logout : REQUEST")
+            Timber.d("syncLocationActivity Logout : REQUEST")
             progress_wheel.spin()
 
             BaseActivity.compositeDisposable.add(
@@ -6180,7 +7453,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                             .subscribe({ result ->
                                 val updateShopActivityResponse = result as BaseResponse
 
-                                XLog.d("syncLocationActivity Logout : RESPONSE : " + updateShopActivityResponse.status + ":" + updateShopActivityResponse.message)
+                                Timber.d("syncLocationActivity Logout : RESPONSE : " + updateShopActivityResponse.status + ":" + updateShopActivityResponse.message)
 
                                 if (updateShopActivityResponse.status == NetworkConstant.SUCCESS) {
 
@@ -6192,17 +7465,40 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                                             if (syncList != null && syncList.isNotEmpty()) {
 
-                                                if (i == 0)
-                                                    AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploadedFor5Items(true, syncList[syncList.size - 1].locationId.toInt(), locationListAllId[i].locationId.toInt())
-                                                else
-                                                    AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploadedFor5Items(true, locationListAllId[i - 1].locationId.toInt(), locationListAllId[i].locationId.toInt())
-
+                                                if (i == 0) {
+                                                    AppDatabase.getDBInstance()!!
+                                                        .userLocationDataDao()
+                                                        .updateIsUploadedFor5Items(
+                                                            true,
+                                                            syncList[syncList.size - 1].locationId.toInt(),
+                                                            locationListAllId[i].locationId.toInt()
+                                                        )
+                                                } else {
+                                                    AppDatabase.getDBInstance()!!
+                                                        .userLocationDataDao()
+                                                        .updateIsUploadedFor5Items(
+                                                            true,
+                                                            locationListAllId[i - 1].locationId.toInt(),
+                                                            locationListAllId[i].locationId.toInt()
+                                                        )
+                                                }
                                             } else {
-                                                if (i == 0)
-                                                    AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploaded(true, locationListAllId[i].locationId.toInt())
-                                                else
-                                                    AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploadedFor5Items(true, locationListAllId[i - 1].locationId.toInt(), locationListAllId[i].locationId.toInt())
-                                            }
+                                                if (i == 0) {
+                                                    AppDatabase.getDBInstance()!!
+                                                        .userLocationDataDao().updateIsUploaded(
+                                                        true,
+                                                        locationListAllId[i].locationId.toInt()
+                                                    )
+                                                } else {
+                                                    AppDatabase.getDBInstance()!!
+                                                        .userLocationDataDao()
+                                                        .updateIsUploadedFor5Items(
+                                                            true,
+                                                            locationListAllId[i - 1].locationId.toInt(),
+                                                            locationListAllId[i].locationId.toInt()
+                                                        )
+                                                }
+                                                }
                                         }
 
                                         uiThread {
@@ -6226,15 +7522,15 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                                 getUnknownList()
 
                                 if (error == null) {
-                                    XLog.d("syncLocationActivity Logout : ERROR : " + "UNEXPECTED ERROR IN LOCATION ACTIVITY API")
+                                    Timber.d("syncLocationActivity Logout : ERROR : " + "UNEXPECTED ERROR IN LOCATION ACTIVITY API")
                                 } else {
-                                    XLog.d("syncLocationActivity Logout : ERROR : " + error.localizedMessage)
+                                    Timber.d("syncLocationActivity Logout : ERROR : " + error.localizedMessage)
                                     error.printStackTrace()
                                 }
                             })
             )
         } else {
-            XLog.e("=======locationList is empty (Logout)=========")
+            Timber.e("=======locationList is empty (Logout)=========")
             AppUtils.isLocationActivityUpdating = false
             //calllogoutApi(Pref.user_id!!, Pref.session_token!!)
             getUnknownList()
@@ -6250,8 +7546,9 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             val response = result as UnknownReponseModel
-                            if (response.status == NetworkConstant.SUCCESS)
+                            if (response.status == NetworkConstant.SUCCESS) {
                                 submitLoc(response.location_list)
+                            }
                             else {
                                 progress_wheel.stopSpinning()
                                 callAppInfoApi()
@@ -6302,15 +7599,17 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
     private fun callAppInfoApi() {
         if (!Pref.isAppInfoEnable) {
-            calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+            //calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+            syncWhatsappStatus()
             return
         }
 
         val unSyncData = AppDatabase.getDBInstance()?.batteryNetDao()?.getDataSyncStateWise(false)
 
         if (unSyncData == null || unSyncData.isEmpty()) {
-            XLog.e("=======Appinfo list is empty (Logout Sync)=========")
-            calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+            Timber.e("=======Appinfo list is empty (Logout Sync)=========")
+            //calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+            syncWhatsappStatus()
             return
         }
 
@@ -6323,16 +7622,20 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
         unSyncData.forEach {
             appInfoList.add(AppInfoDataModel(it.bat_net_id!!, it.date_time!!, it.bat_status!!, it.bat_level!!, it.net_type!!,
-                    it.mob_net_type!!, it.device_model!!, it.android_version!!))
+                    it.mob_net_type!!, it.device_model!!, it.android_version!!,it.Available_Storage!!,it.Total_Storage!!,it.Power_Saver_Status))
         }
+        var totalVisitRevisitCount = AppDatabase.getDBInstance()!!.shopActivityDao().getVisitRevisitCountByDate(AppUtils.getCurrentDateForShopActi())
+        var totalVisitRevisitCountSynced = AppDatabase.getDBInstance()!!.shopActivityDao().getVisitRevisitCountByDateSyncedUnSynced(AppUtils.getCurrentDateForShopActi(),true)
+        var totalVisitRevisitCountUnSynced = AppDatabase.getDBInstance()!!.shopActivityDao().getVisitRevisitCountByDateSyncedUnSynced(AppUtils.getCurrentDateForShopActi(),false)
 
-        val appInfoInput = AppInfoInputModel(Pref.session_token!!, Pref.user_id!!, appInfoList)
+        val appInfoInput = AppInfoInputModel(Pref.session_token!!, Pref.user_id!!, appInfoList,totalVisitRevisitCount.toString(),totalVisitRevisitCountSynced.toString(),totalVisitRevisitCountUnSynced.toString())
 
-        XLog.d("============App Info Input(Logout Sync)===========")
-        XLog.d("session_token==========> " + appInfoInput.session_token)
-        XLog.d("user_id==========> " + appInfoInput.user_id)
-        XLog.d("app_info_list.size==========> " + appInfoInput.app_info_list?.size)
-        XLog.d("==================================================")
+        Timber.d("============App Info Input(Logout Sync)===========")
+        Timber.d("session_token==========> " + appInfoInput.session_token)
+        Timber.d("user_id==========> " + appInfoInput.user_id)
+        Timber.d("app_info_list.size==========> " + appInfoInput.app_info_list?.size)
+        Timber.d("powerSaverStatus==========> " + Pref.PowerSaverStatus)
+        Timber.d("==================================================")
 
         progress_wheel.spin()
         val repository = LocationRepoProvider.provideLocationRepository()
@@ -6344,7 +7647,7 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
                         .subscribe({ result ->
                             val response = result as BaseResponse
 
-                            XLog.d("App Info : RESPONSE : " + response.status + ":" + response.message)
+                            Timber.d("App Info : RESPONSE : " + response.status + ":" + response.message)
                             AppUtils.isAppInfoUpdating = false
 
                             if (response.status == NetworkConstant.SUCCESS) {
@@ -6355,24 +7658,29 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
 
                                     uiThread {
                                         progress_wheel.stopSpinning()
-                                        calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+                                        //calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+                                        syncWhatsappStatus()
                                     }
                                 }
                             }
                             else {
                                 progress_wheel.stopSpinning()
-                                calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+                                //calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+                                syncWhatsappStatus()
                             }
 
                         }, { error ->
                             AppUtils.isAppInfoUpdating = false
-                            XLog.d("App Info : ERROR : " + error.localizedMessage)
+                            Timber.d("App Info : ERROR : " + error.localizedMessage)
                             error.printStackTrace()
                             progress_wheel.stopSpinning()
-                            calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+                            //calllogoutApi(Pref.user_id!!, Pref.session_token!!)
+                            syncWhatsappStatus()
                         })
         )
     }
+
+
 
     private fun animateSyncImage(icon: AppCompatImageView) {
         icon.animation = AnimationUtils.loadAnimation(mContext, R.anim.rotation_sync)
@@ -6383,4 +7691,347 @@ class LogoutSyncFragment : BaseFragment(), View.OnClickListener {
         icon.animate().cancel()
         icon.clearAnimation()
     }
+
+    /*20-12-2021*/
+    private fun callReturnApi(){
+        stopAnimation(addReturnSyncImg)
+        addReturnSyncImg.visibility=View.GONE
+        addReturnTickImg.visibility=View.VISIBLE
+        try{
+            var returnList : ReturnRequest = ReturnRequest()
+            var unsyncData= AppDatabase.getDBInstance()?.returnDetailsDao()!!.getAllUnsynced()
+            if(unsyncData != null && unsyncData.isNotEmpty() && unsyncData.size!=0){
+                var i=0
+                returnList.user_id=Pref.user_id
+                returnList.session_token=Pref.session_token
+                returnList.shop_id=unsyncData?.get(i).shop_id
+                returnList.return_id=unsyncData?.get(i).return_id
+                returnList.latitude=unsyncData?.get(i).return_lat
+                returnList.longitude=unsyncData?.get(i).return_long
+                returnList.description=unsyncData?.get(i).description
+                returnList.return_date_time=unsyncData?.get(i).date
+                returnList.address=""
+                returnList.return_amount=unsyncData?.get(i).amount
+
+
+                var returnProductList= AppDatabase.getDBInstance()?.returnProductListDao()?.getIDUnsynced(returnList?.return_id.toString())
+                var reproductList:MutableList<ReturnProductList> = ArrayList()
+                for(j in 0..returnProductList!!.size-1){
+                    var obj= ReturnProductList()
+                    obj.id=returnProductList.get(j).product_id.toString()
+                    obj.product_name=returnProductList.get(j).product_name
+                    obj.qty=returnProductList.get(j).qty
+                    obj.rate=returnProductList.get(j).rate
+                    obj.total_price=returnProductList.get(j).total_price
+                    reproductList.add(obj)
+                }
+                returnList.return_list=reproductList
+
+                val repository = AddOrderRepoProvider.provideAddOrderRepository()
+                compositeDisposable.add(
+                        repository.addReturn(returnList)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe({ result ->
+                                    Timber.d("Return : RESPONSE " + result.status)
+                                    if (result.status == NetworkConstant.SUCCESS){
+                                        AppDatabase.getDBInstance()?.returnDetailsDao()?.updateIsUploaded(true,returnList.return_id!!)
+                                        callReturnApi()
+                                    }
+                                    else if(result.status == NetworkConstant.SESSION_MISMATCH) {
+                                    (mContext as DashboardActivity).showSnackMessage(result.message!!)
+                                }
+                                },{error ->
+                                    if (error == null) {
+                                        Timber.d("Return : ERROR " + "UNEXPECTED ERROR IN Add Return API")
+                                    } else {
+                                        Timber.d("Return : ERROR " + error.localizedMessage)
+                                        error.printStackTrace()
+                                    }
+//                                    checkToCallActivity()
+                                    callLogshareApi()
+                                })
+                )
+
+            }else{
+//                checkToCallActivity()
+                callLogshareApi()
+            }
+        }catch (ex:Exception){
+//            checkToCallActivity()
+            callLogshareApi()
+
+        }
+    }
+
+    private fun callLogshareApi(){
+        syncExtraContact()
+        /* code off for for Timber Log Introduced
+        if(Pref.LogoutWithLogFile){
+            try{
+                val filesForZip: Array<String> = arrayOf(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "xlavoslogsample/log").path)
+                ZipOutputStream(BufferedOutputStream(FileOutputStream(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "xlavoslogsample/log.zip").path))).use { out ->
+                    for (file in filesForZip) {
+                        FileInputStream(file).use { fi ->
+                            BufferedInputStream(fi).use { origin ->
+                                val entry = ZipEntry(file.substring(file.lastIndexOf("/")))
+                                out.putNextEntry(entry)
+                                origin.copyTo(out, 1024)
+                            }
+                        }
+                    }
+                }
+
+                val addReqData = AddLogReqData()
+                addReqData.user_id = Pref.user_id
+                val fileUrl = Uri.parse(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "xlavoslogsample/log.zip").path);
+                val file = File(fileUrl.path)
+                if (!file.exists()) {
+                    //checkToCallActivity()
+                    syncExtraContact()
+                }
+                val uri: Uri = FileProvider.getUriForFile(mContext, mContext!!.applicationContext.packageName.toString() + ".provider", file)
+                try{
+                    val repository = EditShopRepoProvider.provideEditShopRepository()
+                    BaseActivity.compositeDisposable.add(
+                        repository.addLogfile(addReqData,file.toString(),mContext)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe({ result ->
+                                Timber.d("Logshare : RESPONSE " + result.status)
+                                if (result.status == NetworkConstant.SUCCESS){
+                                    //Timber.d("Return : RESPONSE URL " + result.file_url +  " " +Pref.user_name)
+                                }
+                                //checkToCallActivity()
+                                syncExtraContact()
+                            },{error ->
+                                if (error == null) {
+                                    Timber.d("Logshare : ERROR " + "UNEXPECTED ERROR IN Log share API")
+                                } else {
+                                    Timber.d("Logshare : ERROR " + error.localizedMessage)
+                                    error.printStackTrace()
+                                }
+                                //checkToCallActivity()
+                                syncExtraContact()
+                            })
+                    )
+
+                } catch (ex:Exception){
+                    ex.printStackTrace()
+                    Timber.d("Logshare : Exception " + "UNEXPECTED ERROR IN Log share API")
+                    //checkToCallActivity()
+                    syncExtraContact()
+                }
+            }catch (ex:Exception){
+                Timber.d("Logshare : log.zip error " + ex.message)
+                //checkToCallActivity()
+                syncExtraContact()
+            }
+        }else{
+            //checkToCallActivity()
+            syncExtraContact()
+        }*/
+    }
+
+    // 1.0 LogoutSyncFragment AppV 4.0.6 suman 12-01-2023 multiple contact updation
+    private fun syncExtraContact(){
+        var unsyncShopIDL = AppDatabase.getDBInstance()?.shopExtraContactDao()?.getExtraContListShopIDUnsync(false) as ArrayList<String>
+        if(unsyncShopIDL.size>0){
+            var shopListSubmitReqAdd : multiContactRequestData = multiContactRequestData()
+            shopListSubmitReqAdd.user_id = Pref.user_id!!
+            shopListSubmitReqAdd.session_token = Pref.session_token!!
+
+            var shopListSubmitReqAddEdit : multiContactRequestData = multiContactRequestData()
+            shopListSubmitReqAddEdit.user_id = Pref.user_id!!
+            shopListSubmitReqAddEdit.session_token = Pref.session_token!!
+
+            for(i in 0..unsyncShopIDL.size-1){
+                var extraContResponseObj : ShopExtraContactReq = ShopExtraContactReq()
+                extraContResponseObj.shop_id = unsyncShopIDL.get(i)
+
+                var extraContL = AppDatabase.getDBInstance()?.shopExtraContactDao()?.getExtraContListByShopID(unsyncShopIDL.get(i)) as ArrayList<ShopExtraContactEntity>
+
+                var isFirstUpload = true
+                for(l in 0..extraContL.size-1){
+                    if(extraContL.get(l).contact_serial.equals("1") && extraContL.get(l).isUploaded ){
+                        isFirstUpload = false
+                        break
+                    }
+                }
+                for(a in 0..extraContL.size-1){
+                    if(a==0){
+                        extraContResponseObj.apply {
+                            contact_name1 = extraContL.get(a).contact_name.toString()
+                            contact_number1 = extraContL.get(a).contact_number.toString()
+                            contact_email1 = extraContL.get(a).contact_email.toString()
+                            contact_doa1 = extraContL.get(a).contact_doa.toString()
+                            contact_dob1 = extraContL.get(a).contact_dob.toString()
+                        }
+                    }
+                    if(a==1){
+                        extraContResponseObj.apply {
+                            contact_name2 = extraContL.get(a).contact_name.toString()
+                            contact_number2 = extraContL.get(a).contact_number.toString()
+                            contact_email2 = extraContL.get(a).contact_email.toString()
+                            contact_doa2 = extraContL.get(a).contact_doa.toString()
+                            contact_dob2 = extraContL.get(a).contact_dob.toString()
+                        }
+                    }
+                    if(a==2){
+                        extraContResponseObj.apply {
+                            contact_name3 = extraContL.get(a).contact_name.toString()
+                            contact_number3 = extraContL.get(a).contact_number.toString()
+                            contact_email3 = extraContL.get(a).contact_email.toString()
+                            contact_doa3 = extraContL.get(a).contact_doa.toString()
+                            contact_dob3 = extraContL.get(a).contact_dob.toString()
+                        }
+                    }
+                    if(a==3){
+                        extraContResponseObj.apply {
+                            contact_name4 = extraContL.get(a).contact_name.toString()
+                            contact_number4 = extraContL.get(a).contact_number.toString()
+                            contact_email4 = extraContL.get(a).contact_email.toString()
+                            contact_doa4 = extraContL.get(a).contact_doa.toString()
+                            contact_dob4 = extraContL.get(a).contact_dob.toString()
+                        }
+                    }
+                    if(a==4){
+                        extraContResponseObj.apply {
+                            contact_name5 = extraContL.get(a).contact_name.toString()
+                            contact_number5 = extraContL.get(a).contact_number.toString()
+                            contact_email5 = extraContL.get(a).contact_email.toString()
+                            contact_doa5 = extraContL.get(a).contact_doa.toString()
+                            contact_dob5 = extraContL.get(a).contact_dob.toString()
+                        }
+                    }
+                    if(a==5){
+                        extraContResponseObj.apply {
+                            contact_name6 = extraContL.get(a).contact_name.toString()
+                            contact_number6 = extraContL.get(a).contact_number.toString()
+                            contact_email6 = extraContL.get(a).contact_email.toString()
+                            contact_doa6 = extraContL.get(a).contact_doa.toString()
+                            contact_dob6 = extraContL.get(a).contact_dob.toString()
+                        }
+                    }
+                }
+                if(isFirstUpload){
+                    shopListSubmitReqAdd.shop_list.add(extraContResponseObj)
+                }else{
+                    shopListSubmitReqAddEdit.shop_list.add(extraContResponseObj)
+                }
+            }
+            if(shopListSubmitReqAdd.shop_list.size>0){
+                syncAddMultiContact( shopListSubmitReqAdd,shopListSubmitReqAddEdit)
+            }else if(shopListSubmitReqAddEdit.shop_list.size>0){
+                syncEditMultiContact(shopListSubmitReqAddEdit)
+            }else{
+              //  checkToCallActivity()
+                syncCallHisInfo()
+            }
+        }else{
+           // checkToCallActivity()
+            syncCallHisInfo()
+        }
+    }
+
+    // 1.0 LogoutSyncFragment AppV 4.0.6 suman 12-01-2023 multiple contact updation
+    fun syncAddMultiContact( shopListSubmitReqAdd:multiContactRequestData, shopListSubmitReqEdit:multiContactRequestData){
+        val repository = AddShopRepositoryProvider.provideAddShopWithoutImageRepository()
+        BaseActivity.compositeDisposable.add(
+            repository.addMutiContact(shopListSubmitReqAdd)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe({ result ->
+                    val addmutliContactResult = result as BaseResponse
+                    if (addmutliContactResult.status==NetworkConstant.SUCCESS){
+                        doAsync {
+                            for(l in 0..shopListSubmitReqAdd.shop_list.size-1){
+                                val obj = shopListSubmitReqAdd.shop_list.get(l)
+                                if(obj.contact_serial1.equals("1") && !obj.contact_name1.equals("")){
+                                    AppDatabase.getDBInstance()?.shopExtraContactDao()?.updateIsUploaded(true,obj.shop_id,obj.contact_serial1)
+                                }
+                                if(obj.contact_serial2.equals("2") && !obj.contact_name2.equals("")){
+                                    AppDatabase.getDBInstance()?.shopExtraContactDao()?.updateIsUploaded(true,obj.shop_id,obj.contact_serial2)
+                                }
+                                if(obj.contact_serial3.equals("3") && !obj.contact_name3.equals("")){
+                                    AppDatabase.getDBInstance()?.shopExtraContactDao()?.updateIsUploaded(true,obj.shop_id,obj.contact_serial3)
+                                }
+                                if(obj.contact_serial4.equals("4") && !obj.contact_name4.equals("")){
+                                    AppDatabase.getDBInstance()?.shopExtraContactDao()?.updateIsUploaded(true,obj.shop_id,obj.contact_serial4)
+                                }
+                                if(obj.contact_serial5.equals("5") && !obj.contact_name5.equals("")){
+                                    AppDatabase.getDBInstance()?.shopExtraContactDao()?.updateIsUploaded(true,obj.shop_id,obj.contact_serial5)
+                                }
+                                if(obj.contact_serial6.equals("6") && !obj.contact_name6.equals("")){
+                                    AppDatabase.getDBInstance()?.shopExtraContactDao()?.updateIsUploaded(true,obj.shop_id,obj.contact_serial6)
+                                }
+                            }
+                            uiThread {
+                                if(shopListSubmitReqEdit.shop_list.size>0){
+                                    syncEditMultiContact(shopListSubmitReqEdit)
+                                }else{
+                                   // checkToCallActivity()
+                                    syncCallHisInfo()
+                                }
+                            }
+                        }
+                    }
+                }, { error ->
+                    error.printStackTrace()
+                    progress_wheel.stopSpinning()
+                    (mContext as DashboardActivity).showSnackMessage("Error added contact")
+                   // checkToCallActivity()
+                    syncCallHisInfo()
+                })
+        )
+    }
+
+    // 1.0 LogoutSyncFragment AppV 4.0.6 suman 12-01-2023 multiple contact updation
+    fun syncEditMultiContact(shopListSubmitReqEdit:multiContactRequestData){
+        val repository = AddShopRepositoryProvider.provideAddShopWithoutImageRepository()
+        BaseActivity.compositeDisposable.add(
+            repository.updateMutiContact(shopListSubmitReqEdit)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe({ result ->
+                    val addmutliContactResult = result as BaseResponse
+                    if (addmutliContactResult.status==NetworkConstant.SUCCESS){
+                        doAsync {
+                            for(l in 0..shopListSubmitReqEdit.shop_list.size-1){
+                                val obj = shopListSubmitReqEdit.shop_list.get(l)
+                                if(obj.contact_serial1.equals("1") && !obj.contact_name1.equals("")){
+                                    AppDatabase.getDBInstance()?.shopExtraContactDao()?.updateIsUploaded(true,obj.shop_id,obj.contact_serial1)
+                                }
+                                if(obj.contact_serial2.equals("2") && !obj.contact_name2.equals("")){
+                                    AppDatabase.getDBInstance()?.shopExtraContactDao()?.updateIsUploaded(true,obj.shop_id,obj.contact_serial2)
+                                }
+                                if(obj.contact_serial3.equals("3") && !obj.contact_name3.equals("")){
+                                    AppDatabase.getDBInstance()?.shopExtraContactDao()?.updateIsUploaded(true,obj.shop_id,obj.contact_serial3)
+                                }
+                                if(obj.contact_serial4.equals("4") && !obj.contact_name4.equals("")){
+                                    AppDatabase.getDBInstance()?.shopExtraContactDao()?.updateIsUploaded(true,obj.shop_id,obj.contact_serial4)
+                                }
+                                if(obj.contact_serial5.equals("5") && !obj.contact_name5.equals("")){
+                                    AppDatabase.getDBInstance()?.shopExtraContactDao()?.updateIsUploaded(true,obj.shop_id,obj.contact_serial5)
+                                }
+                                if(obj.contact_serial6.equals("6") && !obj.contact_name6.equals("")){
+                                    AppDatabase.getDBInstance()?.shopExtraContactDao()?.updateIsUploaded(true,obj.shop_id,obj.contact_serial6)
+                                }
+                            }
+                            uiThread {
+                               // checkToCallActivity()
+                                syncCallHisInfo()
+                            }
+                        }
+                    }
+                }, { error ->
+                    error.printStackTrace()
+                    progress_wheel.stopSpinning()
+                    (mContext as DashboardActivity).showSnackMessage("Error added contact")
+                   // checkToCallActivity()
+                    syncCallHisInfo()
+                })
+        )
+    }
+
 }

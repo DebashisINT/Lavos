@@ -6,7 +6,7 @@
     android:fitsSystemWindows="false"
     android:background="@color/color_silver"
     android:orientation="vertical"
-    android:padding="@dimen/_10sdp">
+    android:padding="@dimen/_5sdp">
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
@@ -25,7 +25,8 @@
             android:paddingStart="@dimen/_10sdp"
             android:textColor="@color/black"
             android:textSize="@dimen/_12sdp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:background="@drawable/shape_cursor_two"/>
 
     </androidx.cardview.widget.CardView>
 
@@ -46,7 +47,8 @@
             android:paddingStart="@dimen/_10sdp"
             android:textColor="@color/black"
             android:textSize="@dimen/_12sdp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:background="@drawable/shape_cursor_two"/>
 
     </androidx.cardview.widget.CardView>
 
@@ -67,7 +69,7 @@
             android:layout_width="@dimen/_40sdp"
             android:layout_height="@dimen/_40sdp"
             android:src="@drawable/ic_share"
-            android:backgroundTint="@color/default_text_color"
+            android:backgroundTint="@color/green"
             android:tint="@color/white"
             app:borderWidth="0dp"
             android:layout_gravity="end|bottom"

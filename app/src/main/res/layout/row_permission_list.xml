@@ -13,7 +13,8 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="5dp"
-        android:paddingStart="10dp">
+        android:paddingStart="10dp"
+        android:background="@drawable/shape_cursor_one">
 
         <TextView
             android:id="@+id/tv_permi_name"
@@ -29,7 +30,8 @@
             android:layout_height="35dp"
             android:gravity="center|start"
             android:textSize="@dimen/_11sdp"
-            android:hint="Permission Status"/>
+            android:hint="Permission Status"
+            android:textStyle="bold"/>
 
     </LinearLayout>
 

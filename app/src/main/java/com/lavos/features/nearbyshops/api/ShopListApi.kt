@@ -1,6 +1,9 @@
 package com.lavos.features.nearbyshops.api
 
 import com.lavos.app.NetworkConstant
+import com.lavos.base.BaseResponse
+import com.lavos.features.login.model.GetQtsAnsSubmitDtlsResponseModel
+import com.lavos.features.login.model.GetSecImageUploadResponseModel
 import com.lavos.features.login.model.productlistmodel.ModelListResponse
 import com.lavos.features.nearbyshops.model.*
 import io.reactivex.Observable
@@ -18,6 +21,10 @@ interface ShopListApi {
     @FormUrlEncoded
     @POST("Shoplist/List")
     fun getShopList(@Field("session_token") session_token:String,@Field("user_id") user_id:String): Observable<ShopListResponse>
+
+    @FormUrlEncoded
+    @POST("Shoplist/SupervisorTeamList")
+    fun getExtraTeamShopList(@Field("session_token") session_token:String,@Field("user_id") user_id:String): Observable<ShopListResponse>
 
     @FormUrlEncoded
     @POST("Shoplist/ShopType")
@@ -54,6 +61,30 @@ interface ShopListApi {
     @FormUrlEncoded
     @POST("Shoplist/AllShopTypeWithSettings")
     fun getShopTypeListStockView(@Field("session_token") session_token:String,@Field("user_id") user_id:String): Observable<ShopTypeStockViewResponseModel>
+
+
+    @FormUrlEncoded
+    @POST("RubyFoodLead/ProspectList")
+    fun getProsList(@Field("session_token") session_token:String,@Field("user_id") user_id:String): Observable<ProsListResponseModel>
+
+    @FormUrlEncoded
+    @POST("RubyFoodLead/QuestionList")
+    fun getQuesList(@Field("session_token") session_token:String,@Field("user_id") user_id:String): Observable<QuesListResponseModel>
+
+    @FormUrlEncoded
+    @POST("RubyFoodLead/QuestionAnswerList")
+    fun getQuestionAnsSubmitDetails(@Field("session_token") session_token:String,@Field("user_id") user_id:String)
+            : Observable<GetQtsAnsSubmitDtlsResponseModel>
+
+    @FormUrlEncoded
+    @POST("EmployeeSync/UserIMEIClear")
+    fun deleteImeiAPI(@Field("session_token") session_token:String,@Field("user_id") user_id:String): Observable<BaseResponse>
+
+
+    @FormUrlEncoded
+    @POST("RubyFoodLead/LeadTypeImageLink")
+    fun getSecImageUpload(@Field("session_token") session_token:String,@Field("user_id") user_id:String)
+            : Observable<GetSecImageUploadResponseModel>
 
     /**
      * Companion object to create the GithubApiService

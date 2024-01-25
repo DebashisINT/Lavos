@@ -9,7 +9,6 @@
     android:background="@color/color_silver"
     android:clickable="true">
 
-
     <RelativeLayout
         android:id="@+id/wraper"
         android:layout_width="match_parent"
@@ -131,6 +130,17 @@
         android:layout_marginTop="@dimen/_10sdp"
         android:visibility="gone"/>
 
+    <ImageView
+        android:id="@+id/iv_frag_nearby_shops_mic"
+        android:layout_width="@dimen/_20sdp"
+        android:layout_height="@dimen/_20sdp"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:layout_marginRight="@dimen/_17sdp"
+        android:layout_alignParentRight="true"
+        app:tint="@color/color_custom_red"
+        android:visibility="gone"
+        android:src="@drawable/ic_mic"/>
+
     <com.lavos.widgets.AppCustomTextView
         android:id="@+id/tv_beat_name"
         android:layout_width="wrap_content"
@@ -144,11 +154,24 @@
         android:visibility="gone"
         android:layout_below="@+id/tv_shop_count"/>
 
+    <com.lavos.widgets.AppCustomTextView
+        android:id="@+id/tv_geofence_relax"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="@dimen/_11sdp"
+        android:layout_marginLeft="@dimen/_10sdp"
+        android:layout_marginBottom="@dimen/_5sdp"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:visibility="gone"
+        android:layout_below="@+id/tv_beat_name"/>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/near_by_shops_RCV"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/tv_beat_name"
+        android:layout_below="@id/tv_geofence_relax"
         android:overScrollMode="never" />
 
     <com.lavos.widgets.AppCustomTextView

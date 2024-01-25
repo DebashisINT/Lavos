@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/attendance_top_bar_color"
+    android:background="@drawable/shape_custom_border_blue_button"
     android:gravity="center"
     android:orientation="horizontal"
     android:paddingBottom="@dimen/_10sdp"
@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center"
-        android:text="@string/date_time"
+        android:text="@string/date_time2"
         android:textColor="@color/white"
         android:textSize="@dimen/_11sdp"
         android:textStyle="bold" />
@@ -49,5 +49,5 @@
         android:textColor="@color/white"
         android:textSize="@dimen/_11sdp"
         android:textStyle="bold"
-        android:visibility="visible" />
+        android:visibility="gone" />
 </LinearLayout>

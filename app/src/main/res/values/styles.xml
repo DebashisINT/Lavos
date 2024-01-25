@@ -92,4 +92,26 @@
         <item name="windowFixedWidthMajor">90%</item>
         <item name="windowFixedWidthMinor">90%</item>
     </style>
+
+    <style name="SeekBarColor"
+        parent="Widget.AppCompat.SeekBar">
+        <item name="colorAccent">@color/maroon</item>
+    </style>
+
+    <style name="DefaultNumberPickerTheme" parent="AppTheme">
+        <item name="colorControlNormal">@color/dividerColor</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+
+
+
+    <!--    &lt;!&ndash; The beef: background color for Action Bar overflow menu &ndash;&gt;-->
+<!--    <style name="MyApp.PopupMenu" parent="android:Widget.Holo.Light.ListPopupWindow">-->
+<!--        <item name="android:popupBackground">@drawable/menu_dropdown_panel</item>-->
+<!--    </style>-->
+
+    <!-- Bonus: if you want to style whole Action Bar, not just the menu -->
+
+
 </resources>

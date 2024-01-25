@@ -100,6 +100,25 @@
             android:text="@string/diamond_type"
             android:textColor="@color/login_txt_color"
             android:textSize="@dimen/_11sdp" />
+
+        <com.lavos.widgets.AppCustomTextView
+            android:id="@+id/lead_tv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/_10sdp"
+            android:gravity="center"
+            android:singleLine="true"
+            android:text="@string/diamond_type"
+            android:textColor="@color/login_txt_color"
+            android:textSize="@dimen/_11sdp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/_1sdp"
+            android:layout_marginLeft="@dimen/_5sdp"
+            android:layout_marginRight="@dimen/_5sdp"
+            android:background="@color/popup_window_bar_color"
+            android:visibility="gone"/>
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView

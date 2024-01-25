@@ -67,4 +67,42 @@ class AddShopRequestData {
 
     var shop_revisit_uniqKey: String?= null
 
+
+    var update_by: String?= null
+    var update_on: String?= null
+    var agency_name: String?= null
+    var pros_id: String?= null
+    var lead_contact_number: String?= null
+    var landline_number: String?= null
+    var project_name: String?= null
+    var alternateNoForCustomer: String?= null
+    var whatsappNoForCustomer: String?= null
+
+    var isShopDuplicate: Boolean?= null
+    var purpose: String?= null
+
+    var GSTN_Number:String?= null
+    var ShopOwner_PAN:String?= null
+    var shopStatusUpdate:String?= null
+    var FSSAILicNo:String?= null
+
+    var isUpdateAddressFromShopMaster:Boolean?= null
+
+
+
+    var shop_firstName:String?= null
+    var shop_lastName:String?= null
+    var crm_companyID:String?= null
+    var crm_jobTitle:String?= null
+    var crm_typeID:String?= null
+    var crm_statusID:String?= null
+    var crm_sourceID:String?= null
+    var crm_reference:String?= null
+    var crm_referenceID:String?= null
+    var crm_referenceID_type:String?= null
+    var crm_stage_ID:String?= null
+    var assign_to:String?= null
+    var saved_from_status:String?= null
+
+
 }

@@ -206,7 +206,8 @@ public class FaceStartActivity extends AppCompatActivity {
         //val imageFileName = "fieldtrackingsystem" + java.util.UUID.randomUUID()
         String imageFileName = "field";
         File storageDir =new File(
-//                Environment.getExternalStorageDirectory().toString()
+                //Environment.getExternalStorageDirectory().toString()
+                //27-09-2021
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString()
                         + File.separator + "field" + File.separator
         );

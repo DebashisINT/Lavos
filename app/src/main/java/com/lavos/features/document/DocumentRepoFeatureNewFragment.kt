@@ -1,5 +1,6 @@
 package com.lavos.features.document
 
+import android.content.Context
 import android.os.Bundle
 import androidx.viewpager.widget.ViewPager
 import android.view.LayoutInflater
@@ -7,8 +8,21 @@ import android.view.View
 import android.view.ViewGroup
 import com.lavos.CustomStatic
 import com.lavos.R
+import com.lavos.app.AppDatabase
+import com.lavos.app.NetworkConstant
+import com.lavos.app.domain.DocumentypeEntity
+import com.lavos.app.utils.AppUtils
+import com.lavos.base.presentation.BaseActivity
 import com.lavos.base.presentation.BaseFragment
+import com.lavos.features.dashboard.presentation.DashboardActivity
+import com.lavos.features.document.api.DocumentRepoProvider
+import com.lavos.features.document.model.DocumentTypeResponseModel
 import com.lavos.widgets.AppCustomTextView
+
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
 
 /**
  * Created by Saheli
@@ -19,6 +33,13 @@ class DocumentRepoFeatureNewFragment : BaseFragment(), View.OnClickListener {
     private lateinit var TabPagerAdapter: TabPagerAdapter
     private lateinit var dayConsViewPager: ViewPager
 
+    private lateinit var mContext: Context
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        mContext = context
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
         val view = inflater.inflate(R.layout.fragment_document_repo, container, false)
@@ -28,6 +49,9 @@ class DocumentRepoFeatureNewFragment : BaseFragment(), View.OnClickListener {
     }
 
     private fun initView(view: View) {
+
+
+
         fromOrganization = view.findViewById(R.id.fromOrganization_TV)
         ownFiles = view.findViewById(R.id.ownFiles_TV)
         dayConsViewPager = view.findViewById(R.id.day_cons_viewpager)
@@ -60,6 +84,7 @@ class DocumentRepoFeatureNewFragment : BaseFragment(), View.OnClickListener {
         })
 
     }
+
 
     private fun initAdapter() {
         dayConsViewPager.adapter = TabPagerAdapter

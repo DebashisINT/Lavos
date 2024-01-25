@@ -147,7 +147,7 @@
                 android:textColor="@color/colorPrimary"
                 android:textSize="@dimen/_13sdp" />
 
-<!--            ic_add_button-->
+
             <com.lavos.widgets.AppCustomTextView
                 android:id="@+id/tv_new_order"
                 android:layout_width="wrap_content"

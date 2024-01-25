@@ -19,21 +19,22 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="@dimen/_80sdp"
+            android:layout_height="wrap_content"
             android:orientation="vertical">
 
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center">
+                android:gravity="center"
+                android:layout_marginTop="@dimen/_10sdp">
 
                 <com.lavos.widgets.AppCustomTextView
                     android:id="@+id/dialog_cancel_order_header_TV"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:gravity="center"
-                    android:text="Enter Sales Value : "
+                    android:text="Enter Sales Value"
                     android:textColor="@color/colorPrimary"
                     android:textSize="@dimen/_12sdp" />
 
@@ -43,24 +44,26 @@
                     android:text="*"
                     android:textColor="@color/red"
                     android:textSize="@dimen/_15sdp"
-                    android:gravity="center" />
+                    android:gravity="center"
+                    android:visibility="gone"/>
 
 
             </LinearLayout>
 
 
-
             <EditText
                 android:id="@+id/dialog_et_sale_value"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
+                android:layout_width="@dimen/_100sdp"
+                android:layout_height="@dimen/_50sdp"
                 android:gravity="center"
-                android:hint="00.00"
+                android:layout_gravity="center"
+                android:hint="00"
+                android:background="@drawable/blue_line_custom"
                 android:textColor="@color/colorPrimary"
                 android:textSize="@dimen/_12sdp"
-                android:inputType="numberDecimal"
-                android:background="@color/white"/>
+                android:inputType="number"
+                android:maxLength="7"
+                android:layout_marginTop="@dimen/_5sdp"/>
 
         </LinearLayout>
 
@@ -80,8 +83,6 @@
             android:layout_height="@dimen/_35sdp"
             android:orientation="horizontal">
 
-<!--            android:background="@drawable/selector_order_history_bg"-->
-
             <com.lavos.widgets.AppCustomTextView
                 android:id="@+id/tv_dialog_submit"
                 android:layout_width="match_parent"
@@ -91,7 +92,7 @@
                 android:textSize="@dimen/_13sdp"
                 android:gravity="center"
                 android:layout_gravity="center"
-                android:background="@drawable/shape_custom_border_blue_button"
+                android:background="@drawable/deselected_new_order_history"
                 android:textColor="@drawable/selector_text_clor_blue_white"
                 android:clickable="true"
                 android:focusable="true" />

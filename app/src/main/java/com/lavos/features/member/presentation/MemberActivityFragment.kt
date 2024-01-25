@@ -1,5 +1,6 @@
 package com.lavos.features.member.presentation
 
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
@@ -14,15 +15,18 @@ import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.RelativeLayout
 import androidx.core.content.FileProvider
 import com.lavos.R
 import com.lavos.app.NetworkConstant
 import com.lavos.app.Pref
+import com.lavos.app.types.FragType
 import com.lavos.app.utils.AppUtils
 import com.lavos.app.utils.FTStorageUtils
 import com.lavos.base.presentation.BaseActivity
 import com.lavos.base.presentation.BaseFragment
+import com.lavos.features.NewQuotation.ViewAllQuotListFragment
 import com.lavos.features.dashboard.presentation.DashboardActivity
 import com.lavos.features.login.presentation.LoginActivity
 import com.lavos.features.member.api.TeamRepoProvider
@@ -50,6 +54,7 @@ class MemberActivityFragment : BaseFragment(), View.OnClickListener {
     private lateinit var tv_no_data: AppCustomTextView
     private lateinit var tv_share_pdf: AppCustomTextView
     private lateinit var tv_visit_distance: AppCustomTextView
+    private lateinit var iv_team_map_view: ImageView
 
     private var userId = ""
 
@@ -106,16 +111,24 @@ class MemberActivityFragment : BaseFragment(), View.OnClickListener {
         tv_share_pdf = view.findViewById(R.id.tv_share_pdf)
         tv_visit_distance = view.findViewById(R.id.tv_visit_distance)
 
+        iv_team_map_view = view.findViewById(R.id.iv_team_map_view)
+        iv_team_map_view.visibility=View.VISIBLE
+
         tv_sync_all.visibility = View.GONE
         tv_share_logs.visibility = View.GONE
 
         pickDate.setOnClickListener(this)
         rl_loc_main.setOnClickListener(null)
         tv_share_pdf.setOnClickListener(this)
+        iv_team_map_view.setOnClickListener(this)
     }
 
+    @SuppressLint("UseRequireInsteadOfGet")
     override fun onClick(p0: View?) {
         when (p0!!.id) {
+            R.id.iv_team_map_view ->{
+                (mContext as DashboardActivity).loadFragment(FragType.MapViewForTeamFrag, true, userId!!+"~"+AppUtils.getFormattedDateString(myCalendar))
+            }
             R.id.pick_a_date_TV -> {
                 val datePicker = DatePickerDialog(mContext, R.style.DatePickerTheme, date, myCalendar
                         .get(Calendar.YEAR), myCalendar.get(Calendar.MONTH),
@@ -155,7 +168,7 @@ class MemberActivityFragment : BaseFragment(), View.OnClickListener {
 
                         val file = File(fileUrl.path)
 //                        val uri = Uri.fromFile(file)
-                        val uri: Uri = FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
+                        val uri:Uri= FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
                         shareIntent.type = "image/png"
                         shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
                         startActivity(Intent.createChooser(shareIntent, "Share pdf using"));

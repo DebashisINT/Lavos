@@ -5,7 +5,8 @@
     android:id="@+id/rl_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/color_silver">
+    android:background="@color/color_silver"
+    android:padding="@dimen/_5sdp">
 
     <com.lavos.widgets.AppCustomTextView
         android:id="@+id/tv_order_count"
@@ -24,7 +25,7 @@
         android:id="@+id/rv_order_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/tv_order_count"/>
+        android:layout_below="@+id/tv_order_count" />
 
     <com.lavos.widgets.AppCustomTextView
         android:id="@+id/no_shop_tv"

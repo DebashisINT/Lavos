@@ -93,7 +93,7 @@
             android:textSize="@dimen/_13sdp"
             android:gravity="center"
             android:layout_gravity="center"
-            android:background="@drawable/shape_custom_border_blue_button"
+            android:background="@drawable/deselected_new_order_history"
             android:textColor="@drawable/selector_text_clor_blue_white"
             android:clickable="true"
             android:focusable="true"

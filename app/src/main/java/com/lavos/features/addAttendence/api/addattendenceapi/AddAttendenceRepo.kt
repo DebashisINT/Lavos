@@ -5,10 +5,7 @@ import android.net.Uri
 import com.lavos.app.FileUtils
 import com.lavos.app.Pref
 import com.lavos.base.BaseResponse
-import com.lavos.features.addAttendence.model.AddAttendenceImageInput
-import com.lavos.features.addAttendence.model.AddAttendenceInpuModel
-import com.lavos.features.addAttendence.model.LeaveListResponseModel
-import com.lavos.features.addAttendence.model.SendLeaveApprovalInputParams
+import com.lavos.features.addAttendence.model.*
 import com.lavos.features.dashboard.presentation.DashboardActivity
 import com.lavos.features.location.LocationFuzedService
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -70,4 +67,13 @@ class AddAttendenceRepo(val apiService: AddAttendenceApi) {
     fun leaveList(fromDate: String, toDate: String): Observable<LeaveListResponseModel> {
         return apiService.leaveList(Pref.session_token!!, Pref.user_id!!, fromDate, toDate)
     }
+
+    fun getReportToUserID(user_id: String, session_token: String): Observable<GetReportToResponse> {
+        return apiService.getReportToUserIDAPI(user_id,session_token)
+    }
+
+    fun getReportToFCMInfo(user_id: String, session_token: String): Observable<GetReportToFCMResponse> {
+        return apiService.getReportToFCMInfoAPI(user_id,session_token)
+    }
+
 }

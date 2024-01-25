@@ -5,7 +5,7 @@
     android:id="@+id/rl_add_activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/smoke_white">
+    android:background="@color/color_silver">
 
     <com.lavos.widgets.AppCustomTextView
         android:id="@+id/tv_pick_date"
@@ -1019,7 +1019,6 @@
         </LinearLayout>
     </ScrollView>
 
-<!--    android:background="@drawable/selector_order_history_bg"-->
     <com.lavos.widgets.AppCustomTextView
         android:id="@+id/submit_button_TV"
         android:layout_width="match_parent"

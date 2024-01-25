@@ -4,24 +4,24 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center"
-    android:paddingBottom="@dimen/_10sdp"
-    android:paddingTop="@dimen/_10sdp">
+    android:paddingTop="@dimen/_10sdp"
+    android:paddingBottom="@dimen/_10sdp">
 
     <LinearLayout
-        android:layout_width="match_parent"
         android:id="@+id/mid"
-        android:orientation="horizontal"
-        android:layout_height="wrap_content">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
         <com.lavos.widgets.AppCustomTextView
             android:id="@+id/tv_doc_file_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:visibility="gone"
             android:gravity="center"
             android:textColor="@color/login_txt_color"
-            android:textSize="@dimen/_11sdp" />
+            android:textSize="@dimen/_11sdp"
+            android:visibility="gone" />
 
         <com.lavos.widgets.AppCustomTextView
             android:id="@+id/tv_doc_date_time"
@@ -38,83 +38,101 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
+            android:paddingRight="@dimen/_5sdp"
             android:text=""
-            android:textSize="@dimen/_11sdp"
-            android:paddingRight="@dimen/_5sdp"/>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1">
-
-            <ImageView
-                android:id="@+id/iv_edit"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/_20sdp"
-                android:layout_weight="1"
-                android:visibility="visible"
-                android:gravity="center"
-                android:src="@drawable/ic_edit_icon"
-                android:textSize="@dimen/_11sdp"
-                android:contentDescription="@null" />
-
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/iv_delete"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/_25sdp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:visibility="visible"
-                app:srcCompat="@drawable/ic_delete_black_24dp"
-                android:textSize="@dimen/_11sdp"
-                android:contentDescription="@null"/>
-
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/iv_download"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/_25sdp"
-                android:layout_weight="1"
-                android:visibility="gone"
-                android:gravity="center"
-                app:srcCompat="@drawable/ic_downloaded"
-                android:textSize="@dimen/_11sdp"
-                android:contentDescription="@null"/>
+            android:textColor="@color/blue"
+            android:textSize="@dimen/_11sdp" />
 
 
-
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/iv_share"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/_25sdp"
-                android:layout_weight="1"
-                android:gravity="center"
-                app:srcCompat="@drawable/ic_share"
-                android:textSize="@dimen/_11sdp"
-                android:contentDescription="@null"/>
-
-            <ImageView
-                android:id="@+id/sync_status_iv"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:visibility="invisible"
-                android:src="@drawable/ic_registered_shop_sync"
-                android:textSize="@dimen/_11sdp"
-                android:contentDescription="@null"/>
-        </LinearLayout>
     </LinearLayout>
 
 
-    <com.lavos.widgets.AppCustomTextView
-        android:id="@+id/tv_down_text"
-        android:layout_below="@+id/mid"
-        android:gravity="end"
-        android:visibility="invisible"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/label_click_view_file"
-        android:textColor="@color/navy_blue_dot"
-        android:textSize="@dimen/_11sdp" />
+        android:layout_below="@+id/mid"
+        android:weightSum="16"
+        android:gravity="end">
+
+        <ImageView
+            android:id="@+id/iv_edit"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/_20sdp"
+            android:layout_weight="1"
+            android:contentDescription="@null"
+            android:gravity="center"
+            android:src="@drawable/ic_edit_icon"
+            android:textSize="@dimen/_11sdp"
+            android:visibility="visible" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/iv_delete"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/_25sdp"
+            android:layout_weight="1"
+            android:contentDescription="@null"
+            android:gravity="center"
+            android:textSize="@dimen/_11sdp"
+            android:visibility="visible"
+            app:srcCompat="@drawable/ic_delete_black_24dp" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/iv_download"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/_25sdp"
+            android:layout_weight="1"
+            android:contentDescription="@null"
+            android:gravity="center"
+            android:textSize="@dimen/_11sdp"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_downloaded" />
+
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/iv_share"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/_25sdp"
+            android:layout_weight="1"
+            android:contentDescription="@null"
+            android:gravity="center"
+            android:textSize="@dimen/_11sdp"
+            app:srcCompat="@drawable/ic_share" />
+
+        <ImageView
+            android:id="@+id/sync_status_iv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:contentDescription="@null"
+            android:gravity="center"
+            android:src="@drawable/ic_registered_shop_sync"
+            android:textSize="@dimen/_11sdp"
+            android:visibility="invisible" />
+
+        <ImageView
+            android:id="@+id/tv_down_text"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/_25sdp"
+            android:layout_weight="1"
+            android:contentDescription="@null"
+            android:gravity="center"
+            android:src="@drawable/ic_view_icon"
+            android:textSize="@dimen/_11sdp"
+            android:visibility="visible" />
+
+
+    </LinearLayout>
+
+
+<!--    <com.lavos.widgets.AppCustomTextView-->
+<!--        android:id="@+id/tv_down_text"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_below="@+id/mid"-->
+<!--        android:gravity="end"-->
+<!--        android:text="@string/label_click_view_file"-->
+<!--        android:textColor="@color/navy_blue_dot"-->
+<!--        android:textSize="@dimen/_11sdp"-->
+<!--        android:visibility="gone" />-->
 
 </RelativeLayout>

@@ -1,9 +1,12 @@
 package com.lavos.features.member.presentation
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.location.Location
 import android.os.Bundle
+import android.speech.RecognizerIntent
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.text.TextUtils
@@ -12,11 +15,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
 import com.lavos.R
-import com.lavos.app.AppDatabase
-import com.lavos.app.NetworkConstant
-import com.lavos.app.Pref
-import com.lavos.app.SearchListener
+import com.lavos.app.*
+import com.lavos.app.domain.AddShopDBModelEntity
 import com.lavos.app.domain.MemberShopEntity
+import com.lavos.app.types.FragType
 import com.lavos.app.utils.AppUtils
 import com.lavos.base.presentation.BaseActivity
 import com.lavos.base.presentation.BaseFragment
@@ -28,16 +30,21 @@ import com.lavos.features.member.model.TeamShopListResponseModel
 import com.lavos.features.nearbyshops.api.updateaddress.ShopAddressUpdateRepoProvider
 import com.lavos.features.nearbyshops.model.updateaddress.AddressUpdateRequest
 import com.lavos.widgets.AppCustomTextView
-import com.elvishew.xlog.XLog
+
 import com.pnikosis.materialishprogress.ProgressWheel
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
+import timber.log.Timber
+import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * Created by Saikat on 03-Jul-20.
  */
+// Revision Histroy
+// 1.0 OfflineAllShopListFragment saheli 24-02-2032 AppV 4.0.7 mantis 0025683
 class OfflineAllShopListFragment : BaseFragment() {
 
     private lateinit var mContext: Context
@@ -119,9 +126,52 @@ class OfflineAllShopListFragment : BaseFragment() {
             }
         })
 
+        // 1.0 MemberListFragment AppV 4.0.7 mantis 0025683 start
+        (mContext as DashboardActivity).searchView.setVoiceIcon(R.drawable.ic_mic)
+        (mContext as DashboardActivity).searchView.setOnVoiceClickedListener({ startVoiceInput() })
+        // 1.0 MemberListFragment AppV 4.0.7 mantis 0025683 end
 
         return view
     }
+    // 1.0 MemberListFragment AppV 4.0.7 mantis 0025683 start
+    private fun startVoiceInput() {
+        try {
+            val intent: Intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            intent.putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            //intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,"hi")
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.ENGLISH)
+            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Hello, How can I help you?")
+            try {
+                startActivityForResult(intent, MaterialSearchView.REQUEST_VOICE)
+            } catch (a: ActivityNotFoundException) {
+                a.printStackTrace()
+            }
+        }
+        catch (ex:Exception) {
+            ex.printStackTrace()
+        }
+
+    }
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?){
+        super.onActivityResult(requestCode, resultCode, data)
+        if(requestCode == MaterialSearchView.REQUEST_VOICE){
+            try {
+                val result = data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                var t= result!![0]
+                (mContext as DashboardActivity).searchView.setQuery(t,false)
+            }
+            catch (ex:Exception) {
+                ex.printStackTrace()
+            }
+
+//            tv_search_frag_order_type_list.setText(t)
+//            tv_search_frag_order_type_list.setSelection(t.length);
+        }
+    }
+    // 1.0 MemberListFragment AppV 4.0.7 mantis 0025683 end
 
     private fun initView(view: View) {
         rv_team_shop_list = view.findViewById(R.id.rv_team_shop_list)
@@ -353,11 +403,11 @@ class OfflineAllShopListFragment : BaseFragment() {
                     if (AppUtils.mLocation!!.accuracy <= Pref.shopLocAccuracy.toFloat()) {
                         openAddressUpdateDialog(teamShop, AppUtils.mLocation!!)
                     } else {
-                        XLog.d("======Saved current location is inaccurate (Offline Member Shop List)========")
+                        Timber.d("======Saved current location is inaccurate (Offline Member Shop List)========")
                         getShopLatLong(teamShop)
                     }
                 } else {
-                    XLog.d("=====Saved current location is null (Offline Member Shop List)======")
+                    Timber.d("=====Saved current location is null (Offline Member Shop List)======")
                     getShopLatLong(teamShop)
                 }
 
@@ -470,15 +520,15 @@ class OfflineAllShopListFragment : BaseFragment() {
             pincode = team.shop_pincode
         }
 
-        XLog.d("==============Sync Team Shop Input Params (Offline Shop)====================")
-        XLog.d("shop id=======> " + addressUpdateReq.shop_id)
-        XLog.d("user_id=======> " + addressUpdateReq.user_id)
-        XLog.d("shop_lat=======> " + addressUpdateReq.shop_lat)
-        XLog.d("shop_long=======> " + addressUpdateReq.shop_long)
-        XLog.d("shop_address=======> " + addressUpdateReq.shop_address)
-        XLog.d("shop_pincode=======> " + addressUpdateReq.pincode)
-        XLog.d("isAddressUpdated=======> " + addressUpdateReq.isAddressUpdated)
-        XLog.d("=============================================================================")
+        Timber.d("==============Sync Team Shop Input Params (Offline Shop)====================")
+        Timber.d("shop id=======> " + addressUpdateReq.shop_id)
+        Timber.d("user_id=======> " + addressUpdateReq.user_id)
+        Timber.d("shop_lat=======> " + addressUpdateReq.shop_lat)
+        Timber.d("shop_long=======> " + addressUpdateReq.shop_long)
+        Timber.d("shop_address=======> " + addressUpdateReq.shop_address)
+        Timber.d("shop_pincode=======> " + addressUpdateReq.pincode)
+        Timber.d("isAddressUpdated=======> " + addressUpdateReq.isAddressUpdated)
+        Timber.d("=============================================================================")
 
 
         BaseActivity.compositeDisposable.add(

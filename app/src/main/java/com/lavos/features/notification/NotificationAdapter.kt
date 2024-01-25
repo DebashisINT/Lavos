@@ -58,10 +58,21 @@ class NotificationAdapter(context: Context, val notificationList: ArrayList<Noti
             itemView.setOnClickListener {
                 listener.onNotificationClick(adapterPosition)
             }
+
+            if(notificationList[adapterPosition].phoneNo.equals("")){
+                itemView.iv_noti_item_whatsapp.visibility=View.GONE
+            }else{
+                itemView.iv_noti_item_whatsapp.visibility=View.VISIBLE
+            }
+            itemView.iv_noti_item_whatsapp.setOnClickListener {
+                listener.getWhatsappOnLick(notificationList?.get(adapterPosition)?.phoneNo.toString())
+            }
+
         }
     }
 
     interface OnClickListener {
         fun onNotificationClick(adapterPosition: Int)
+        fun getWhatsappOnLick(phone: String)
     }
 }

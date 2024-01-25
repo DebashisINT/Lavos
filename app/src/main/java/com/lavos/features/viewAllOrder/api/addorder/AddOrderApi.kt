@@ -2,6 +2,7 @@ package com.lavos.features.viewAllOrder.api.addorder
 
 import com.lavos.app.NetworkConstant
 import com.lavos.base.BaseResponse
+import com.lavos.features.returnsOrder.ReturnRequest
 import com.lavos.features.timesheet.api.TimeSheetApi
 import com.lavos.features.timesheet.model.EditDeleteTimesheetResposneModel
 import com.lavos.features.viewAllOrder.model.AddOrderInputParamsModel
@@ -25,12 +26,18 @@ interface AddOrderApi {
             Observable<BaseResponse>
 
 
+    @POST("RubyFoodLead/OrderReturnSave")
+    fun addReturn(@Body ReturnRequest: ReturnRequest?): Observable<BaseResponse>
+
+
+
     @POST("Order/AddOrder")
     fun addNewOrder(@Body addOrder: AddOrderInputParamsModel): Observable<BaseResponse>
 
     @Multipart
     @POST("FileUpload/OrderSignature")
     fun addNewOrderWithImage(@Query("data") addOrder: String, @Part logo_img_data: MultipartBody.Part?): Observable<BaseResponse>
+
 
 
     @POST("OrderWithProductAttribute/OrderWithProductAttribute")

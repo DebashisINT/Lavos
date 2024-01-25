@@ -10,11 +10,13 @@ import android.content.Context
 
 import com.lavos.app.AppConstant.DBNAME
 import com.lavos.app.domain.*
+import com.lavos.features.lead.model.LeadActivityDao
+import com.lavos.features.lead.model.LeadActivityEntity
 import com.lavos.features.location.UserLocationDataDao
 import com.lavos.features.location.UserLocationDataEntity
-import com.lavos.features.login.UserAttendanceDataDao
-import com.lavos.features.login.UserLoginDataEntity
-import com.lavos.features.stockCompetetorStock.model.CompetetorStockData
+import com.lavos.features.login.*
+import com.lavos.features.taskManagement.model.TaskManagementDao
+import com.lavos.features.taskManagement.model.TaskManagmentEntity
 
 
 /*
@@ -32,6 +34,12 @@ import com.lavos.features.stockCompetetorStock.model.CompetetorStockData
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+//Revision History
+// 1.0   AppV 4.0.6  Saheli    05/012/2023 shop_extra_contact migration
+// 2.0   AppV 4.0.6  Saheli    06/01/2023 shop_activity and tbl_shop_deefback migration
+// 3.0   AppV 4.0.6  Saheli    11/01/2023  shopStatusUpdate migration
+// 4.0   AppV 4.0.6  Saheli    20/01/2023  order_product_list order_mrp & order_discount  migration mantis 25601
+// 5.0   AppV 4.0.6  Saheli    01/02/2023  product_list   migration changes
 
 @Database(entities = arrayOf(AddShopDBModelEntity::class, UserLocationDataEntity::class, UserLoginDataEntity::class, ShopActivityEntity::class,
         StateListEntity::class, CityListEntity::class, MarketingDetailEntity::class, MarketingDetailImageEntity::class, MarketingCategoryMasterEntity::class,
@@ -50,11 +58,16 @@ import com.lavos.features.stockCompetetorStock.model.CompetetorStockData
         PriorityListEntity::class, ActivityEntity::class, AddDoctorProductListEntity::class, AddDoctorEntity::class,
         AddChemistProductListEntity::class, AddChemistEntity::class, DocumentypeEntity::class, DocumentListEntity::class, PaymentModeEntity::class,
         EntityTypeEntity::class, PartyStatusEntity::class, RetailerEntity::class, DealerEntity::class, BeatEntity::class, AssignToShopEntity::class,
-        VisitRemarksEntity::class,ShopVisitCompetetorModelEntity::class,
-        OrderStatusRemarksModelEntity::class,CurrentStockEntryModelEntity::class,CurrentStockEntryProductModelEntity::class,
-           CcompetetorStockEntryModelEntity::class,CompetetorStockEntryProductModelEntity::class,
+        VisitRemarksEntity::class, ShopVisitCompetetorModelEntity::class,
+        OrderStatusRemarksModelEntity::class, CurrentStockEntryModelEntity::class, CurrentStockEntryProductModelEntity::class,
+        CcompetetorStockEntryModelEntity::class, CompetetorStockEntryProductModelEntity::class,
         ShopTypeStockViewStatus::class,
-        NewOrderGenderEntity::class,NewOrderProductEntity::class,NewOrderColorEntity::class,NewOrderSizeEntity::class,NewOrderScrOrderEntity::class),
+        NewOrderGenderEntity::class, NewOrderProductEntity::class, NewOrderColorEntity::class, NewOrderSizeEntity::class, NewOrderScrOrderEntity::class, ProspectEntity::class,
+        QuestionEntity::class, QuestionSubmitEntity::class, AddShopSecondaryImgEntity::class, ReturnDetailsEntity::class, ReturnProductListEntity::class, UserWiseLeaveListEntity::class, ShopFeedbackEntity::class, ShopFeedbackTempEntity::class, LeadActivityEntity::class,
+        ShopDtlsTeamEntity::class, CollDtlsTeamEntity::class, BillDtlsTeamEntity::class, OrderDtlsTeamEntity::class,
+        TeamAllShopDBModelEntity::class, DistWiseOrderTblEntity::class, NewGpsStatusEntity::class,ShopExtraContactEntity::class,ProductOnlineRateTempEntity::class, TaskManagmentEntity::class,
+    VisitRevisitWhatsappStatus::class,CallHisEntity::class,CompanyMasterEntity::class,TypeMasterEntity::class,StatusMasterEntity::class,SourceMasterEntity::class,StageMasterEntity::class,TeamListEntity::class,
+    ContactActivityEntity::class,ScheduleTemplateEntity::class,ModeTemplateEntity::class,RuleTemplateEntity::class,SchedulerMasterEntity::class),
         version = 1, exportSchema = false)
 @TypeConverters(DateConverter::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -99,6 +112,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun selectedRouteListDao(): SelectedRouteDao
     abstract fun selectedRouteShopListDao(): SelectedRouteShopListDao
     abstract fun updateOutstandingDao(): OutstandingListDao
+
     //abstract fun locationDao(): LocationDao
     abstract fun idleLocDao(): IdleLocDao
 
@@ -165,6 +179,50 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun newOrderSizeDao(): NewOrderSizeDao
     abstract fun newOrderScrOrderDao(): NewOrderScrOrderDao
 
+    abstract fun prosDao(): ProspectDao
+    abstract fun questionMasterDao(): QuestionDao
+    abstract fun questionSubmitDao(): QuestionSubmitDao
+    abstract fun addShopSecondaryImgDao(): AddShopSecondaryImgDao
+
+    abstract fun returnDetailsDao(): ReturnDetailsDao
+    abstract fun returnProductListDao(): ReturnProductListDao
+
+    abstract fun userWiseLeaveListDao(): UserWiseLeaveListDao
+
+    abstract fun shopFeedbackDao(): ShopFeedbackDao
+    abstract fun shopFeedbackTempDao(): ShopFeedbackTepDao
+    abstract fun leadActivityDao(): LeadActivityDao
+
+    abstract fun shopDtlsTeamDao(): ShopDtlsTeamDao
+    abstract fun billDtlsTeamDao(): BillDtlsTeamDao
+    abstract fun orderDtlsTeamDao(): OrderDtlsTeamDao
+    abstract fun collDtlsTeamDao(): CollDtlsTeamDao
+    abstract fun teamAllShopDBModelDao(): TeamAllShopDBModelDao
+
+    abstract fun distWiseOrderTblDao(): DistWiseOrderTblDao
+
+    abstract fun newGpsStatusDao(): NewGpsStatusDao
+    abstract fun shopExtraContactDao(): ShopExtraContactDao
+
+    abstract fun productOnlineRateTempDao(): ProductOnlineRateTempDao
+
+
+    abstract fun taskManagementDao(): TaskManagementDao
+    abstract fun visitRevisitWhatsappStatusDao(): VisitRevisitWhatsappStatusDao
+    abstract fun callhisDao(): CallHisDao
+    abstract fun companyMasterDao(): CompanyMasterDao
+    abstract fun typeMasterDao(): TypeMasterDao
+    abstract fun statusMasterDao(): StatusMasterDao
+    abstract fun sourceMasterDao(): SourceMasterDao
+    abstract fun stageMasterDao(): StageMasterDao
+    abstract fun teamListDao(): TeamListDao
+    abstract fun contactActivityDao(): ContactActivityDao
+    abstract fun scheduleTemplateDao(): ScheduleTemplateDao
+    abstract fun modeTemplateDao(): ModeTemplateDao
+    abstract fun ruleTemplateDao(): RuleTemplateDao
+    abstract fun schedulerMasterDao(): SchedulerMasterDao
+
+
     companion object {
         var INSTANCE: AppDatabase? = null
 
@@ -174,6 +232,7 @@ abstract class AppDatabase : RoomDatabase() {
                         // allow queries on the main thread.
                         // Don't do this on a real app! See PersistenceBasicSample for an example.
                         .allowMainThreadQueries()
+                        .addMigrations( )
 //                        .fallbackToDestructiveMigration()
                         .build()
             }
@@ -189,9 +248,5 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
     }
-
-
-//}
-
 
 }

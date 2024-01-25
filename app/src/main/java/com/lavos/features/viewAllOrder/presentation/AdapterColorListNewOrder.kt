@@ -91,6 +91,11 @@ class AdapterColorListNewOrder(var context: Context, var color_list: ArrayList<C
         val ProductTv = simpleDialog.findViewById(R.id.dialog_message_headerProductTV) as AppCustomTextView
         val colorTv = simpleDialog.findViewById(R.id.dialog_message_headerColorTV) as AppCustomTextView
 
+        val genderProductTypeTag = simpleDialog.findViewById(R.id.tv_dialog_new_ord_size_qty_gender_productType) as AppCustomTextView
+        //gender vs product type new order
+        //holder.genderOrProductTypeTag.text = context.getString(R.string.GenderTextNewOrd)
+        genderProductTypeTag.text = context.getString(R.string.ProductTextNewOrd)+" : "
+
         colorTv.text = colorName
         ProductTv.text = ProductName
         genderTv.text = genderName
@@ -207,18 +212,19 @@ class AdapterColorListNewOrder(var context: Context, var color_list: ArrayList<C
         dialogHeader.text = "Item Deleted Successfully."
         val dialogYes = simpleDialog.findViewById(R.id.tv_message_ok) as AppCustomTextView
         dialogYes.setOnClickListener({ view ->
+            CustomStatic.IsNewOrdDeleteConfirmOkClick=true
             simpleDialog.cancel()
+            listner.delProductOnCLick(true)
         })
         simpleDialog.show()
         voiceAttendanceMsg("Item Deleted Successfully")
 
-        /*dialog_yes_no_headerTV.setOnClickListener{
-            Toaster.msgLong(context,"asd")
+        CustomStatic.IsNewOrdDeleteConfirmOkClick=false
 
-        }*/
-
+//05-11-2021
         Handler(Looper.getMainLooper()).postDelayed({
             simpleDialog.dismiss()
+            listner.delProductOnCLick(true)
         }, 8000)
     }
 

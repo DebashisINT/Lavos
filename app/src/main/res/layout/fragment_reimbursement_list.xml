@@ -4,7 +4,7 @@
     xmlns:wheel="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/smoke_white">
+    android:background="@color/color_silver">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,7 +14,7 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/white"
+            android:background="@color/color_silver"
             android:padding="@dimen/_10sdp">
 
             <LinearLayout
@@ -91,7 +91,7 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/deep_blue">
+            android:background="@drawable/custom_toolbar_back">
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -580,7 +580,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_marginTop="@dimen/_5sdp"
-                    android:paddingBottom="@dimen/_10sdp"/>
+                    android:paddingBottom="@dimen/_10sdp" />
             </RelativeLayout>
 
             <com.lavos.widgets.AppCustomTextView

@@ -18,5 +18,8 @@ class NewOrderListDataModel {
     var patient_no: String?= null
     var patient_name: String?= null
     var patient_address: String?= null
+    var scheme_amount: String? = null
+    var Hospital: String?= null
+    var Email_Address: String?= null
     var product_list: ArrayList<NewProductListDataModel>? = null
 }

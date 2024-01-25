@@ -1,5 +1,6 @@
 package com.lavos.features.viewAllOrder.orderNew
 
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
@@ -18,10 +19,8 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.activity.OnBackPressedCallback
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
-import com.elvishew.xlog.XLog
 import com.lavos.CustomStatic
 import com.lavos.R
 import com.lavos.app.AppDatabase
@@ -32,7 +31,6 @@ import com.lavos.app.types.FragType
 import com.lavos.app.uiaction.IntentActionable
 import com.lavos.app.utils.AppUtils
 import com.lavos.app.utils.FTStorageUtils
-import com.lavos.app.utils.Toaster
 import com.lavos.app.widgets.MovableFloatingActionButton
 import com.lavos.base.BaseResponse
 import com.lavos.base.presentation.BaseActivity
@@ -40,20 +38,22 @@ import com.lavos.base.presentation.BaseFragment
 import com.lavos.features.dashboard.presentation.DashboardActivity
 import com.lavos.features.location.LocationWizard
 import com.lavos.features.viewAllOrder.api.addorder.AddOrderRepoProvider
+import com.lavos.features.viewAllOrder.presentation.NewOrderCartAdapter
 import com.lavos.features.viewAllOrder.interf.NewOrderorderCount
 import com.lavos.features.viewAllOrder.model.AddOrderInputParamsModel
 import com.lavos.features.viewAllOrder.model.AddOrderInputProductList
 import com.lavos.features.viewAllOrder.model.NewOrderCartModel
 import com.lavos.features.viewAllOrder.model.NewOrderSaveApiModel
-import com.lavos.features.viewAllOrder.presentation.NewOrderCartAdapter
 import com.lavos.features.viewAllOrder.presentation.NewOrderCartAdapterNew
 import com.lavos.widgets.AppCustomTextView
+
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.fragment_new_order_scr_cart.*
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
+import timber.log.Timber
 import java.io.File
+
 
 class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
 
@@ -61,18 +61,18 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
     private var newOrderCartAdapter: NewOrderCartAdapter? = null
     private var newOrderCartAdapterNew: NewOrderCartAdapterNew? = null
 
-    private lateinit var tv_name: TextView
-    private lateinit var tv_orderID: TextView
-    private lateinit var tv_orderDate: TextView
-    private lateinit var iv_call: ImageView
-    private lateinit var tv_phone: TextView
-    private lateinit var ll_odrDtlsRoot: LinearLayout
-    private var shop_phone: String = ""
+    private lateinit var tv_name:TextView
+    private lateinit var tv_orderID:TextView
+    private lateinit var tv_orderDate:TextView
+    private lateinit var iv_call:ImageView
+    private lateinit var tv_phone:TextView
+    private lateinit var ll_odrDtlsRoot:LinearLayout
+    private var shop_phone:String=""
     private lateinit var share: MovableFloatingActionButton
     private lateinit var mContext: Context
 
     private lateinit var btnSaveDB: Button
-    var ordID: String = ""
+    var ordID:String=""
 
 //    var simpleDialog = Dialog(mContext)
 
@@ -102,8 +102,9 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         //fab_frag_new_order_share.setOnClickListener(this)
     }
 
+    @SuppressLint("UseRequireInsteadOfGet", "RestrictedApi")
     private fun initView(view: View?) {
-        share = view!!.findViewById(R.id.fab_frag_new_order_share)
+        share=view!!.findViewById(R.id.fab_frag_new_order_share)
         share.setCustomClickListener {
             sharePdf()
         }
@@ -119,24 +120,24 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         btnSaveDB = view!!.findViewById(R.id.btn_new_order_save_db)
         btnSaveDB.setOnClickListener(this)
 
-        tv_orderID.text = CustomStatic.IsFromViewNewOdrScrOrderID
+        tv_orderID.text=CustomStatic.IsFromViewNewOdrScrOrderID
 
-        tv_orderDate.text = AppUtils.convertToCommonFormat(CustomStatic.IsFromViewNewOdrScrOrderDate)
+        tv_orderDate.text= AppUtils.convertToCommonFormat(CustomStatic.IsFromViewNewOdrScrOrderDate)
         iv_call.setOnClickListener(this)
         tv_phone.setOnClickListener(this)
 
-        if (CustomStatic.IsFromViewNewOdrScr == true) {
+        if( CustomStatic.IsFromViewNewOdrScr==true){
             share.visibility = View.VISIBLE
-            ll_odrDtlsRoot.visibility = View.VISIBLE
-            btnSaveDB.visibility = View.GONE
-            tv_name.text = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(NewOrderScrOrderDetailsFragment.shop_id).shopName!!
-            shop_phone = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(NewOrderScrOrderDetailsFragment.shop_id).ownerContactNumber!!
-        } else {
+            ll_odrDtlsRoot.visibility=View.VISIBLE
+            btnSaveDB.visibility=View.GONE
+            tv_name.text=AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(NewOrderScrOrderDetailsFragment.shop_id).shopName!!
+            shop_phone=AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(NewOrderScrOrderDetailsFragment.shop_id).ownerContactNumber!!
+        }else{
             share.visibility = View.GONE
-            ll_odrDtlsRoot.visibility = View.GONE
-            btnSaveDB.visibility = View.VISIBLE
+            ll_odrDtlsRoot.visibility=View.GONE
+            btnSaveDB.visibility=View.VISIBLE
         }
-        tv_phone.text = shop_phone
+        tv_phone.text=shop_phone
 
         showCartDetails()
     }
@@ -160,16 +161,19 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         val dialogHeader = simpleDialog.findViewById(R.id.dialog_new_order_confirmed_header_TV) as AppCustomTextView
         val dialog_yes_no_headerTV = simpleDialog.findViewById(R.id.dialog_new_order_confirmed_headerTV) as AppCustomTextView
         dialog_yes_no_headerTV.text = "Order Confirmation"
-        dialogHeader.text = "Do you want to recheck the order?"
+        //dialogHeader.text = "Do you want to recheck the order?"
+        dialogHeader.text = "Would you like to confirm the order?"
         val dialogYes = simpleDialog.findViewById(R.id.tv_message_yes) as AppCustomTextView
         val dialogNo = simpleDialog.findViewById(R.id.tv_message_no) as AppCustomTextView
         dialogYes.setOnClickListener({ view ->
             simpleDialog.cancel()
+            if (cartOrder!!.size > 0)
+                saveToDB()
         })
         dialogNo.setOnClickListener({ view ->
             simpleDialog.cancel()
-            if (cartOrder!!.size > 0)
-                saveToDB()
+            //if (cartOrder!!.size > 0)
+                //saveToDB()
         })
         simpleDialog.show()
 //        CommonDialog.getInstance(header, title, getString(R.string.no), getString(R.string.yes), false, object : CommonDialogClickListener {
@@ -186,6 +190,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
     }
 
     private fun showCartDetails() {
+
         newOrderCartAdapterNew = NewOrderCartAdapterNew(mContext, cartOrder!!, object : NewOrderorderCount {
             override fun getOrderCount(orderCount: Int) {
                 (mContext as DashboardActivity).tv_cart_count.text = orderCount.toString()
@@ -204,25 +209,9 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         if (v != null) {
             when (v.id) {
                 R.id.btn_new_order_save_db -> {
-                    if (cartOrder!!.size > 0){
+                    if (cartOrder!!.size > 0)
                         showCheckAlert()
-                    }else{
-                        val simpleDialog = Dialog(mContext)
-                        simpleDialog.setCancelable(false)
-                        simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                        simpleDialog.setContentView(R.layout.dialog_message)
-                        val dialogHeader = simpleDialog.findViewById(R.id.dialog_message_header_TV) as AppCustomTextView
-                        val dialog_yes_no_headerTV = simpleDialog.findViewById(R.id.dialog_message_headerTV) as AppCustomTextView
-                        dialog_yes_no_headerTV.text = AppUtils.hiFirstNameText()+"!"
-                        dialogHeader.text = "Please add products into cart."
-                        val dialogYes = simpleDialog.findViewById(R.id.tv_message_ok) as AppCustomTextView
-                        dialogYes.setOnClickListener({ view ->
-                            simpleDialog.cancel()
-                        })
-                        simpleDialog.show()
-                    }
-
-                    //saveToDB()
+                        //saveToDB()
                 }
                 R.id.iv_frag_new_order_scr_cart_phone -> {
                     IntentActionable.initiatePhoneCall(mContext, shop_phone)
@@ -237,52 +226,56 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         }
     }
 
-    var newOrderRoomDataList: ArrayList<NewOrderRoomData> = ArrayList()
+    var newOrderRoomDataList:ArrayList<NewOrderRoomData> = ArrayList()
 
-    fun saveToDB() {
+    fun saveToDB(){
         newOrderRoomDataList.clear()
-        ordID = Pref.user_id + AppUtils.getCurrentDateMonth() + AppUtils.getRandomNumber(6)
-        for (i in 0..cartOrder!!.size - 1) {
-            for (j in 0..cartOrder!!.get(i).color_list.size - 1) {
-                for (k in 0..cartOrder!!.get(i).color_list.get(j).order_list.size - 1) {
-                    var newOrderRoomData = NewOrderRoomData(ordID, cartOrder!!.get(i).product_id.toString(), cartOrder!!.get(i).product_name.toString(), cartOrder!!.get(i).gender.toString(),
-                            cartOrder!!.get(i).color_list.get(j).color_id, cartOrder!!.get(i).color_list.get(j).color_name, cartOrder!!.get(i).color_list.get(j).order_list.get(k).size, cartOrder!!.get(i).color_list.get(j).order_list.get(k).qty)
+        ordID= Pref.user_id + AppUtils.getCurrentDateMonth() + AppUtils.getRandomNumber(6)
+        for(i in 0..cartOrder!!.size-1){
+            for(j in 0..cartOrder!!.get(i).color_list.size-1){
+                for(k in 0..cartOrder!!.get(i).color_list.get(j).order_list.size-1){
+                    var newOrderRoomData=NewOrderRoomData(ordID,cartOrder!!.get(i).product_id.toString(),cartOrder!!.get(i).product_name.toString(),cartOrder!!.get(i).gender.toString(),
+                            cartOrder!!.get(i).color_list.get(j).color_id,cartOrder!!.get(i).color_list.get(j).color_name,cartOrder!!.get(i).color_list.get(j).order_list.get(k).size, cartOrder!!.get(i).color_list.get(j).order_list.get(k).qty,
+                        //(cartOrder!!.get(i).rate.toDouble()*cartOrder!!.get(i).color_list.get(j).order_list.get(k).qty.toInt()).toString())
+                        (cartOrder!!.get(i).rate.toDouble()).toString())
 
                     newOrderRoomDataList.add(newOrderRoomData)
 
-                    var obj: NewOrderScrOrderEntity = NewOrderScrOrderEntity()
-                    obj.order_id = ordID
-                    obj.product_id = newOrderRoomData.product_id
-                    obj.product_name = newOrderRoomData.product_name
-                    obj.gender = newOrderRoomData.gender
-                    obj.size = newOrderRoomData.size
-                    obj.qty = newOrderRoomData.qty
-                    obj.order_date = AppUtils.getCurrentDateyymmdd()
-                    obj.shop_id = NewOrderScrActiFragment.shop_id!!
-                    obj.color_id = newOrderRoomData.color_id
-                    obj.color_name = newOrderRoomData.color_name
-                    obj.isUploaded = false
+                    var obj:NewOrderScrOrderEntity= NewOrderScrOrderEntity()
+                    obj.order_id=ordID
+                    obj.product_id=newOrderRoomData.product_id
+                    obj.product_name=newOrderRoomData.product_name
+                    obj.gender=newOrderRoomData.gender
+                    obj.size=newOrderRoomData.size
+                    obj.qty=newOrderRoomData.qty
+                    obj.order_date=AppUtils.getCurrentDateyymmdd()
+                    obj.shop_id=NewOrderScrActiFragment.shop_id!!
+                    obj.color_id=newOrderRoomData.color_id
+                    obj.color_name=newOrderRoomData.color_name
+                    obj.isUploaded=false
+                    //obj.rate= (cartOrder!!.get(i).rate.toDouble()*newOrderRoomData.qty.toInt()).toString()
+                    obj.rate= (cartOrder!!.get(i).rate.toDouble()).toString()
                     AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.insert(obj)
 
-                    XLog.d("NeworderScrCartFragment ITEM : " + AppUtils.getCurrentDateTime().toString() + "\n" +
-                            "ordID:" + ordID + "~product_id:" + obj.product_id + "~gender:" + obj.gender + "~size:" + obj.size + "~qty:" + obj.qty + "~order_date:" + obj.order_date + "~shop_id:" + obj.shop_id +
-                            "~color_id:" + obj.color_id + "~color_name:" + obj.color_name + "\n")
+                    Timber.d("NeworderScrCartFragment ITEM : "  + AppUtils.getCurrentDateTime().toString()+"\n"+
+                    "ordID:"+ordID+"~product_id:"+obj.product_id+"~gender:"+obj.gender+"~size:"+obj.size+"~qty:"+obj.qty+"~order_date:"+obj.order_date+"~shop_id:"+obj.shop_id+
+                    "~color_id:"+obj.color_id+"~color_name:"+obj.color_name+"\n")
                 }
             }
         }
 
-        if (AppUtils.isOnline(mContext)) {
+        if(AppUtils.isOnline(mContext)){
             sendToApi(ordID)
 
             //showConfirmationDialog()
 
-        } else {
+        }else{
             showConfirmationDialog()
         }
 
     }
 
-    data class NewOrderRoomData(var order_id: String, var product_id: String, var product_name: String, var gender: String, var color_id: String, var color_name: String, var size: String, var qty: String)
+    data class NewOrderRoomData(var order_id:String,var product_id:String,var product_name:String,var gender:String,var color_id:String,var color_name:String ,var size:String,var qty:String,var rate:String)
 
 
     private fun sendToApi(ordID: String) {
@@ -312,11 +305,15 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         addOrder.patient_address = ""
         addOrder.patient_no = ""
         addOrder.remarks = ""
+        addOrder.scheme_amount = "0"
 
         if (!TextUtils.isEmpty(Pref.latitude) && !TextUtils.isEmpty(Pref.longitude))
             addOrder.address = LocationWizard.getLocationName(mContext, Pref.latitude!!.toDouble(), Pref.longitude!!.toDouble())
         else
             addOrder.address = ""
+
+        addOrder.Hospital = ""
+        addOrder.Email_Address = ""
 
         val productList = ArrayList<AddOrderInputProductList>()
         for (i in 0..newOrderRoomDataList.size - 1) {
@@ -326,6 +323,14 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
             product.qty = newOrderRoomDataList.get(i).qty!!
             product.rate = "0"
             product.total_price = "0"
+            product.scheme_qty = "0"
+            product.scheme_rate = "0"
+            product.total_scheme_price = "0"
+            product.MRP = "0"
+
+            //mantis 25601 23-01-2023
+            product.order_mrp = "0"
+            product.order_discount = "0"
             productList.add(product)
         }
 
@@ -339,7 +344,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
-                            XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : RESPONSE " + result.status)
+                            Timber.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : RESPONSE " + result.status)
                             if (result.status == NetworkConstant.SUCCESS) {
 
                                 doAsync {
@@ -357,9 +362,9 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
                             }
                         }, { error ->
                             if (error == null) {
-                                XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR ")
+                                Timber.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR ")
                             } else {
-                                XLog.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR " + error.localizedMessage)
+                                Timber.d("NewOrderScrCartFrag OrderWithProductAttribute/OrderWithProductAttribute : ERROR " + error.localizedMessage)
                                 error.printStackTrace()
                             }
                         })
@@ -389,7 +394,7 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         )
     }
 
-    private fun showConfirmationDialog() {
+    private fun showConfirmationDialog(){
         val simpleDialog = Dialog(mContext)
         simpleDialog.setCancelable(false)
         simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -399,13 +404,13 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
         val dialogHeader = simpleDialog.findViewById(R.id.dialog_message_header_TV_new) as AppCustomTextView
 
         dialog_yes_no_headerTV.text = "Congrats!"
-        dialogHeader.text = AppUtils.hiFirstNameText() + "!" + " , Your order has been placed successfully. Order No is " + ordID.toString() + "."
+        dialogHeader.text = AppUtils.hiFirstNameText() + " , Your order has been placed successfully. Order No is "+ ordID.toString()+"."
 
 
         val dialogYes = simpleDialog.findViewById(R.id.tv_message_ok_new) as AppCustomTextView
         dialogYes.setOnClickListener({ view ->
             simpleDialog.cancel()
-            voiceAttendanceMsg(AppUtils.hiFirstNameText() + "!" + " , Your order has been placed successfully.")
+            voiceAttendanceMsg( AppUtils.hiFirstNameText()+"!" + " , Your order has been placed successfully.")
         })
         simpleDialog.show()
     }
@@ -417,46 +422,51 @@ class NeworderScrCartFragment : BaseFragment(), View.OnClickListener {
                 Log.e("Speeh Error", "NewOrderScrCartFragment");
         }
 
-        (mContext as DashboardActivity).loadFragment(FragType.NewOrderScrOrderDetailsFragment, false, NewOrderScrActiFragment.shop_id!!)
+        (mContext as DashboardActivity).loadFragment(FragType.NewOrderScrOrderDetailsFragment, false, NewOrderScrActiFragment.shop_id!! )
     }
 
 
-    fun sharePdf() {
+    @SuppressLint("UseRequireInsteadOfGet")
+    fun sharePdf(){
         var heading = "ORDER DETAILS"
         var pdfBody: String = "\n\n"
 
-        pdfBody = pdfBody + "Party      : " + AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(NewOrderScrOrderDetailsFragment.shop_id).shopName!! + "                                  " + "Phone : " + shop_phone.toString() + "\n\n"
-        pdfBody = pdfBody + "Order ID : " + CustomStatic.IsFromViewNewOdrScrOrderID + "     " +
-                "                                    Date : " + AppUtils.convertToCommonFormat(CustomStatic.IsFromViewNewOdrScrOrderDate) + "\n\n\n"
+        pdfBody=pdfBody+"Party      : "+AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(NewOrderScrOrderDetailsFragment.shop_id).shopName!!+ "                                  "+ "Phone : "+shop_phone.toString()+"\n\n"
+        pdfBody=pdfBody+"Order ID : "+CustomStatic.IsFromViewNewOdrScrOrderID+ "     "+
+                "                                             Date : "+AppUtils.convertToCommonFormat(CustomStatic.IsFromViewNewOdrScrOrderDate)+"\n\n\n"
 
 
-        for (i in 0..cartOrder!!.size - 1) {
+        for(i in 0..cartOrder!!.size-1){
 //            val currentPos: Int = cartOrder!!.size - i
             /* if(currentPos >= 0){
 
              }*/
-            var rootObjj = cartOrder!!.get(i)
+            var rootObjj=cartOrder!!.get(i)
 
-            var contextHeader = "\n" + "___________________________________________________________" + "\n\n" + "Product Name : " + rootObjj.product_name!! + "       " + " Gender : " + rootObjj.gender + "\n"
+            //gender vs product type new order
+            //var str = getString(R.string.GenderTextNewOrd)
+            var str = getString(R.string.ProductTextNewOrd)
+            //var contextHeader="\n"+"___________________________________________________________"+"\n\n"+"Product Name : "+rootObjj.product_name!!+"       "+" Gender : "+rootObjj.gender+"\n"
+            var contextHeader="\n"+"___________________________________________________________"+"\n\n"+"Product Name : "+rootObjj.product_name!!+"       "+str+" : "+rootObjj.gender+"\n"
 
             //var contextHeader="Product Name : "+rootObjj.product_name!!+"       "+" Gender : " +rootObjj.gender+"\n"
 
-            var colorObjj = cartOrder!!.get(i).color_list
-            for (j in 0..colorObjj!!.size!! - 1) {
-                var colorRoot = "\nColor : " + colorObjj.get(j).color_name + "\n\n"
-                contextHeader += colorRoot
-                var sizeQtyObjj = colorObjj.get(j).order_list
-                for (k in 0..sizeQtyObjj!!.size - 1) {
-                    var spaceCount = sizeQtyObjj.get(k).size.length
-                    var spacee = " "
-                    for (p in 0..(20 - spaceCount)) {
-                        spacee += " "
+            var colorObjj=cartOrder!!.get(i).color_list
+            for(j in 0..colorObjj!!.size!!-1){
+                var colorRoot="\nColor : "+colorObjj.get(j).color_name+"\n"
+                contextHeader+=colorRoot
+                var sizeQtyObjj=colorObjj.get(j).order_list
+                for(k in 0..sizeQtyObjj!!.size-1){
+                    var spaceCount=sizeQtyObjj.get(k).size.length
+                    var spacee=" "
+                    for(p in 0..(20-spaceCount)){
+                        spacee+=" "
                     }
-                    var sizeQtyRoot = "       Size : " + sizeQtyObjj.get(k).size + "  " + spacee + "  " + "Qty : " + sizeQtyObjj.get(k).qty.repeat(1) + "\n"
-                    contextHeader += sizeQtyRoot
+                    var sizeQtyRoot="       Size : "+sizeQtyObjj.get(k).size+"  "+spacee+"  "+"Qty : "+sizeQtyObjj.get(k).qty.repeat(1)+"\n"
+                    contextHeader+=sizeQtyRoot
                 }
             }
-            pdfBody += contextHeader + "\n"
+            pdfBody+=contextHeader+"\n"
         }
 
         val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)

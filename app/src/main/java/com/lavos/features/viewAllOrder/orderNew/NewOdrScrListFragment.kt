@@ -1,5 +1,6 @@
 package com.lavos.features.viewAllOrder.orderNew
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -14,14 +15,17 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
-
 import com.lavos.CustomStatic
 import com.lavos.CustomStatic.IsOrderFromTotalOrder
 import com.lavos.R
 import com.lavos.app.AppDatabase
+import com.lavos.app.Pref
 import com.lavos.app.domain.AddShopDBModelEntity
 import com.lavos.app.types.FragType
 import com.lavos.app.utils.AppUtils
+import com.lavos.app.utils.FTStorageUtils
+import com.lavos.app.utils.Toaster
+import com.lavos.app.widgets.MovableFloatingActionButton
 import com.lavos.base.presentation.BaseFragment
 import com.lavos.features.dashboard.presentation.DashboardActivity
 import com.lavos.features.viewAllOrder.interf.ViewNewOrdScrDetailsOnCLick
@@ -31,34 +35,29 @@ import com.lavos.features.viewAllOrder.model.ProductOrder
 import com.lavos.features.viewAllOrder.presentation.NewOdrScrListAdapter
 import com.github.jhonnyx2012.horizontalpicker.DatePickerListener
 import com.github.jhonnyx2012.horizontalpicker.HorizontalPicker
-import com.lavos.app.Pref
-import com.lavos.app.utils.FTStorageUtils
-import com.lavos.app.utils.Toaster
-import com.lavos.app.widgets.MovableFloatingActionButton
-import kotlinx.android.synthetic.main.fragment_new_odr_scr_list.*
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import org.joda.time.DateTime
 import java.io.File
 import java.lang.Exception
 
-class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickListener {
-    //NewOdrScrListAdapter
+class NewOdrScrListFragment: BaseFragment(), DatePickerListener {
+//NewOdrScrListAdapter
     private lateinit var mContext: Context
-    private lateinit var rv_details: RecyclerView
+    private lateinit var rv_details:RecyclerView
 
-    data class ViewDataNewOdrScr(var order_id: String, var shop_id: String, var order_date: String)
-    data class ViewDataNewOdrScrDetails(var order_id: String, var shop_id: String, var order_date: String, var shop_name: String, var shop_addr: String)
-
-    private var viewDataList: ArrayList<ViewDataNewOdrScrDetails> = ArrayList()
+    data class ViewDataNewOdrScr(var order_id:String,var shop_id:String,var order_date:String)
+    data class ViewDataNewOdrScrDetails(var order_id:String,var shop_id:String,var order_date:String,var shop_name:String,var shop_addr:String)
+    private var viewDataList:ArrayList<ViewDataNewOdrScrDetails> = ArrayList()
     private var viewDataListPDF: ArrayList<ViewDataNewOdrScrDetails> = ArrayList()
     private var newOdrScrListAdapter: NewOdrScrListAdapter? = null
-    private lateinit var share: MovableFloatingActionButton
 
 
     private lateinit var picker: HorizontalPicker
     private lateinit var selectedDate: String
-    private lateinit var date_CV: CardView
+    private lateinit var date_CV:CardView
+
+    private lateinit var share: MovableFloatingActionButton
 
 
     override fun onAttach(context: Context) {
@@ -68,11 +67,11 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
 
     companion object {
         var mAddShopDataObj: AddShopDBModelEntity? = null
-        var shop_id: String = ""
+        var shop_id:String = ""
         fun getInstance(objects: Any): NewOdrScrListFragment {
             val Fragment = NewOdrScrListFragment()
             if (!TextUtils.isEmpty(objects.toString())) {
-                shop_id = objects.toString()
+                shop_id=objects.toString()
                 mAddShopDataObj = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(shop_id)
             }
             return Fragment
@@ -88,23 +87,19 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
         return view
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        //fab_frag_view_new_ord_scr_list_share.setOnClickListener(this)
-    }
+    @SuppressLint("UseRequireInsteadOfGet")
+    private fun initView(view:View){
 
-    private fun initView(view: View) {
-        //fabShare=view!!.findViewById(R.id.fab_frag_view_new_ord_scr_list_share)
         share=view!!.findViewById(R.id.fab_frag_view_new_ord_scr_list_share)
         share.setCustomClickListener {
             sharePdf()
         }
 
-        date_CV = view!!.findViewById(R.id.date_CV)
-        if (CustomStatic.IsOrderFromTotalOrder) {
-            date_CV.visibility = View.VISIBLE
-        } else {
-            date_CV.visibility = View.GONE
+        date_CV=view!!.findViewById(R.id.date_CV)
+        if(CustomStatic.IsOrderFromTotalOrder){
+            date_CV.visibility=View.VISIBLE
+        }else{
+            date_CV.visibility=View.GONE
         }
 
         /*NEW CALENDER*/
@@ -129,7 +124,7 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
 
         /*NEW CALENDER*/
 
-        rv_details = view!!.findViewById(R.id.rv_frag_new_odr_scr_list)
+        rv_details=view!!.findViewById(R.id.rv_frag_new_odr_scr_list)
 
         gatherData()
     }
@@ -141,120 +136,140 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
         gatherData()
     }
 
-    private fun gatherData() {
-        var odr_shop_list: List<ViewDataNewOdrScr> = emptyList()
-        if (CustomStatic.IsOrderFromTotalOrder) {
-            odr_shop_list = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getDistinctOrderShopAllDateFiltered(selectedDate)!!
-        } else {
-            odr_shop_list = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getDistinctOrderShopAll()!!
-        }
+    private fun gatherData(){
 
+        var odr_shop_list:List<ViewDataNewOdrScr> = emptyList()
+        if(CustomStatic.IsOrderFromTotalOrder){
+            odr_shop_list= AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getDistinctOrderShopAllDateFiltered(selectedDate)!!
+        }else{
+            odr_shop_list= AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getDistinctOrderShopAll()!!
+        }
 
 
         viewDataList.clear()
 
         doAsync {
-            try {
-                for (i in 0..odr_shop_list!!.size - 1) {
-                    var shopName = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopDetail(odr_shop_list.get(i).shop_id).shopName
-                    var shopAddr = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopDetail(odr_shop_list.get(i).shop_id).address
-                    var obj = ViewDataNewOdrScrDetails(odr_shop_list.get(i).order_id, odr_shop_list.get(i).shop_id, odr_shop_list.get(i).order_date, shopName, shopAddr)
+            try{
+                for(i in 0..odr_shop_list!!.size-1){
+                    var shopName= AppDatabase.getDBInstance()!!.addShopEntryDao().getShopDetail(odr_shop_list.get(i).shop_id).shopName
+                    var shopAddr= AppDatabase.getDBInstance()!!.addShopEntryDao().getShopDetail(odr_shop_list.get(i).shop_id).address
+                    var obj= ViewDataNewOdrScrDetails(odr_shop_list.get(i).order_id,odr_shop_list.get(i).shop_id,odr_shop_list.get(i).order_date,shopName,shopAddr)
                     viewDataList.add(obj)
                 }
 
-            } catch (ex: Exception) {
+            }catch (ex:Exception){
 
             }
 
 
             uiThread {
-                newOdrScrListAdapter = NewOdrScrListAdapter(mContext, viewDataList, object : ViewNewOrdScrDetailsOnCLick {
-                    override fun getOrderID(orderID: String, orderDate: String, shop_id: String) {
-                        NewOrderScrOrderDetailsFragment.shop_id = shop_id
-                        getOrderDetailsList(orderID, orderDate)
+                newOdrScrListAdapter=NewOdrScrListAdapter(mContext,viewDataList!!,object : ViewNewOrdScrDetailsOnCLick {
+                    override fun getOrderID(orderID: String, orderDate: String,shop_id:String) {
+                        NewOrderScrOrderDetailsFragment.shop_id=shop_id
+                        getOrderDetailsList(orderID,orderDate)
                     }
                 })
-                rv_details.adapter = newOdrScrListAdapter
+                rv_details.adapter=newOdrScrListAdapter
 
             }
 
         }
 
-        if (odr_shop_list.size == 0) {
-            Toaster.msgShort(mContext, "No Order (s) found.")
+        if(odr_shop_list.size==0){
+            Toaster.msgShort(mContext,"No Order (s) found.")
         }
 
     }
 
-    private var final_order_list: ArrayList<NewOrderCartModel> = ArrayList()
-    private var newOrderCartModel1: NewOrderCartModel? = null
-    private var newOrderCartModel2: NewOrderCartModel? = null
+    private  var final_order_list:ArrayList<NewOrderCartModel> = ArrayList()
+    private  var newOrderCartModel1:NewOrderCartModel? = null
+    private  var newOrderCartModel2:NewOrderCartModel? = null
 
-    private fun getOrderDetailsList(orderID: String, orderDate: String) {
-        var orderAllList = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderAll(NewOrderScrOrderDetailsFragment.shop_id)
+    private fun getOrderDetailsList(orderID:String,orderDate:String){
+        var orderAllList=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderAll(NewOrderScrOrderDetailsFragment.shop_id)
         //var orderIdList=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderDistinct(shop_id)
-        var orderIdList: ArrayList<String> = ArrayList()
+        var orderIdList:ArrayList<String> = ArrayList()
         orderIdList.add(orderID)
         final_order_list.clear()
 
-        for (i in 0..orderIdList!!.size - 1) {
-            newOrderCartModel1 = NewOrderCartModel()
-            newOrderCartModel2 = NewOrderCartModel()
+        for(i in 0..orderIdList!!.size-1){
+            newOrderCartModel1= NewOrderCartModel()
+            newOrderCartModel2= NewOrderCartModel()
             //var uniqGender=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getUniqGenderForOrderID(orderIdList.get(i))
 
-            var productIDList = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getProductCodeDistinctByOrderID(orderIdList.get(i))
+            var productIDList=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getProductCodeDistinctByOrderID(orderIdList.get(i))
             //
 
 
-            for (j in 0..productIDList!!.size - 1) {
+            for(j in 0..productIDList!!.size-1){
 
 
-                if (j != 0) {
-                    if (newOrderCartModel1 != null) {
-                        if (newOrderCartModel1!!.color_list.size > 0)
+                if(j!=0){
+                    if(newOrderCartModel1!=null){
+                        if(newOrderCartModel1!!.color_list.size>0)
                             final_order_list.add(newOrderCartModel1!!)
                     }
-                    if (newOrderCartModel2 != null) {
-                        if (newOrderCartModel2!!.color_list.size > 0)
+                    if(newOrderCartModel2!=null){
+                        if(newOrderCartModel2!!.color_list.size>0)
                             final_order_list.add(newOrderCartModel2!!)
                     }
                 }
 
-                newOrderCartModel1 = NewOrderCartModel()
-                newOrderCartModel2 = NewOrderCartModel()
+                newOrderCartModel1=NewOrderCartModel()
+                newOrderCartModel2=NewOrderCartModel()
 
                 //newOrderCartModel1!!.product_id=productIDList!!.get(j)
                 //newOrderCartModel2!!.product_id=productIDList!!.get(j)
                 //newOrderCartModel1!!.product_name=AppDatabase.getDBInstance()?.newOrderProductDao()?.getNewOrderProductName(productIDList!!.get(j))!!
                 //newOrderCartModel2!!.product_name=AppDatabase.getDBInstance()?.newOrderProductDao()?.getNewOrderProductName(productIDList!!.get(j))!!
 
-                var colorIDListForProduct = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getColorIDDistinctByOrderID(orderIdList.get(i), productIDList.get(j))
-                for (k in 0..colorIDListForProduct!!.size - 1) {
+                var colorIDListForProduct=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getColorIDDistinctByOrderID(orderIdList.get(i),productIDList.get(j))
+                for(k in 0..colorIDListForProduct!!.size-1){
                     var sizeQtyListMale = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getSizeQtyByProductColorIDMale(orderIdList!!.get(i), productIDList!!.get(j), colorIDListForProduct!!.get(k),
-                    Pref.new_ord_gender_male)
+                            Pref.new_ord_gender_male)
                     var sizeQtyListFeMale = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getSizeQtyByProductColorIDFemale(orderIdList!!.get(i), productIDList!!.get(j), colorIDListForProduct!!.get(k),
                             Pref.new_ord_gender_female)
-                    if (sizeQtyListMale!!.size > 0) {
-                        newOrderCartModel1!!.product_id = productIDList!!.get(j)
-                        newOrderCartModel1!!.product_name = AppDatabase.getDBInstance()?.newOrderProductDao()?.getNewOrderProductName(productIDList!!.get(j))!!
+                    if(sizeQtyListMale!!.size>0){
+                        newOrderCartModel1!!.product_id=productIDList!!.get(j)
+                        newOrderCartModel1!!.product_name=AppDatabase.getDBInstance()?.newOrderProductDao()?.getNewOrderProductName(productIDList!!.get(j))!!
 
-                        //newOrderCartModel1!!.gender = "MALE"
+                        //newOrderCartModel1!!.gender="MALE"
                         newOrderCartModel1!!.gender = Pref.new_ord_gender_male
 
-                        var colorSel = AppDatabase.getDBInstance()?.newOrderColorDao()?.getNewOrderColorName(colorIDListForProduct.get(k))
-                        var colorList: ColorList = ColorList(colorSel!!, colorIDListForProduct.get(k), sizeQtyListMale as ArrayList<ProductOrder>)
+                        try{
+                            var totalRate = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getNewOrderProductRateByOrdID(productIDList!!.get(j),orderIdList.get(i))!!.toDouble()
+                            var qt = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getNewOrderProductQtyByOrdID(productIDList!!.get(j),orderIdList.get(i))!!.toDouble()
+                            //newOrderCartModel1!!.rate=(totalRate/qt).toString()
+                            newOrderCartModel1!!.rate=totalRate.toString()
+                        }catch (ex:Exception){
+                            newOrderCartModel1!!.rate="0.0"
+                        }
+                        //newOrderCartModel1!!.rate=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getNewOrderProductRateByOrdID(productIDList!!.get(j),orderIdList.get(i))!!
+
+                        var colorSel= AppDatabase.getDBInstance()?.newOrderColorDao()?.getNewOrderColorName(colorIDListForProduct.get(k))
+                        var colorList: ColorList = ColorList(colorSel!!,colorIDListForProduct.get(k), sizeQtyListMale as ArrayList<ProductOrder>)
                         newOrderCartModel1!!.color_list.add(colorList)
                     }
 
-                    if (sizeQtyListFeMale!!.size > 0) {
-                        newOrderCartModel2!!.product_id = productIDList!!.get(j)
-                        newOrderCartModel2!!.product_name = AppDatabase.getDBInstance()?.newOrderProductDao()?.getNewOrderProductName(productIDList!!.get(j))!!
+                    if(sizeQtyListFeMale!!.size>0){
+                        newOrderCartModel2!!.product_id=productIDList!!.get(j)
+                        newOrderCartModel2!!.product_name=AppDatabase.getDBInstance()?.newOrderProductDao()?.getNewOrderProductName(productIDList!!.get(j))!!
 
-                        //newOrderCartModel2!!.gender = "FEMALE"
+                        //newOrderCartModel2!!.gender="FEMALE"
                         newOrderCartModel2!!.gender = Pref.new_ord_gender_female
 
-                        var colorSel = AppDatabase.getDBInstance()?.newOrderColorDao()?.getNewOrderColorName(colorIDListForProduct.get(k))
-                        var colorList: ColorList = ColorList(colorSel!!, colorIDListForProduct.get(k), sizeQtyListFeMale as ArrayList<ProductOrder>)
+                        try{
+                            var totalRate = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getNewOrderProductRateByOrdID(productIDList!!.get(j),orderIdList.get(i))!!.toDouble()
+                            var qt = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getNewOrderProductQtyByOrdID(productIDList!!.get(j),orderIdList.get(i))!!.toDouble()
+                            //newOrderCartModel1!!.rate=(totalRate/qt).toString()
+                            newOrderCartModel1!!.rate=totalRate.toString()
+                        }catch (ex:Exception){
+                            newOrderCartModel1!!.rate="0.0"
+                        }
+                        //newOrderCartModel2!!.rate=AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getNewOrderProductRateByOrdID(productIDList!!.get(j),orderIdList.get(i))!!
+
+                        var colorSel= AppDatabase.getDBInstance()?.newOrderColorDao()?.getNewOrderColorName(colorIDListForProduct.get(k))
+                        var colorList: ColorList = ColorList(colorSel!!,colorIDListForProduct.get(k), sizeQtyListFeMale as ArrayList<ProductOrder>)
                         newOrderCartModel2!!.color_list.add(colorList)
                     }
 
@@ -262,91 +277,26 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
 
             }
 
-            if (newOrderCartModel1 != null) {
-                if (newOrderCartModel1!!.color_list.size > 0)
+            if(newOrderCartModel1!=null){
+                if(newOrderCartModel1!!.color_list.size>0)
                     final_order_list.add(newOrderCartModel1!!)
             }
-            if (newOrderCartModel2 != null) {
-                if (newOrderCartModel2!!.color_list.size > 0)
+            if(newOrderCartModel2!=null){
+                if(newOrderCartModel2!!.color_list.size>0)
                     final_order_list.add(newOrderCartModel2!!)
             }
 
         }
 
-        CustomStatic.IsFromViewNewOdrScr = true
-        CustomStatic.IsFromViewNewOdrScrOrderID = orderID
-        CustomStatic.IsFromViewNewOdrScrOrderDate = orderDate
+        CustomStatic.IsFromViewNewOdrScr=true
+        CustomStatic.IsFromViewNewOdrScrOrderID=orderID
+        CustomStatic.IsFromViewNewOdrScrOrderDate=orderDate
         (mContext as DashboardActivity).loadFragment(FragType.NeworderScrCartFragment, true, final_order_list)
 
     }
 
 
-    override fun onClick(v: View?) {
-        when(v!!.id){
-            R.id.fab_frag_view_new_ord_scr_list_share ->{
-                var odr_shop_list: List<ViewDataNewOdrScr> = emptyList()
-                if (CustomStatic.IsOrderFromTotalOrder) {
-                    odr_shop_list = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getDistinctOrderShopAllDateFiltered(selectedDate)!!
-                } else {
-                    odr_shop_list = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getDistinctOrderShopAll()!!
-                }
-                viewDataListPDF.clear()
-                try {
-                    for (i in 0..odr_shop_list!!.size - 1) {
-                        var shopName = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopDetail(odr_shop_list.get(i).shop_id).shopName
-                        var shopAddr = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopDetail(odr_shop_list.get(i).shop_id).address
-                        var obj = ViewDataNewOdrScrDetails(odr_shop_list.get(i).order_id, odr_shop_list.get(i).shop_id, odr_shop_list.get(i).order_date, shopName, shopAddr)
-                        viewDataListPDF.add(obj)
-                    }
-
-                } catch (ex: Exception) {
-                    ex.printStackTrace()
-                }
-
-                var heading = "ORDER SUMMARY"
-                var pdfBody: String = "\n\n"
-                for (i in 0..viewDataListPDF!!.size - 1) {
-                    var qty_Order: Int = 0
-                    var qtty_list = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderQtyOrderIDWise(viewDataListPDF!!.get(i).order_id)
-                    for (j in 0..qtty_list!!.size - 1) {
-                        qty_Order = qty_Order + qtty_list.get(j).toString().toInt()
-                    }
-                    var content= "\n\n"+"Order ID  : "+viewDataListPDF!!.get(i).order_id+"          Order Date : "+viewDataListPDF!!.get(i).order_date+"\n"+"Qty           : "+qty_Order.toString()+"\n"+"Name      : "+viewDataListPDF!!.get(i).shop_name+"\n"+"Address  :"+viewDataListPDF!!.get(i).shop_addr+"\n"+
-                            "\n____________________________________________________________"
-                    pdfBody=pdfBody+content
-                }
-
-
-                val image = BitmapFactory.decodeResource(this.resources, R.mipmap.ic_launcher)
-
-                val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "OrderDetalis" +
-                        "_" + Pref.user_id+AppUtils.getCurrentDateTime().toString().replace(" ","R").replace(":","_") + ".pdf", image, heading, 3.7f)
-
-                if (!TextUtils.isEmpty(path)) {
-                    try {
-                        val shareIntent = Intent(Intent.ACTION_SEND)
-                        val fileUrl = Uri.parse(path)
-
-                        val file = File(fileUrl.path)
-//                        val uri = Uri.fromFile(file)
-                        val uri: Uri = FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
-
-                        shareIntent.type = "image/png"
-                        shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
-                        startActivity(Intent.createChooser(shareIntent, "Share pdf using"));
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                } else
-                    (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
-
-
-            }
-        }
-    }
-
-
-
+    @SuppressLint("UseRequireInsteadOfGet")
     fun sharePdf(){
         var odr_shop_list: List<ViewDataNewOdrScr> = emptyList()
         if (CustomStatic.IsOrderFromTotalOrder) {
@@ -403,4 +353,6 @@ class NewOdrScrListFragment : BaseFragment(), DatePickerListener,View.OnClickLis
         } else
             (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
     }
+
+
 }

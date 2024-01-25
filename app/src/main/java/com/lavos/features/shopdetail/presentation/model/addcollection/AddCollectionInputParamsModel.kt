@@ -19,4 +19,6 @@ class AddCollectionInputParamsModel {
     var patient_no: String = ""
     var patient_name: String = ""
     var patient_address: String = ""
+    var Hospital: String = ""
+    var Email_Address: String = ""
 }

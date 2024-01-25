@@ -1,5 +1,6 @@
 package com.lavos.features.orderhistory
 
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
@@ -7,8 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import android.os.Environment
 import android.text.TextUtils
 import android.util.Log
 import android.view.LayoutInflater
@@ -16,10 +16,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.core.content.FileProvider
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.SimpleTarget
-import com.bumptech.glide.request.transition.Transition
-import com.elvishew.xlog.XLog
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.lavos.R
 import com.lavos.app.AppDatabase
 import com.lavos.app.NetworkConstant
@@ -37,18 +35,21 @@ import com.lavos.features.orderhistory.activitiesapi.LocationFetchRepositoryProv
 import com.lavos.features.orderhistory.api.LocationUpdateRepositoryProviders
 import com.lavos.features.orderhistory.model.*
 import com.lavos.widgets.AppCustomTextView
+
+import com.itextpdf.text.*
+import com.itextpdf.text.BaseColor
+import com.itextpdf.text.pdf.PdfPCell
+import com.itextpdf.text.pdf.PdfPTable
+import com.itextpdf.text.pdf.PdfWriter
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.BufferedWriter
-import java.io.File
-import java.io.FileWriter
-import java.io.Writer
+import timber.log.Timber
+import java.io.*
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 /**
@@ -127,7 +128,6 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
                 initAdapter()
             }
         }
-
     }
 
 
@@ -288,24 +288,28 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
 
         for (i in 0 until location_details.size) {
             val localData = UserLocationDataEntity()
-            if (location_details[i].latitude == null)
+            if (location_details[i].latitude == null) {
                 continue
-            else
+            }
+            else {
                 localData.latitude = location_details[i].latitude!!
-
-            if (location_details[i].longitude == null)
+            }
+            if (location_details[i].longitude == null) {
                 continue
-            else
+            }
+            else {
                 localData.longitude = location_details[i].longitude!!
-
-            if (location_details[i].date == null)
+            }
+            if (location_details[i].date == null) {
                 continue
+            }
             else {
                 localData.updateDate = AppUtils.changeAttendanceDateFormatToCurrent(location_details[i].date!!)
                 localData.updateDateTime = location_details[i].date!!
             }
-            if (location_details[i].last_update_time == null)
+            if (location_details[i].last_update_time == null) {
                 continue
+            }
             else {
                 val str = location_details[i].last_update_time
                 localData.time = str.split(" ")[0]
@@ -314,59 +318,69 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
             localData.isUploaded = true
             localData.minutes = "0"
             localData.hour = "0"
-            if (location_details[i].distance_covered == null)
+            if (location_details[i].distance_covered == null) {
                 continue
-            else
+            }
+            else {
                 localData.distance = location_details[i].distance_covered!!
-
-            if (location_details[i].shops_covered == null)
+            }
+            if (location_details[i].shops_covered == null) {
                 continue
-            else
+            }
+            else {
                 localData.shops = location_details[i].shops_covered!!
-            if (location_details[i].location_name == null)
+            }
+            if (location_details[i].location_name == null) {
                 continue
-            else
+            }
+            else {
                 localData.locationName = location_details[i].location_name!!
-
-            if (location_details[i].date == null)
+            }
+            if (location_details[i].date == null) {
                 continue
-            else
+            }
+            else {
                 localData.timestamp = AppUtils.getTimeStampFromDate(location_details[i].date!!)
-
-            if (location_details[i].meeting_attended == null)
+            }
+            if (location_details[i].meeting_attended == null) {
                 continue
-            else
+            }
+            else {
                 localData.meeting = location_details[i].meeting_attended!!
-
-            if (visitDistance == null)
+            }
+            if (visitDistance == null) {
                 continue
-            else
+            }
+            else {
                 localData.visit_distance = visitDistance
-
-            if (location_details[i].network_status == null)
+            }
+            if (location_details[i].network_status == null) {
                 continue
-            else
+            }
+            else {
                 localData.network_status = location_details[i].network_status
-
-            if (location_details[i].battery_percentage == null)
+            }
+            if (location_details[i].battery_percentage == null) {
                 continue
-            else
+            }
+            else {
                 localData.battery_percentage = location_details[i].battery_percentage
+            }
 
-            XLog.d("=====Current location (Activity)=======")
-            XLog.d("distance=====> " + localData.distance)
-            XLog.d("lat====> " + localData.latitude)
-            XLog.d("long=====> " + localData.longitude)
-            XLog.d("location=====> " + localData.locationName)
-            XLog.d("date time=====> " + localData.updateDateTime)
-            XLog.d("meeting_attended=====> " + localData.meeting)
-            XLog.d("visit_distance=====> " + localData.visit_distance)
-            XLog.d("network_status=====> " + localData.network_status)
-            XLog.d("battery_percentage=====> " + localData.battery_percentage)
+            Timber.d("=====Current location (Activity)=======")
+            Timber.d("distance=====> " + localData.distance)
+            Timber.d("lat====> " + localData.latitude)
+            Timber.d("long=====> " + localData.longitude)
+            Timber.d("location=====> " + localData.locationName)
+            Timber.d("date time=====> " + localData.updateDateTime)
+            Timber.d("meeting_attended=====> " + localData.meeting)
+            Timber.d("visit_distance=====> " + localData.visit_distance)
+            Timber.d("network_status=====> " + localData.network_status)
+            Timber.d("battery_percentage=====> " + localData.battery_percentage)
 
             AppDatabase.getDBInstance()!!.userLocationDataDao().insert(localData)
 
-            XLog.d("=======location added to db (Activity)======")
+            Timber.d("=======location added to db (Activity)======")
             list.add(localData)
         }
 
@@ -397,10 +411,12 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
         tv_visit_distance = view.findViewById(R.id.tv_visit_distance)
         tv_share_pdf = view.findViewById(R.id.tv_share_pdf)
 
-        if (Pref.isAttendanceDistanceShow)
+        if (Pref.isAttendanceDistanceShow) {
             ll_visit_distance.visibility = View.VISIBLE
-        else
+        }
+        else{
             ll_visit_distance.visibility = View.GONE
+        }
 
         pickDate.setOnClickListener(this)
         tv_share_logs.setOnClickListener(this)
@@ -408,6 +424,7 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
         tv_share_pdf.setOnClickListener(this)
     }
 
+    @SuppressLint("WrongConstant")
     private fun initAdapter() {
 
         /* Collections.sort(list, object : Comparator<UserLocationDataEntity> {
@@ -462,61 +479,222 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
 
             R.id.tv_sync_all -> {
 
-                if (AppUtils.isOnline(mContext))
+                if (AppUtils.isOnline(mContext)) {
                     syncLocationActivity()
-                else
+                }
+                else {
                     (mContext as DashboardActivity).showSnackMessage(getString(R.string.no_internet))
+                }
             }
+
+//            R.id.tv_share_pdf -> {
+//                if (list.isEmpty()) {
+//                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.no_data_found))
+//                    return
+//                }
+//
+//                val heading = "TIMELINE DETAILS"
+//                var pdfBody = "\n\n\nDate: " + pickDate.text.toString().trim() + "\n\n\n\n" + getString(R.string.visit_distance) +
+//                        " " + tv_visit_distance.text.toString().trim() + "\n\n" + getString(R.string.total_distance_travelled) + " " +
+//                        tv_total_distance.text.toString().trim() + "\n\n\n\n"
+//
+//                list.forEach {
+//                    pdfBody += it.time + it.meridiem + ":        " + it.locationName +
+//                            "\n                           " + it.distance + " " + getString(R.string.distance_covered) +
+//                            "\n                           " + it.shops + " " + getString(R.string.no_of_shop_visited) +
+//                            "\n                           " + it.meeting + " " + getString(R.string.no_of_meeting_visited) +
+//                            "\n\n\n"
+//                }
+//
+//
+//                val image = BitmapFactory.decodeResource(mContext.resources, R.mipmap.ic_launcher)
+//
+//                val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "FTS_Timeline_" +
+//                        AppUtils.getFormattedDateForApi(myCalendar.time) + "_" + Pref.user_id + ".pdf", image, heading, 2.7f)
+//                if (!TextUtils.isEmpty(path)) {
+//                    try {
+//                        val shareIntent = Intent(Intent.ACTION_SEND)
+//                        val fileUrl = Uri.parse(path)
+//
+//                        val file = File(fileUrl.path)
+//                        //val uri = Uri.fromFile(file)
+//                        //27-09-2021
+//                        val uri: Uri = FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
+//                        shareIntent.type = "image/png"
+//                        shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+//                        startActivity(Intent.createChooser(shareIntent, "Share pdf using"))
+//                    } catch (e: Exception) {
+//                        e.printStackTrace()
+//                    }
+//                }
+//                else
+//                    (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
+//            }
 
             R.id.tv_share_pdf -> {
-                if (list.isEmpty()) {
-                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.no_data_found))
-                    return
-                }
-
-                val heading = "TIMELINE DETAILS"
-                var pdfBody = "\n\n\nDate: " + pickDate.text.toString().trim() + "\n\n\n\n" + getString(R.string.visit_distance) +
-                        " " + tv_visit_distance.text.toString().trim() + "\n\n" + getString(R.string.total_distance_travelled) + " " +
-                        tv_total_distance.text.toString().trim() + "\n\n\n\n"
-
-                list.forEach {
-                    pdfBody += it.time + it.meridiem + ":        " + it.locationName +
-                            "\n                           " + it.distance + " " + getString(R.string.distance_covered) +
-                            "\n                           " + it.shops + " " + getString(R.string.no_of_shop_visited) +
-                            "\n                           " + it.meeting + " " + getString(R.string.no_of_meeting_visited) +
-                            "\n\n\n"
-                }
-
-
-                val image = BitmapFactory.decodeResource(mContext.resources, R.mipmap.ic_launcher)
-
-                val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "FTS_Timeline_" +
-                        AppUtils.getFormattedDateForApi(myCalendar.time) + "_" + Pref.user_id + ".pdf", image, heading, 2.7f)
-                if (!TextUtils.isEmpty(path)) {
-                    try {
-                        val shareIntent = Intent(Intent.ACTION_SEND)
-                        val fileUrl = Uri.parse(path)
-
-                        val file = File(fileUrl.path)
-
-//                        val uri = Uri.fromFile(file)
-                        val uri: Uri = FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
-                        shareIntent.type = "image/png"
-                        shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
-                        startActivity(Intent.createChooser(shareIntent, "Share pdf using"))
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-                else
-                    (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
+                saveDataAsPdf(list)
             }
+        }
+    }
+
+    private fun saveDataAsPdf(list: List<UserLocationDataEntity>) {
+        var document: Document = Document()
+        var fileName = "FTS_Timeline"+ "_" + AppUtils.getFormattedDateForApi(myCalendar.time) + "_" + Pref.user_id
+        fileName = fileName.replace("/", "_")
+
+        val path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() +"/lavosApp/TIMELINE/"
+
+        val dir = File(path)
+        if (!dir.exists()) {
+            dir.mkdirs()
+        }
+
+        try {
+            PdfWriter.getInstance(document, FileOutputStream(path + fileName + ".pdf"))
+            document.open()
+
+
+            var font: Font = Font(Font.FontFamily.HELVETICA, 10f, Font.BOLD)
+            var fontBoldU: Font = Font(Font.FontFamily.HELVETICA, 12f,Font.UNDERLINE or Font.BOLD)
+            var font1: Font = Font(Font.FontFamily.HELVETICA, 8f, Font.NORMAL)
+            val grayFront = Font(Font.FontFamily.HELVETICA, 8f, Font.NORMAL, BaseColor.GRAY)
+
+            //image add
+            val bm: Bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+            val bitmap = Bitmap.createScaledBitmap(bm, 50, 50, true);
+            val stream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            var img: Image? = null
+            val byteArray: ByteArray = stream.toByteArray()
+            try {
+                img = Image.getInstance(byteArray)
+                img.scaleToFit(90f, 90f)
+                img.scalePercent(70f)
+                img.alignment = Image.ALIGN_LEFT
+            } catch (e: BadElementException) {
+                e.printStackTrace()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+            document.add(img)
+
+            val xx = Paragraph("", font)
+            xx.spacingAfter = 2f
+            document.add(xx)
+
+
+//            val content = SpannableString("TIMELINE DETAILS ")
+            val Heading = Paragraph("TIMELINE DETAILS " , fontBoldU)
+            Heading.alignment = Element.ALIGN_CENTER
+            Heading.spacingAfter = 2f
+            document.add(Heading)
+
+
+//            val HeadingLine = Chunk("TIMELINE DETAILS " , fontB)
+//            HeadingLine.setUnderline(0.1f, -2f) //0.1 thick, -2 y-location
+//            document.add(HeadingLine)
+
+            val x = Paragraph("", font)
+            x.spacingAfter = 2f
+            document.add(x)
+
+            val date = Paragraph("Date: " + pickDate.text.toString().trim(), font)
+            date.alignment = Element.ALIGN_CENTER
+            date.spacingAfter = 2f
+            document.add(date)
+
+//            val visit_distance = Paragraph(getString(R.string.visit_distance) + tv_visit_distance.text.toString().trim(), font)
+//            visit_distance.alignment = Element.ALIGN_LEFT
+//            visit_distance.spacingAfter = 2f
+//            document.add(visit_distance)
+
+            val total_distance = Paragraph(getString(R.string.total_distance_travelled) + tv_total_distance.text.toString().trim(), font)
+            total_distance.alignment = Element.ALIGN_CENTER
+            total_distance.spacingAfter = 15f
+            document.add(total_distance)
+
+            // table header
+            val widths = floatArrayOf(0.05f, 0.50f)
+
+            var tableHeader: PdfPTable = PdfPTable(widths)
+            tableHeader.getDefaultCell().setHorizontalAlignment(Element.ALIGN_CENTER)
+            tableHeader.setWidthPercentage(100f)
+
+
+
+            val cell1 = PdfPCell(Phrase("Time", font))
+            cell1.setHorizontalAlignment(Element.ALIGN_CENTER)
+            cell1.borderColor = BaseColor.GRAY
+            tableHeader.addCell(cell1);
+
+            val cell2 = PdfPCell(Phrase("Address", font))
+            cell2.setHorizontalAlignment(Element.ALIGN_LEFT);
+            cell2.borderColor = BaseColor.GRAY
+            tableHeader.addCell(cell2);
+
+            document.add(tableHeader)
+
+            //table body
+            var time: String = ""
+            var addr: String = ""
+
+            var obj=list!!
+            for (i in 0..obj.size-1) {
+                time = obj!!.get(i).time + obj!!.get(i).meridiem + "       "
+                addr = obj!!.get(i).locationName + "\n" + obj!!.get(i).distance + " " + getString(R.string.distance_covered) +
+                        "\n" + obj!!.get(i).shops + " " + getString(R.string.no_of_shop_visited) +
+                        "\n" + obj!!.get(i).meeting + " " + getString(R.string.no_of_meeting_visited)
+
+
+                val tableRows = PdfPTable(widths)
+                tableRows.defaultCell.horizontalAlignment = Element.ALIGN_CENTER
+                tableRows.setWidthPercentage(100f);
+
+                var cellBodySl = PdfPCell(Phrase(time, font1))
+                cellBodySl.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cellBodySl.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellBodySl)
+
+                var cellBody2 = PdfPCell(Phrase(addr, font1))
+                cellBody2.setHorizontalAlignment(Element.ALIGN_LEFT)
+                cellBody2.borderColor = BaseColor.GRAY
+                tableRows.addCell(cellBody2)
+
+
+
+                document.add(tableRows)
+
+                document.add(Paragraph())
+            }
+
+
+            document.close()
+
+            var sendingPath = path + fileName + ".pdf"
+            if (!TextUtils.isEmpty(sendingPath)) {
+                try {
+                    val shareIntent = Intent(Intent.ACTION_SEND)
+                    val fileUrl = Uri.parse(sendingPath)
+                    val file = File(fileUrl.path)
+                    val uri: Uri = FileProvider.getUriForFile(mContext, mContext.applicationContext.packageName.toString() + ".provider", file)
+                    shareIntent.type = "image/png"
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+                    startActivity(Intent.createChooser(shareIntent, "Share pdf using"))
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.something_went_wrong1))
+                }
+            }
+        }
+        catch (ex: Exception){
+            ex.printStackTrace()
+            (mContext as DashboardActivity).showSnackMessage(getString(R.string.something_went_wrong))
         }
     }
 
     private fun syncLocationActivity() {
 
-        XLog.d("syncLocationActivity (Activity Screen) : ENTER")
+        Timber.d("syncLocationActivity (Activity Screen) : ENTER")
 
         if (Pref.user_id.isNullOrEmpty())
             return
@@ -602,8 +780,8 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
         for (i in apiLocationList.indices) {
             if (!apiLocationList[i].isUploaded) {
 
-                XLog.e("Final Home Duration (Location Fuzed Service)=================> ${apiLocationList[i].home_duration}")
-                XLog.e("Time (Location Fuzed Service)=================> ${apiLocationList[i].time} ${apiLocationList[i].meridiem}")
+                Timber.e("Final Home Duration (Location Fuzed Service)=================> ${apiLocationList[i].home_duration}")
+                Timber.e("Time (Location Fuzed Service)=================> ${apiLocationList[i].time} ${apiLocationList[i].meridiem}")
 
 
                 val locationData = LocationData()
@@ -633,7 +811,7 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
             locationUpdateReq.location_details = locationList
             val repository = LocationUpdateRepositoryProviders.provideLocationUpdareRepository()
 
-            XLog.d("syncLocationActivity (Activity Screen) : REQUEST")
+            Timber.d("syncLocationActivity (Activity Screen) : REQUEST")
 
             progress_wheel.spin()
 
@@ -644,7 +822,7 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
                             .subscribe({ result ->
                                 val updateShopActivityResponse = result as BaseResponse
 
-                                XLog.d("syncLocationActivity (Activity Screen) : RESPONSE : " + updateShopActivityResponse.status + ":" + updateShopActivityResponse.message)
+                                Timber.d("syncLocationActivity (Activity Screen) : RESPONSE : " + updateShopActivityResponse.status + ":" + updateShopActivityResponse.message)
 
                                 if (updateShopActivityResponse.status == NetworkConstant.SUCCESS) {
                                     doAsync {
@@ -655,16 +833,17 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
 
                                             if (syncList != null && syncList.isNotEmpty()) {
 
-                                                if (i == 0)
+                                                if (i == 0) {
                                                     AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploadedFor5Items(true, syncList[syncList.size - 1].locationId.toInt(), locationListAllId[i].locationId.toInt())
-                                                else
+                                                }else {
                                                     AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploadedFor5Items(true, locationListAllId[i - 1].locationId.toInt(), locationListAllId[i].locationId.toInt())
-
+                                                }
                                             } else {
-                                                if (i == 0)
+                                                if (i == 0) {
                                                     AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploaded(true, locationListAllId[i].locationId.toInt())
-                                                else
+                                                }else {
                                                     AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploadedFor5Items(true, locationListAllId[i - 1].locationId.toInt(), locationListAllId[i].locationId.toInt())
+                                                }
                                             }
                                         }
 
@@ -676,8 +855,7 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
                                             initAdapter()
                                         }
                                     }
-                                }
-                                else {
+                                } else {
                                     progress_wheel.stopSpinning()
                                     AppUtils.isLocationActivityUpdating = false
                                 }
@@ -686,9 +864,9 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
                                 AppUtils.isLocationActivityUpdating = false
                                 progress_wheel.stopSpinning()
                                 if (error == null) {
-                                    XLog.d("syncLocationActivity (Activity Screen) : ERROR : " + "UNEXPECTED ERROR IN LOCATION ACTIVITY API")
+                                    Timber.d("syncLocationActivity (Activity Screen) : ERROR : " + "UNEXPECTED ERROR IN LOCATION ACTIVITY API")
                                 } else {
-                                    XLog.d("syncLocationActivity (Activity Screen) : ERROR : " + error.localizedMessage)
+                                    Timber.d("syncLocationActivity (Activity Screen) : ERROR : " + error.localizedMessage)
                                     error.printStackTrace()
                                 }
 
@@ -699,6 +877,7 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
     }
 
 
+    @SuppressLint("UseRequireInsteadOfGet")
     private fun openShareIntents() {
         try {
             val shareIntent = Intent(Intent.ACTION_SEND)
@@ -712,7 +891,7 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
             }
 
 //            val uri = Uri.fromFile(file)
-            val uri: Uri = FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
+            val uri : Uri=FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
 //        shareIntent.data = fileUrl
             shareIntent.type = "image/png"
             shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
@@ -773,7 +952,8 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
         }
 
         val configValues = JSONObject()
-        configValues.put("min_accuracy", AppUtils.minAccuracy)
+        //configValues.put("min_accuracy", AppUtils.minAccuracy)
+        configValues.put("min_accuracy", Pref.minAccuracy)
         configValues.put("max_accuracy", AppUtils.maxAccuracy)
         configValues.put("min_distance", AppUtils.minDistance)
         configValues.put("max_distance", AppUtils.maxDistance)

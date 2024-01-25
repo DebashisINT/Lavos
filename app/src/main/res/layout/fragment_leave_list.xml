@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/tools"
     android:orientation="vertical"
-    android:background="@android:color/white">
+    android:background="@color/color_silver">
 
     <com.lavos.widgets.AppCustomTextView
         android:id="@+id/tv_pick_date_range"
@@ -27,7 +27,9 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_achv_list"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:layout_marginLeft="@dimen/_2sdp"
+            android:layout_marginRight="@dimen/_2sdp"/>
 
         <com.lavos.widgets.AppCustomTextView
             android:id="@+id/tv_no_data_available"

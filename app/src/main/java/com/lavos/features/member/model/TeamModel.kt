@@ -15,7 +15,13 @@ data class TeamListDataModel(var user_id: String = "",
                              var user_name: String = "",
                              var contact_no: String = "",
                              var super_id: String = "",
-                             var super_name: String = "") : Serializable
+                             var super_name: String = "",
+                             var isLeavePending: Boolean = false,
+                             var isLeaveApplied: Boolean = false,
+                             var State: String = "",
+                             var Branch: String = "",
+                             var Designation: String = "",
+                             var Employee_Code: String = "") : Serializable
 
 
 data class TeamShopListResponseModel(var team_struct: String? = null,
@@ -44,7 +50,11 @@ data class TeamShopListDataModel(var shop_id: String = "",
                                  var type_id: String = "",
                                  var user_id: String = "",
                                  var assign_to_pp_id: String = "",
-                                 var assign_to_dd_id: String = "") : Serializable
+                                 var assign_to_dd_id: String = "",
+                                 var owner_name:String = "",
+                                 var owner_email:String = "",
+                                 var owner_doa:String = "",
+                                 var total_visit_count:String="") : Serializable
 
 data class TeamLocListResponseModel(var total_distance: String = "",
                                     var total_visit_distance: String = "",

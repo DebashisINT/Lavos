@@ -15,4 +15,5 @@ object AddAttendenceRepoProvider {
     fun sendAttendanceImgRepo(): AddAttendenceRepo {
         return AddAttendenceRepo(AddAttendenceApi.sendAttendanceImg())
     }
+
 }

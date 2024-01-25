@@ -4,7 +4,7 @@
     android:id="@+id/rl_chat_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/smoke_white">
+    android:background="@color/color_silver">
 
     <RelativeLayout
         android:id="@+id/rl_footer"
@@ -18,14 +18,14 @@
             android:id="@+id/tv_send_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginLeft="@dimen/_10sdp"
+            android:background="@drawable/selector_billing_submit_bg"
+            android:padding="@dimen/_10sdp"
             android:text="@string/send"
             android:textColor="@color/white"
             android:textSize="@dimen/_13sdp"
-            android:padding="@dimen/_10sdp"
-            android:textStyle="bold"
-            android:layout_alignParentRight="true"
-            android:layout_marginLeft="@dimen/_10sdp"
-            android:background="@drawable/selector_billing_submit_bg"/>
+            android:textStyle="bold" />
 
         <com.lavos.widgets.AppCustomEditText
             android:id="@+id/et_msg"

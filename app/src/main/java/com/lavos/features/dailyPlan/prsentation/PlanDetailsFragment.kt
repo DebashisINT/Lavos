@@ -11,7 +11,6 @@ import android.widget.ImageView
 import android.widget.RelativeLayout
 import com.amulyakhare.textdrawable.TextDrawable
 import com.amulyakhare.textdrawable.util.ColorGenerator
-import com.elvishew.xlog.XLog
 import com.lavos.R
 import com.lavos.app.NetworkConstant
 import com.lavos.app.utils.AppUtils
@@ -26,6 +25,7 @@ import com.lavos.widgets.AppCustomTextView
 import com.pnikosis.materialishprogress.ProgressWheel
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import timber.log.Timber
 
 /**
  * Created by Saikat on 23-12-2019.
@@ -142,7 +142,7 @@ class PlanDetailsFragment : BaseFragment() {
                             progress_wheel.stopSpinning()
                             tv_no_data.visibility = View.VISIBLE
                             (mContext as DashboardActivity).showSnackMessage(getString(R.string.something_went_wrong))
-                            XLog.d("DailyPlanDetails ERROR: " + error.localizedMessage)
+                            Timber.d("DailyPlanDetails ERROR: " + error.localizedMessage)
                         })
         )
     }

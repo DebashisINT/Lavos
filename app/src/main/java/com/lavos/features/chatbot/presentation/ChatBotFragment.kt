@@ -40,12 +40,14 @@ import com.lavos.features.location.model.ShopDurationRequestData
 import com.lavos.features.location.shopdurationapi.ShopDurationRepositoryProvider
 import com.lavos.widgets.AppCustomEditText
 import com.lavos.widgets.AppCustomTextView
-import com.elvishew.xlog.XLog
+
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import timber.log.Timber
 import java.util.*
 import kotlin.collections.ArrayList
 
+// 1.0 ChatBotFragment AppV 4.0.6 saheli 12-01-2023 multiple contact Data added on Api called
 class ChatBotFragment : BaseFragment(), View.OnClickListener {
 
     private lateinit var mContext: Context
@@ -998,7 +1000,8 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
             return
         }
 
-        XLog.d("callShopDurationApi : ENTER")
+//        XLog.d("callShopDurationApi : ENTER")
+        Timber.d("callShopDurationApi : ENTER")
 
         Log.e("ChatBot", "isShopActivityUpdating=============> ${BaseActivity.isShopActivityUpdating}")
 
@@ -1099,9 +1102,50 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
                     shopDurationData.in_location = shopActivity.in_loc
                     shopDurationData.out_location = shopActivity.out_loc
 
+                    shopDurationData.shop_revisit_uniqKey = shopActivity.shop_revisit_uniqKey!!
+                    /*10-12-2021*/
+                    shopDurationData.updated_by = Pref.user_id
+                    try {
+                        shopDurationData.updated_on = shopActivity.updated_on!!
+                    }
+                    catch (ex:Exception){
+                        shopDurationData.updated_on = ""
+                    }
+
+                    if (!TextUtils.isEmpty(shopActivity.pros_id!!))
+                        shopDurationData.pros_id = shopActivity.pros_id!!
+                    else
+                        shopDurationData.pros_id = ""
+
+                    if (!TextUtils.isEmpty(shopActivity.agency_name!!))
+                        shopDurationData.agency_name =shopActivity.agency_name!!
+                    else
+                        shopDurationData.agency_name = ""
+
+                    if (!TextUtils.isEmpty(shopActivity.approximate_1st_billing_value))
+                        shopDurationData.approximate_1st_billing_value = shopActivity.approximate_1st_billing_value!!
+                    else
+                        shopDurationData.approximate_1st_billing_value = ""
+                    //duration garbage fix
+                    try{
+                        if(shopDurationData.spent_duration!!.contains("-") || shopDurationData.spent_duration!!.length != 8)
+                        {
+                            shopDurationData.spent_duration="00:00:10"
+                        }
+                    }catch (ex:Exception){
+                        shopDurationData.spent_duration="00:00:10"
+                    }
+
+                    //New shop Create issue
+                    shopDurationData.isnewShop = shopActivity.isnewShop!!
+
+                    // 1.0 ChatBotFragment AppV 4.0.6  multiple contact Data added on Api called
+                    shopDurationData.multi_contact_name = shopActivity.multi_contact_name
+                    shopDurationData.multi_contact_number = shopActivity.multi_contact_number
+
                     shopDataList.add(shopDurationData)
 
-                    XLog.d("====SYNC VISITED SHOP DATA (ChatBot)====")
+                  /*  XLog.d("====SYNC VISITED SHOP DATA (ChatBot)====")
                     XLog.d("SHOP ID======> " + shopDurationData.shop_id)
                     XLog.d("SPENT DURATION======> " + shopDurationData.spent_duration)
                     XLog.d("VISIT DATE=========> " + shopDurationData.visited_date)
@@ -1123,7 +1167,31 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
                     XLog.d("start_timestamp========> " + shopDurationData.start_timestamp)
                     XLog.d("in_location========> " + shopDurationData.in_location)
                     XLog.d("out_location========> " + shopDurationData.out_location)
-                    XLog.d("========================================================")
+                    XLog.d("========================================================")*/
+
+                    Timber.d("====SYNC VISITED SHOP DATA (ChatBot)====")
+                    Timber.d("SHOP ID======> " + shopDurationData.shop_id)
+                    Timber.d("SPENT DURATION======> " + shopDurationData.spent_duration)
+                    Timber.d("VISIT DATE=========> " + shopDurationData.visited_date)
+                    Timber.d("VISIT DATE TIME==========> " + shopDurationData.visited_date)
+                    Timber.d("TOTAL VISIT COUNT========> " + shopDurationData.total_visit_count)
+                    Timber.d("DISTANCE TRAVELLED========> " + shopDurationData.distance_travelled)
+                    Timber.d("FEEDBACK========> " + shopDurationData.feedback)
+                    Timber.d("isFirstShopVisited========> " + shopDurationData.isFirstShopVisited)
+                    Timber.d("distanceFromHomeLoc========> " + shopDurationData.distanceFromHomeLoc)
+                    Timber.d("next_visit_date========> " + shopDurationData.next_visit_date)
+                    Timber.d("early_revisit_reason========> " + shopDurationData.early_revisit_reason)
+                    Timber.d("device_model========> " + shopDurationData.device_model)
+                    Timber.d("android_version========> " + shopDurationData.android_version)
+                    Timber.d("battery========> " + shopDurationData.battery)
+                    Timber.d("net_status========> " + shopDurationData.net_status)
+                    Timber.d("net_type========> " + shopDurationData.net_type)
+                    Timber.d("in_time========> " + shopDurationData.in_time)
+                    Timber.d("out_time========> " + shopDurationData.out_time)
+                    Timber.d("start_timestamp========> " + shopDurationData.start_timestamp)
+                    Timber.d("in_location========> " + shopDurationData.in_location)
+                    Timber.d("out_location========> " + shopDurationData.out_location)
+                    Timber.d("========================================================")
                 }
             }
             else {
@@ -1171,10 +1239,49 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
                     shopDurationData.in_location = it.in_loc
                     shopDurationData.out_location = it.out_loc
 
+
+                    shopDurationData.shop_revisit_uniqKey = it.shop_revisit_uniqKey!!
+                    /*10-12-2021*/
+                    shopDurationData.updated_by = Pref.user_id
+                    try {
+                        shopDurationData.updated_on = it.updated_on!!
+                    }catch (Ex:Exception){
+                        shopDurationData.updated_on = ""
+                    }
+
+                    if (!TextUtils.isEmpty(it.pros_id!!))
+                        shopDurationData.pros_id = it.pros_id!!
+                    else
+                        shopDurationData.pros_id = ""
+
+                    if (!TextUtils.isEmpty(it.agency_name!!))
+                        shopDurationData.agency_name =it.agency_name!!
+                    else
+                        shopDurationData.agency_name = ""
+
+                    if (!TextUtils.isEmpty(it.approximate_1st_billing_value))
+                        shopDurationData.approximate_1st_billing_value = it.approximate_1st_billing_value!!
+                    else
+                        shopDurationData.approximate_1st_billing_value = ""
+                    //duration garbage fix
+                    try{
+                        if(shopDurationData.spent_duration!!.contains("-") || shopDurationData.spent_duration!!.length != 8)
+                        {
+                            shopDurationData.spent_duration="00:00:10"
+                        }
+                    }catch (ex:Exception){
+                        shopDurationData.spent_duration="00:00:10"
+                    }
+                    //New shop Create issue
+                    shopDurationData.isnewShop = it.isnewShop!!
+
+                    // 1.0 ChatBotFragment AppV 4.0.6  multiple contact Data added on Api called
+                    shopDurationData.multi_contact_name = it.multi_contact_name
+                    shopDurationData.multi_contact_number = it.multi_contact_number
                     shopDataList.add(shopDurationData)
 
 
-                    XLog.d("====SYNC VISITED SHOP DATA (LOCATION FUZED SERVICE)====")
+                  /*  XLog.d("====SYNC VISITED SHOP DATA (LOCATION FUZED SERVICE)====")
                     XLog.d("SHOP ID======> " + shopDurationData.shop_id)
                     XLog.d("SPENT DURATION======> " + shopDurationData.spent_duration)
                     XLog.d("VISIT DATE=========> " + shopDurationData.visited_date)
@@ -1195,7 +1302,30 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
                     XLog.d("start_timestamp========> " + shopDurationData.start_timestamp)
                     XLog.d("in_location========> " + shopDurationData.in_location)
                     XLog.d("out_location========> " + shopDurationData.out_location)
-                    XLog.d("========================================================")
+                    XLog.d("========================================================")*/
+
+                    Timber.d("====SYNC VISITED SHOP DATA (LOCATION FUZED SERVICE)====")
+                    Timber.d("SHOP ID======> " + shopDurationData.shop_id)
+                    Timber.d("SPENT DURATION======> " + shopDurationData.spent_duration)
+                    Timber.d("VISIT DATE=========> " + shopDurationData.visited_date)
+                    Timber.d("VISIT DATE TIME==========> " + shopDurationData.visited_date)
+                    Timber.d("TOTAL VISIT COUNT========> " + shopDurationData.total_visit_count)
+                    Timber.d("DISTANCE TRAVELLED========> " + shopDurationData.distance_travelled)
+                    Timber.d("FEEDBACK========> " + shopDurationData.feedback)
+                    Timber.d("isFirstShopVisited========> " + shopDurationData.isFirstShopVisited)
+                    Timber.d("distanceFromHomeLoc========> " + shopDurationData.distanceFromHomeLoc)
+                    Timber.d("next_visit_date========> " + shopDurationData.next_visit_date)
+                    Timber.d("device_model========> " + shopDurationData.device_model)
+                    Timber.d("android_version========> " + shopDurationData.android_version)
+                    Timber.d("battery========> " + shopDurationData.battery)
+                    Timber.d("net_status========> " + shopDurationData.net_status)
+                    Timber.d("net_type========> " + shopDurationData.net_type)
+                    Timber.d("in_time========> " + shopDurationData.in_time)
+                    Timber.d("out_time========> " + shopDurationData.out_time)
+                    Timber.d("start_timestamp========> " + shopDurationData.start_timestamp)
+                    Timber.d("in_location========> " + shopDurationData.in_location)
+                    Timber.d("out_location========> " + shopDurationData.out_location)
+                    Timber.d("========================================================")
                 }
             }
         }
@@ -1262,8 +1392,11 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
             }
         } else {
 
-            XLog.e("====SYNC VISITED SHOP (ChatBot)====")
-            XLog.e("ShopData List size===> " + shopDataList.size)
+//            XLog.e("====SYNC VISITED SHOP (ChatBot)====")
+//            XLog.e("ShopData List size===> " + shopDataList.size)
+
+            Timber.e("====SYNC VISITED SHOP (ChatBot)====")
+            Timber.e("ShopData List size===> " + shopDataList.size)
 
             //val newShopList = FTStorageUtils.removeDuplicateData(shopDataList)
 
@@ -1281,14 +1414,17 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
             shopDurationApiReq.user_id = Pref.user_id
             shopDurationApiReq.session_token = Pref.session_token
             if (newShopList.size > 0) {
-                XLog.e("Unique ShopData List size===> " + newShopList.size)
+//                XLog.e("Unique ShopData List size===> " + newShopList.size)
+                Timber.e("Unique ShopData List size===> " + newShopList.size)
                 shopDurationApiReq.shop_list = newShopList
             } else
                 shopDurationApiReq.shop_list = shopDataList
 
             val repository = ShopDurationRepositoryProvider.provideShopDurationRepository()
 
-            XLog.d("callShopDurationApi : REQUEST")
+//            XLog.d("callShopDurationApi : REQUEST")
+            Timber.d("callShopDurationApi : REQUEST")
+
 
             BaseActivity.compositeDisposable.add(
                     repository.shopDuration(shopDurationApiReq)
@@ -1296,7 +1432,8 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
 //                        .timeout(60 * 1, TimeUnit.SECONDS)
                             .subscribe({ result ->
-                                XLog.d("callShopDurationApi : RESPONSE " + result.status)
+//                                XLog.d("callShopDurationApi : RESPONSE " + result.status)
+                                Timber.d("callShopDurationApi : RESPONSE " + result.status)
                                 if (result.status == NetworkConstant.SUCCESS) {
                                     if (newShopList.size > 0) {
                                         for (i in 0 until newShopList.size) {
@@ -1315,6 +1452,8 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
                                             for (i in 0 until shopDataList.size) {
                                                 AppDatabase.getDBInstance()!!.shopActivityDao().updateisUploaded(true, shopDataList[i].shop_id!!, AppUtils.changeAttendanceDateFormatToCurrent(shopDataList[i].visited_date!!), shopDataList[i].start_timestamp!!)
                                             }
+                                            // multivisit test
+                                            syncShopVisitImage(shopDataList)
                                         }
                                     }
                                 }
@@ -1322,9 +1461,11 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
                             }, { error ->
                                 BaseActivity.isShopActivityUpdating = false
                                 if (error == null) {
-                                    XLog.d("callShopDurationApi : ERROR " + "UNEXPECTED ERROR IN SHOP ACTIVITY API")
+//                                    XLog.d("callShopDurationApi : ERROR " + "UNEXPECTED ERROR IN SHOP ACTIVITY API")
+                                    Timber.d("callShopDurationApi : ERROR " + "UNEXPECTED ERROR IN SHOP ACTIVITY API")
                                 } else {
-                                    XLog.d("callShopDurationApi : ERROR " + error.localizedMessage)
+//                                    XLog.d("callShopDurationApi : ERROR " + error.localizedMessage)
+                                    Timber.d("callShopDurationApi : ERROR " + error.localizedMessage)
                                     error.printStackTrace()
                                 }
 
@@ -1383,13 +1524,21 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
             visitImageShop.visit_datetime = unSyncedList[i].visit_datetime
 
 
-            XLog.d("========UPLOAD REVISIT ALL IMAGE INPUT PARAMS (ChatBot)======")
+          /*  XLog.d("========UPLOAD REVISIT ALL IMAGE INPUT PARAMS (ChatBot)======")
             XLog.d("USER ID======> " + visitImageShop.user_id)
             XLog.d("SESSION ID======> " + visitImageShop.session_token)
             XLog.d("SHOP ID=========> " + visitImageShop.shop_id)
             XLog.d("VISIT DATE TIME==========> " + visitImageShop.visit_datetime)
             XLog.d("IMAGE========> " + unSyncedList[i].shop_image)
-            XLog.d("==============================================================")
+            XLog.d("==============================================================")*/
+
+            Timber.d("========UPLOAD REVISIT ALL IMAGE INPUT PARAMS (ChatBot)======")
+            Timber.d("USER ID======> " + visitImageShop.user_id)
+            Timber.d("SESSION ID======> " + visitImageShop.session_token)
+            Timber.d("SHOP ID=========> " + visitImageShop.shop_id)
+            Timber.d("VISIT DATE TIME==========> " + visitImageShop.visit_datetime)
+            Timber.d("IMAGE========> " + unSyncedList[i].shop_image)
+            Timber.d("==============================================================")
 
             val repository = ShopVisitImageUploadRepoProvider.provideAddShopRepository()
 
@@ -1399,7 +1548,8 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val logoutResponse = result as BaseResponse
-                                XLog.d("UPLOAD REVISIT ALL IMAGE : " + "RESPONSE : " + logoutResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + logoutResponse.message)
+//                                XLog.d("UPLOAD REVISIT ALL IMAGE : " + "RESPONSE : " + logoutResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + logoutResponse.message)
+                                Timber.d("UPLOAD REVISIT ALL IMAGE : " + "RESPONSE : " + logoutResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + logoutResponse.message)
                                 if (logoutResponse.status == NetworkConstant.SUCCESS)
                                     AppDatabase.getDBInstance()!!.shopVisitImageDao().updateisUploaded(true, unSyncedList.get(i).shop_id!!)
 
@@ -1412,7 +1562,8 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
                                 }
 
                             }, { error ->
-                                XLog.d("UPLOAD REVISIT ALL IMAGE : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+//                                XLog.d("UPLOAD REVISIT ALL IMAGE : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                                Timber.d("UPLOAD REVISIT ALL IMAGE : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                                 error.printStackTrace()
                                 i++
                                 if (i < unSyncedList.size)
@@ -1484,13 +1635,21 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
             visitImageShop.shop_id = unSyncedList[i].shop_id
             visitImageShop.visit_datetime = unSyncedList[i].visit_datetime
 
-            XLog.d("====UPLOAD REVISIT ALL AUDIO INPUT PARAMS (LOCATION FUZED SERVICE)======")
+          /*  XLog.d("====UPLOAD REVISIT ALL AUDIO INPUT PARAMS (LOCATION FUZED SERVICE)======")
             XLog.d("USER ID====> " + visitImageShop.user_id)
             XLog.d("SESSION ID====> " + visitImageShop.session_token)
             XLog.d("SHOP ID====> " + visitImageShop.shop_id)
             XLog.d("VISIT DATE TIME=====> " + visitImageShop.visit_datetime)
             XLog.d("AUDIO=====> " + unSyncedList[i].audio)
-            XLog.d("===============================================================")
+            XLog.d("===============================================================")*/
+
+            Timber.d("====UPLOAD REVISIT ALL AUDIO INPUT PARAMS (LOCATION FUZED SERVICE)======")
+            Timber.d("USER ID====> " + visitImageShop.user_id)
+            Timber.d("SESSION ID====> " + visitImageShop.session_token)
+            Timber.d("SHOP ID====> " + visitImageShop.shop_id)
+            Timber.d("VISIT DATE TIME=====> " + visitImageShop.visit_datetime)
+            Timber.d("AUDIO=====> " + unSyncedList[i].audio)
+            Timber.d("===============================================================")
 
             val repository = ShopVisitImageUploadRepoProvider.provideAddShopRepository()
 
@@ -1500,7 +1659,8 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
                             .subscribeOn(Schedulers.io())
                             .subscribe({ result ->
                                 val logoutResponse = result as BaseResponse
-                                XLog.d("UPLOAD REVISIT ALL AUDIO : " + "RESPONSE : " + logoutResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + logoutResponse.message)
+//                                XLog.d("UPLOAD REVISIT ALL AUDIO : " + "RESPONSE : " + logoutResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + logoutResponse.message)
+                                Timber.d("UPLOAD REVISIT ALL AUDIO : " + "RESPONSE : " + logoutResponse.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + logoutResponse.message)
                                 if (logoutResponse.status == NetworkConstant.SUCCESS)
                                     AppDatabase.getDBInstance()!!.shopVisitAudioDao().updateisUploaded(true, unSyncedList.get(i).shop_id!!)
 
@@ -1527,7 +1687,8 @@ class ChatBotFragment : BaseFragment(), View.OnClickListener {
                                 }
 
                             }, { error ->
-                                XLog.d("UPLOAD REVISIT ALL AUDIO : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+//                                XLog.d("UPLOAD REVISIT ALL AUDIO : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                                Timber.d("UPLOAD REVISIT ALL AUDIO : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                                 error.printStackTrace()
 
                                 i++

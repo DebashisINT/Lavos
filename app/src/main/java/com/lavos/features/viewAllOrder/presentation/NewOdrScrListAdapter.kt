@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.lavos.R
-import com.lavos.app.AppDatabase
 import com.lavos.app.utils.AppUtils
 import com.lavos.features.viewAllOrder.interf.ViewNewOrdScrDetailsOnCLick
 import com.lavos.features.viewAllOrder.orderNew.NewOdrScrListFragment
@@ -35,13 +34,6 @@ class NewOdrScrListAdapter (var context: Context,var list:List<NewOdrScrListFrag
 
         holder.tv_orderID.setOnClickListener { listner.getOrderID(list.get(holder.adapterPosition).order_id,list.get(holder.adapterPosition).order_date,
                 list.get(holder.adapterPosition).shop_id) }
-
-        var qty_Order: Int = 0
-        var qtty_list = AppDatabase.getDBInstance()?.newOrderScrOrderDao()?.getShopOrderQtyOrderIDWise(list.get(position).order_id)
-        for (i in 0..qtty_list!!.size - 1) {
-            qty_Order = qty_Order + qtty_list.get(i).toString().toInt()
-        }
-        holder.tv_qty.text="Qty         : "+qty_Order.toString()
     }
 
     inner class OdrScrListViewHolder(itemView:View):RecyclerView.ViewHolder(itemView){
@@ -49,7 +41,6 @@ class NewOdrScrListAdapter (var context: Context,var list:List<NewOdrScrListFrag
         var tv_orderDate = itemView.tv_row_new_odr_scr_dtls_order_date
         var tv_shopName = itemView.tv_row_new_odr_scr_dtls_order_shop_name
         var tv_shopAddr = itemView.tv_row_new_odr_scr_dtls_order_shop_addr
-        var tv_qty = itemView.tv_row_new_odr_scr_dtls_order_qty
         var btn_viewDetails = itemView.btn_row_new_odr_scr_dtls_view_details
     }
 

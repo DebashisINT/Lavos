@@ -22,4 +22,7 @@ interface DocumentypeDao {
 
     @Query("SELECT * FROM " + AppConstant.DOCUMENT_TYPE_TABLE + " where IsForOwn= 1")
     fun getOwnList(): List<DocumentypeEntity>
+
+    @Query("SELECT * FROM " + AppConstant.DOCUMENT_TYPE_TABLE + " where type_id=:type_id ")
+    fun isOwn(type_id:String): Boolean
 }

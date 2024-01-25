@@ -18,7 +18,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import com.elvishew.xlog.XLog
+
 import com.lavos.R
 import com.lavos.app.AppDatabase
 import com.lavos.app.NetworkConstant
@@ -58,10 +58,12 @@ import org.jetbrains.anko.uiThread
 import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
+import timber.log.Timber
 
 /**
  * Created by Saikat on 17-12-2018.
  */
+// 1.0 ViewPPDDListOutstandingFragment AppV 4.0.6 saheli 12-01-2023 multiple contact Data added on Api called
 class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
 
     private lateinit var mViewPPDDListAdapter: ViewPPDDListAdapter
@@ -257,6 +259,15 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
             shopObj.user_id = Pref.user_id
             shopObj.orderValue = 0
             shopObj.lastVisitedDate = AppUtils.getCurrentDate()
+            //start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+            try {
+                shopObj.FSSAILicNo = shop_list[i].FSSAILicNo
+            }catch (ex:Exception){
+                ex.printStackTrace()
+                shopObj.FSSAILicNo = ""
+            }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+
 
             if (shop_list[i].entity_code == null)
                 shopObj.entity_code = ""
@@ -264,7 +275,7 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
                 shopObj.entity_code = shop_list[i].entity_code
 
             list.add(shopObj)
-            AppDatabase.getDBInstance()!!.addShopEntryDao().insert(shopObj)
+            AppDatabase.getDBInstance()!!.addShopEntryDao(). insert(shopObj)
         }
         initAdapter()
     }
@@ -641,29 +652,29 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
 
         isShopRegistrationInProcess = true
 
-        XLog.d("================SyncShop Input Params (Outstanding)=====================")
-        XLog.d("shop id=======> " + addShop.shop_id)
+        Timber.d("================SyncShop Input Params (Outstanding)=====================")
+        Timber.d("shop id=======> " + addShop.shop_id)
         val index = addShop.shop_id!!.indexOf("_")
-        XLog.d("decoded shop id=======> " + addShop.user_id + "_" + AppUtils.getDate(addShop.shop_id!!.substring(index + 1, addShop.shop_id!!.length).toLong()))
-        XLog.d("shop added date=======> " + addShop.added_date)
-        XLog.d("shop address=======> " + addShop.address)
-        XLog.d("assigned to dd id=======> " + addShop.assigned_to_dd_id)
-        XLog.d("assigned to pp id=======> " + addShop.assigned_to_pp_id)
-        XLog.d("date aniversery=======> " + addShop.date_aniversary)
-        XLog.d("dob=======> " + addShop.dob)
-        XLog.d("shop owner phn no=======> " + addShop.owner_contact_no)
-        XLog.d("shop owner email=======> " + addShop.owner_email)
-        XLog.d("shop owner name=======> " + addShop.owner_name)
-        XLog.d("shop pincode=======> " + addShop.pin_code)
-        XLog.d("session token=======> " + addShop.session_token)
-        XLog.d("shop lat=======> " + addShop.shop_lat)
-        XLog.d("shop long=======> " + addShop.shop_long)
-        XLog.d("shop name=======> " + addShop.shop_name)
-        XLog.d("shop type=======> " + addShop.type)
-        XLog.d("user id=======> " + addShop.user_id)
-        XLog.d("amount=======> " + addShop.amount)
-        XLog.d("shop image path=======> $shop_imgPath")
-        XLog.d("=========================================================================")
+        Timber.d("decoded shop id=======> " + addShop.user_id + "_" + AppUtils.getDate(addShop.shop_id!!.substring(index + 1, addShop.shop_id!!.length).toLong()))
+        Timber.d("shop added date=======> " + addShop.added_date)
+        Timber.d("shop address=======> " + addShop.address)
+        Timber.d("assigned to dd id=======> " + addShop.assigned_to_dd_id)
+        Timber.d("assigned to pp id=======> " + addShop.assigned_to_pp_id)
+        Timber.d("date aniversery=======> " + addShop.date_aniversary)
+        Timber.d("dob=======> " + addShop.dob)
+        Timber.d("shop owner phn no=======> " + addShop.owner_contact_no)
+        Timber.d("shop owner email=======> " + addShop.owner_email)
+        Timber.d("shop owner name=======> " + addShop.owner_name)
+        Timber.d("shop pincode=======> " + addShop.pin_code)
+        Timber.d("session token=======> " + addShop.session_token)
+        Timber.d("shop lat=======> " + addShop.shop_lat)
+        Timber.d("shop long=======> " + addShop.shop_long)
+        Timber.d("shop name=======> " + addShop.shop_name)
+        Timber.d("shop type=======> " + addShop.type)
+        Timber.d("user id=======> " + addShop.user_id)
+        Timber.d("amount=======> " + addShop.amount)
+        Timber.d("shop image path=======> $shop_imgPath")
+        Timber.d("=========================================================================")
 
         BaseActivity.compositeDisposable.add(
                 repository.addShopWithImage(addShop, shop_imgPath, mContext)
@@ -671,7 +682,7 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             val addShopResult = result as AddShopResponse
-                            XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
+                            Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
                             if (addShopResult.status == NetworkConstant.SUCCESS) {
                                 AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
                                 (mContext as DashboardActivity).showSnackMessage("Synced successfully")
@@ -693,7 +704,7 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
                                 progress_wheel.stopSpinning()
 
                             } else if (addShopResult.status == NetworkConstant.DUPLICATE_SHOP_ID) {
-                                XLog.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
+                                Timber.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
                                 AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
                                 progress_wheel.stopSpinning()
                                 (mContext as DashboardActivity).showSnackMessage(addShopResult.message!!)
@@ -738,7 +749,7 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
                             (mContext as DashboardActivity).showSnackMessage(getString(R.string.unable_to_sync))
                             isShopRegistrationInProcess = false
                             if (error != null)
-                                XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
+                                Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
                         })
         )
     }
@@ -1206,11 +1217,11 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
             isDurationCalculated = list[0].isDurationCalculated
             shopName = list[0].shop_name!!
         }
-        XLog.d("Geofence: ENTER : " + "ShopName : " + shopName + ",IS_DURATION_CALCULATED" + isDurationCalculated)
+        Timber.d("Geofence: ENTER : " + "ShopName : " + shopName + ",IS_DURATION_CALCULATED" + isDurationCalculated)
         if (isDurationCalculated)
             return
 
-        XLog.d("Geofence: NearToShop : " + "ShopName : " + shopName)
+        Timber.d("Geofence: NearToShop : " + "ShopName : " + shopName)
         // Get an instance of the Notification manager
         val notification = NotificationUtils(getString(R.string.app_name), shopName, shopId, "")
         notification.CreateNotification(mContext, shopId)
@@ -1230,29 +1241,29 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
 
         isShopRegistrationInProcess = true
 
-        XLog.d("==============SyncShop Input Params (Outstanding)==================")
-        XLog.d("shop id=======> " + addShop.shop_id)
+        Timber.d("==============SyncShop Input Params (Outstanding)==================")
+        Timber.d("shop id=======> " + addShop.shop_id)
         val index = addShop.shop_id!!.indexOf("_")
-        XLog.d("decoded shop id=======> " + addShop.user_id + "_" + AppUtils.getDate(addShop.shop_id!!.substring(index + 1, addShop.shop_id!!.length).toLong()))
-        XLog.d("shop added date=======> " + addShop.added_date)
-        XLog.d("shop address=======> " + addShop.address)
-        XLog.d("assigned to dd id=======> " + addShop.assigned_to_dd_id)
-        XLog.d("assigned to pp id=======> " + addShop.assigned_to_pp_id)
-        XLog.d("date aniversery=======> " + addShop.date_aniversary)
-        XLog.d("dob=======> " + addShop.dob)
-        XLog.d("shop owner phn no=======> " + addShop.owner_contact_no)
-        XLog.d("shop owner email=======> " + addShop.owner_email)
-        XLog.d("shop owner name=======> " + addShop.owner_name)
-        XLog.d("shop pincode=======> " + addShop.pin_code)
-        XLog.d("session token=======> " + addShop.session_token)
-        XLog.d("shop lat=======> " + addShop.shop_lat)
-        XLog.d("shop long=======> " + addShop.shop_long)
-        XLog.d("shop name=======> " + addShop.shop_name)
-        XLog.d("shop type=======> " + addShop.type)
-        XLog.d("user id=======> " + addShop.user_id)
-        XLog.d("amount=======> " + addShop.amount)
-        XLog.d("shop image path=======> $shop_imgPath")
-        XLog.d("====================================================================")
+        Timber.d("decoded shop id=======> " + addShop.user_id + "_" + AppUtils.getDate(addShop.shop_id!!.substring(index + 1, addShop.shop_id!!.length).toLong()))
+        Timber.d("shop added date=======> " + addShop.added_date)
+        Timber.d("shop address=======> " + addShop.address)
+        Timber.d("assigned to dd id=======> " + addShop.assigned_to_dd_id)
+        Timber.d("assigned to pp id=======> " + addShop.assigned_to_pp_id)
+        Timber.d("date aniversery=======> " + addShop.date_aniversary)
+        Timber.d("dob=======> " + addShop.dob)
+        Timber.d("shop owner phn no=======> " + addShop.owner_contact_no)
+        Timber.d("shop owner email=======> " + addShop.owner_email)
+        Timber.d("shop owner name=======> " + addShop.owner_name)
+        Timber.d("shop pincode=======> " + addShop.pin_code)
+        Timber.d("session token=======> " + addShop.session_token)
+        Timber.d("shop lat=======> " + addShop.shop_lat)
+        Timber.d("shop long=======> " + addShop.shop_long)
+        Timber.d("shop name=======> " + addShop.shop_name)
+        Timber.d("shop type=======> " + addShop.type)
+        Timber.d("user id=======> " + addShop.user_id)
+        Timber.d("amount=======> " + addShop.amount)
+        Timber.d("shop image path=======> $shop_imgPath")
+        Timber.d("====================================================================")
 
         BaseActivity.compositeDisposable.add(
                 repository.addShopWithImage(addShop, shop_imgPath, mContext)
@@ -1260,7 +1271,7 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             val addShopResult = result as AddShopResponse
-                            XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
+                            Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
                             if (addShopResult.status == NetworkConstant.SUCCESS) {
                                 AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
                                 (mContext as DashboardActivity).showSnackMessage("Synced successfully")
@@ -1279,7 +1290,7 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
                                 progress_wheel.stopSpinning()
 
                             } else if (addShopResult.status == NetworkConstant.DUPLICATE_SHOP_ID) {
-                                XLog.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
+                                Timber.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
                                 AppDatabase.getDBInstance()!!.addShopEntryDao().updateIsUploaded(true, addShop.shop_id)
                                 progress_wheel.stopSpinning()
                                 (mContext as DashboardActivity).showSnackMessage(addShopResult.message!!)
@@ -1321,7 +1332,7 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
                             (mContext as DashboardActivity).showSnackMessage(getString(R.string.unable_to_sync))
                             isShopRegistrationInProcess = false
                             if (error != null)
-                                XLog.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
+                                Timber.d("syncShopFromShopList : " + ", SHOP: " + addShop.shop_name + error.localizedMessage)
                         })
         )
     }
@@ -1370,7 +1381,21 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
 
         shopDurationData.isFirstShopVisited = shopActivity.isFirstShopVisited
         shopDurationData.distanceFromHomeLoc = shopActivity.distance_from_home_loc
+        //duration garbage fix
+        try{
+            if(shopDurationData.spent_duration!!.contains("-") || shopDurationData.spent_duration!!.length != 8)
+            {
+                shopDurationData.spent_duration="00:00:10"
+            }
+        }catch (ex:Exception){
+            shopDurationData.spent_duration="00:00:10"
+        }
+        //New shop Create issue
+        shopDurationData.isnewShop = shopActivity.isnewShop
 
+        // 1.0 ViewPPDDListOutstandingFragment AppV 4.0.6  multiple contact Data added on Api called
+        shopDurationData.multi_contact_name = shopActivity.multi_contact_name
+        shopDurationData.multi_contact_number = shopActivity.multi_contact_number
         shopDataList.add(shopDurationData)
 
         if (shopDataList.isEmpty()) {
@@ -1385,7 +1410,7 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
-                            XLog.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + ", RESPONSE:" + result.message)
+                            Timber.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + ", RESPONSE:" + result.message)
                             if (result.status == NetworkConstant.SUCCESS) {
 
                             }
@@ -1393,7 +1418,7 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
                         }, { error ->
                             error.printStackTrace()
                             if (error != null)
-                                XLog.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + error.localizedMessage)
+                                Timber.d("syncShopActivityFromShopList : " + ", SHOP: " + list[0].shop_name + error.localizedMessage)
 //                                (mContext as DashboardActivity).showSnackMessage("ERROR")
                         })
         )
@@ -1616,11 +1641,12 @@ class ViewPPDDListOutstandingFragment : BaseFragment(), View.OnClickListener {
         val bytes = ByteArrayOutputStream()
         bm!!.compress(Bitmap.CompressFormat.JPEG, 90, bytes)
 
-        /*var destination = File(Environment.getExternalStorageDirectory(),
+      /*  var destination = File(Environment.getExternalStorageDirectory(),
                 System.currentTimeMillis().toString() + ".jpg")*/
-
+//27-09-2021
         var destination = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
                 System.currentTimeMillis().toString() + ".jpg")
+
         val camera_image_path = destination?.absolutePath
         val fo: FileOutputStream
         try {

@@ -49,7 +49,7 @@ import java.util.*
  * Created by Pratishruti on 27-10-2017.
  */
 class SearchLocationFragment : BaseFragment(), View.OnClickListener, LocationAdapter.OnLocationItemClickListener,
-    GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
 
     private lateinit var captureShopImage: ImageView
     private lateinit var shopImage: RelativeLayout
@@ -92,13 +92,13 @@ class SearchLocationFragment : BaseFragment(), View.OnClickListener, LocationAda
         val view = inflater.inflate(R.layout.searchlocation, container, false)
 
         mGoogleApiClient = GoogleApiClient.Builder(mContext)
-            .enableAutoManage(activity!!, 0, this)
-            .addApi(LocationServices.API)
-            .addApi(Places.GEO_DATA_API)
-            .addApi(Places.PLACE_DETECTION_API)
-            .addConnectionCallbacks(this)
-            .addOnConnectionFailedListener(this)
-            .build()
+                .enableAutoManage(activity!!, 0, this)
+                .addApi(LocationServices.API)
+                .addApi(Places.GEO_DATA_API)
+                .addApi(Places.PLACE_DETECTION_API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build()
         mGoogleApiClient?.connect()
 
         initView(view, savedInstanceState)
@@ -256,7 +256,7 @@ class SearchLocationFragment : BaseFragment(), View.OnClickListener, LocationAda
             googleMap?.uiSettings!!.isMapToolbarEnabled = false;
             // For showing a move to my location button
             if (ActivityCompat.checkSelfPermission(mContext, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(mContext, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.checkSelfPermission(mContext, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
                 return@OnMapReadyCallback
             }
@@ -497,7 +497,7 @@ class SearchLocationFragment : BaseFragment(), View.OnClickListener, LocationAda
         mLocationRequest?.fastestInterval = 1000
         mLocationRequest?.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         if (ContextCompat.checkSelfPermission(mContext,
-                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             if (mGoogleApiClient?.isConnected!!) {
                 LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient!!, mLocationRequest!!, this)
 
@@ -574,18 +574,18 @@ class SearchLocationFragment : BaseFragment(), View.OnClickListener, LocationAda
 
     private fun checkLocationPermission(): Boolean {
         if (ContextCompat.checkSelfPermission(mContext,
-                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(mContext as Activity,
-                    android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+                            android.Manifest.permission.ACCESS_FINE_LOCATION)) {
 
                 ActivityCompat.requestPermissions(mContext as Activity,
-                    arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-                    MY_PERMISSIONS_REQUEST_LOCATION)
+                        arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                        MY_PERMISSIONS_REQUEST_LOCATION)
             } else {
                 ActivityCompat.requestPermissions(mContext as Activity,
-                    arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-                    MY_PERMISSIONS_REQUEST_LOCATION)
+                        arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                        MY_PERMISSIONS_REQUEST_LOCATION)
             }
             return false
         } else {

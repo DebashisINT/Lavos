@@ -1,5 +1,6 @@
 package com.lavos.features.stock;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
@@ -12,6 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.lavos.R;
+import com.lavos.app.Pref;
 import com.lavos.app.domain.StockDetailsListEntity;
 import com.lavos.app.utils.AppUtils;
 
@@ -21,6 +23,7 @@ import java.util.ArrayList;
  * Created by Saikat on 10-09-2019.
  */
 
+// REv 1.0 StockAdapter v 4.1.6 stock optmization mantis 0026391 21-06-2023 saheli
 public class StockAdapter extends RecyclerView.Adapter<StockAdapter.ViewHolder> {
 
     private LayoutInflater layoutInflater;
@@ -47,7 +50,7 @@ public class StockAdapter extends RecyclerView.Adapter<StockAdapter.ViewHolder> 
 
 
     @Override
-    public void onBindViewHolder(ViewHolder attendanceFragmentViewHolder, final int position) {
+    public void onBindViewHolder(ViewHolder attendanceFragmentViewHolder, @SuppressLint("RecyclerView") final int position) {
         try {
             if (position % 2 == 0)
                 attendanceFragmentViewHolder.rcv_item_bg.setBackgroundColor(ContextCompat.getColor(context, R.color.report_screen_bg));
@@ -85,14 +88,23 @@ public class StockAdapter extends RecyclerView.Adapter<StockAdapter.ViewHolder> 
 
 
             if (!TextUtils.isEmpty(mViewAllOrderListEntityArray.get(position).getQty())) {
-                if (mViewAllOrderListEntityArray.get(position).getQty().contains("."))
+             if (mViewAllOrderListEntityArray.get(position).getQty().contains("."))
                     attendanceFragmentViewHolder.ordered_amount_tv.setText(String.valueOf(Integer.valueOf((int) Float.parseFloat(mViewAllOrderListEntityArray.get(position).getQty()))));
                 else {
                     attendanceFragmentViewHolder.ordered_amount_tv.setText(mViewAllOrderListEntityArray.get(position).getQty());
                 }
-
                 //attendanceFragmentViewHolder.ordered_amount_tv.setText(mViewAllOrderListEntityArray.get(position).getQty());
             }
+            if (!TextUtils.isEmpty(mViewAllOrderListEntityArray.get(position).getQty())) {
+                Double qtyRectify = Double.parseDouble(String.format("%.3f",Double.parseDouble(mViewAllOrderListEntityArray.get(position).getQty())));
+                if(qtyRectify- qtyRectify.intValue() == 0.0){
+                    attendanceFragmentViewHolder.ordered_amount_tv.setText(String.valueOf(qtyRectify.intValue()));
+                }else{
+                    attendanceFragmentViewHolder.ordered_amount_tv.setText(qtyRectify.toString());
+                }
+            }
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }

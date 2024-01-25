@@ -2,8 +2,11 @@ package com.lavos.features.notification
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.text.TextUtils
 import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -11,9 +14,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
+import com.lavos.CustomStatic
 import com.lavos.R
+import com.lavos.app.AppDatabase
 import com.lavos.app.NetworkConstant
 import com.lavos.app.Pref
+import com.lavos.app.types.FragType
 import com.lavos.app.utils.AppUtils
 import com.lavos.base.presentation.BaseActivity
 import com.lavos.base.presentation.BaseFragment
@@ -22,6 +28,7 @@ import com.lavos.features.login.presentation.LoginActivity
 import com.lavos.features.notification.api.NotificationListRepoProvider
 import com.lavos.features.notification.model.NotificationListDataModel
 import com.lavos.features.notification.model.NotificationListResponseModel
+import com.lavos.mappackage.SendBrod
 import com.lavos.widgets.AppCustomTextView
 import com.pnikosis.materialishprogress.ProgressWheel
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -72,7 +79,7 @@ class NotificationFragment : BaseFragment() {
         progress_wheel = view.findViewById(R.id.progress_wheel)
         progress_wheel.stopSpinning()
         rl_main = view.findViewById(R.id.rl_main)
-        rl_main.setBackgroundColor(mContext.resources.getColor(android.R.color.white))
+       // rl_main.setBackgroundColor(mContext.resources.getColor(android.R.color.white))
         rl_main.setOnClickListener(null)
     }
 
@@ -97,8 +104,9 @@ class NotificationFragment : BaseFragment() {
                                 progress_wheel.stopSpinning()
 
                                 if (response.notification_list == null || response.notification_list?.size!! == 0) {
-                                    no_shop_tv.visibility = View.VISIBLE
+                                    //no_shop_tv.visibility = View.VISIBLE
                                     //(mContext as DashboardActivity).showSnackMessage(response.message!!)
+                                    initAdapter(response.notification_list)
                                 } else
                                     initAdapter(response.notification_list)
 
@@ -123,12 +131,118 @@ class NotificationFragment : BaseFragment() {
     }
 
     private fun initAdapter(notification_list: ArrayList<NotificationListDataModel>?) {
-
+        var notification_list_temp: ArrayList<NotificationListDataModel> = ArrayList()
         no_shop_tv.visibility = View.GONE
+        /*new work*/
+        val shopList = AppDatabase.getDBInstance()?.addShopEntryDao()?.all
+        var bodyDOB = ""
+        var bodyAni = ""
+        for(i in 0..shopList!!.size-1){
+            var sName = shopList[i].shopName
+            var dob = ""
+            if(shopList[i].dateOfBirth!=null){
+                dob = shopList[i].dateOfBirth.split("T").get(0)
+            }
+            var anni = ""
+            if(shopList[i].dateOfAniversary!=null){
+                anni = shopList[i].dateOfAniversary.split("T").get(0)
+            }
+            var todayDate = AppUtils.getCurrentMonthDayForShopActi()
 
-        rv_order_list.adapter = NotificationAdapter(mContext, notification_list, object : NotificationAdapter.OnClickListener {
+            var objDOB : NotificationListDataModel = NotificationListDataModel()
+            var objAnni : NotificationListDataModel = NotificationListDataModel()
+
+            var dobMonthDay = AppUtils.changeAttendanceDateFormatToMonthDay(dob+"T00:00:00")
+            if (todayDate.equals(dobMonthDay) && !dob.equals("")){
+                bodyDOB ="Please wish Mr. " + shopList[i].ownerName + " of " + shopList[i].shopName +
+                        ", Contact Number: " + shopList[i].ownerContactNumber + " for birthday today."
+                objDOB.phoneNo = shopList[i].ownerContactNumber
+            }
+            var anniMonthDay = AppUtils.changeAttendanceDateFormatToMonthDay(anni+"T00:00:00")
+            if (todayDate.equals(anniMonthDay) && !anni.equals("")){
+                bodyAni = "Please wish Mr. " + shopList[i].ownerName + " of " + shopList[i].shopName+
+                        ", Contact Number: " + shopList[i].ownerContactNumber + " for Anniversary today."
+                objAnni.phoneNo = shopList[i].ownerContactNumber
+            }
+
+            objDOB.id=""
+            objAnni.id=""
+            objDOB.date_time=AppUtils.getCurrentDateTime().replace(" ","T")
+            objAnni.date_time=AppUtils.getCurrentDateTime().replace(" ","T")
+            if(!bodyDOB.equals("")){
+                objDOB.notificationmessage=bodyDOB
+                notification_list_temp!!.add(objDOB)
+            }
+
+            if(!bodyAni.equals("")){
+                objAnni.notificationmessage=bodyAni
+                notification_list_temp!!.add(objAnni)
+            }
+
+            bodyDOB = ""
+            bodyAni = ""
+
+        }
+
+        if(notification_list_temp.size>0){
+            if(notification_list!!.size>0){
+                for(i in 0..notification_list.size-1){
+                    notification_list_temp.add(notification_list.get(i))
+                }
+            }
+        }else{
+            if(notification_list!!.size>0){
+                for(i in 0..notification_list.size-1){
+                    notification_list_temp.add(notification_list.get(i))
+                }
+            }
+        }
+
+        if(notification_list_temp!!.size==0){
+            no_shop_tv.visibility = View.VISIBLE
+            return
+        }
+
+
+
+        rv_order_list.adapter = NotificationAdapter(mContext, notification_list_temp, object : NotificationAdapter.OnClickListener {
             override fun onNotificationClick(adapterPosition: Int) {
+                if(notification_list?.get(adapterPosition)!!.notificationmessage!!.contains("Please take action on it")){
+                    if (!Pref.isAddAttendence)
+                        (mContext as DashboardActivity).checkToShowAddAttendanceAlert()
+                    else{
+                        var splitTT = notification_list?.get(adapterPosition)!!.notificationmessage!!.split(".")
+                        var date = splitTT.get(2).split(":").get(1).replace(" ","")
+                        var enqType = splitTT.get(3).split(":").get(1).trim()
+                        CustomStatic.lead_msgBody = splitTT.get(0).toString()
+                        CustomStatic.lead_msgLeadDate = date
+                        CustomStatic.lead_msgLeadEnquiry = enqType
+                        (mContext as DashboardActivity).loadFragment(FragType.LeadFrag, false, "")
+                    }
+                }
+
+            }
+
+            override fun getWhatsappOnLick(phone: String) {
+                var phone = "+91" + phone
+                sendWhats(phone)
             }
         })
+    }
+
+    private fun sendWhats(phone: String) {
+        val packageManager: PackageManager = mContext.getPackageManager()
+        val i = Intent(Intent.ACTION_VIEW)
+        try {
+            //val url = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + URLEncoder.encode("", "UTF-8")
+            val url = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + " "
+            i.setPackage("com.whatsapp")
+            i.data = Uri.parse(url)
+            if (i.resolveActivity(packageManager) != null) {
+                this.startActivity(i)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

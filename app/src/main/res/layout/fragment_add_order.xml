@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@color/color_silver"
     android:clickable="true"
     >
 
@@ -19,7 +19,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.6"
-            android:background="@color/white"
+            android:background="@drawable/shape_cursor_two"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
@@ -48,7 +48,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.4"
-            android:background="@color/default_text_color"
+            android:background="@drawable/shape_custom_border_blue_button"
             android:clickable="true"
             android:drawableRight="@drawable/ic_continue_icon"
             android:focusable="true"

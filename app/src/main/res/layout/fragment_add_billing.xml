@@ -4,7 +4,7 @@
     android:id="@+id/rl_add_bill_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="@color/color_silver">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -212,7 +212,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="@drawable/shape_custom_border_blue_button"
+        android:background="@drawable/selector_billing_submit_bg"
         android:gravity="center_horizontal"
         android:padding="@dimen/_10sdp"
         android:text="@string/Submit"

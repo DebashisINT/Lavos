@@ -5,7 +5,7 @@
     android:id="@+id/rl_add_task_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@color/color_silver"
     android:paddingLeft="@dimen/_10sdp"
     android:paddingRight="@dimen/_10sdp"
     android:paddingTop="@dimen/_20sdp"
@@ -209,7 +209,7 @@
                     android:layout_marginRight="@dimen/_2sdp"
                     android:background="@color/light_gray" />
             </RelativeLayout>
-<!--            selector_blue_botton_bg-->
+
             <com.lavos.widgets.AppCustomTextView
                 android:id="@+id/tv_submit_btn"
                 android:layout_width="match_parent"
@@ -217,7 +217,7 @@
                 android:layout_marginLeft="@dimen/_60sdp"
                 android:layout_marginRight="@dimen/_60sdp"
                 android:layout_marginTop="@dimen/_50sdp"
-                android:background="@drawable/shape_custom_border_blue_button"
+                android:background="@drawable/selector_blue_botton_bg"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"

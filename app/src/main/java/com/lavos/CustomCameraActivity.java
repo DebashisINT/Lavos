@@ -35,6 +35,7 @@ public class CustomCameraActivity extends AppCompatActivity implements SurfaceHo
             previewing = false;
         }
 
+
         if (camera != null){
             try {
                 camera.setDisplayOrientation(90);

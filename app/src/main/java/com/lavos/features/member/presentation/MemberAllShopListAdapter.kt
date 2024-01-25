@@ -1,6 +1,7 @@
 package com.lavos.features.member.presentation
 
 import android.content.Context
+import android.location.Location
 import androidx.recyclerview.widget.RecyclerView
 import android.text.TextUtils
 import android.view.LayoutInflater
@@ -10,19 +11,50 @@ import android.widget.Filter
 import android.widget.Filterable
 import com.amulyakhare.textdrawable.TextDrawable
 import com.amulyakhare.textdrawable.util.ColorGenerator
+import com.lavos.CustomStatic
 import com.lavos.R
 import com.lavos.app.AppDatabase
 import com.lavos.app.Pref
+import com.lavos.app.domain.AddShopDBModelEntity
 import com.lavos.app.utils.AppUtils
+import com.lavos.app.utils.FTStorageUtils
+import com.lavos.features.location.LocationWizard.Companion.NEARBY_RADIUS
 import com.lavos.features.member.model.TeamShopListDataModel
+import kotlinx.android.synthetic.main.inflate_avg_shop_item.view.*
 import kotlinx.android.synthetic.main.inflate_member_shop_list.view.*
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.add_order_ll
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.add_quot_ll
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.iconWrapper_rl
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.last_visited_date_TV
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.ll_dd_name
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.ll_shop_code
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.ll_shop_type
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.myshop_address_TV
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.myshop_name_TV
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.order_view
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.shop_IV
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.shop_damage_ll
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.shop_damage_view
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.total_visited_value_TV
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.tv_dd_name
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.tv_funnel_stage
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.tv_funnel_stage_header
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.tv_shop_code
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.tv_shop_contact_no
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.tv_stage
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.tv_stage_header
 
 /**
  * Created by Saikat on 28-02-2020.
  */
-class MemberAllShopListAdapter(private val context: Context, private val teamShopList: ArrayList<TeamShopListDataModel>,
+//Revision History
+// 1.0 MemberAllShopListAdapter  AppV 4.0.6  Saheli    11/01/2023 IsAllowShopStatusUpdate
+// 2.0 MemberAllShopListFragment tufan 02-08-2023 AppV 4.1.6 mantis 0026651
+class MemberAllShopListAdapter(private val context: Context, private val teamShopList: ArrayList<TeamShopListDataModel>,private val isViewAll: Boolean ,
+                               private val onVisitShopClick: (TeamShopListDataModel) -> Unit,
                                private val listener: (TeamShopListDataModel) -> Unit, private val onUpdateLocClick: (TeamShopListDataModel) -> Unit,
-                               private val getListSize: (Int) -> Unit) : RecyclerView.Adapter<MemberAllShopListAdapter.MyViewHolder>(),
+                               private val getListSize: (Int) -> Unit,private val onDamageClick: (TeamShopListDataModel) -> Unit,private val onQuotClick: (TeamShopListDataModel) -> Unit,private val onHistoryClick: (AddShopDBModelEntity) -> Unit
+,private val getShopStatusDtls: (TeamShopListDataModel) -> Unit) : RecyclerView.Adapter<MemberAllShopListAdapter.MyViewHolder>(),
         Filterable {
 
     private val layoutInflater: LayoutInflater by lazy {
@@ -48,7 +80,8 @@ class MemberAllShopListAdapter(private val context: Context, private val teamSho
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        holder.bindItems(context, shopList!!, listener, onUpdateLocClick)
+
+        holder.bindItems(context, shopList!!,isViewAll,onVisitShopClick, listener, onUpdateLocClick,onDamageClick,onQuotClick,onHistoryClick,getShopStatusDtls)
     }
 
     override fun getItemCount(): Int {
@@ -57,8 +90,10 @@ class MemberAllShopListAdapter(private val context: Context, private val teamSho
 
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        fun bindItems(context: Context, teamShopList: ArrayList<TeamShopListDataModel>, listener: (TeamShopListDataModel) -> Unit,
-                      onUpdateLocClick: (TeamShopListDataModel) -> Unit) {
+        fun bindItems(context: Context, teamShopList: ArrayList<TeamShopListDataModel>, isViewAll: Boolean, onVisitShopClick: (TeamShopListDataModel) -> Unit,
+                      listener: (TeamShopListDataModel) -> Unit,
+                      onUpdateLocClick: (TeamShopListDataModel) -> Unit,onDamageClick: (TeamShopListDataModel) -> Unit,onQuotClick: (TeamShopListDataModel) -> Unit,
+                      onHistoryClick: (AddShopDBModelEntity) -> Unit,getShopStatusDtls:(TeamShopListDataModel) -> Unit) {
             itemView.apply {
                 myshop_name_TV.text = teamShopList[adapterPosition].shop_name
                 myshop_address_TV.text = teamShopList[adapterPosition].shop_address
@@ -80,8 +115,7 @@ class MemberAllShopListAdapter(private val context: Context, private val teamSho
                 else
                     last_visited_date_TV.text = "N.A."
 
-                val drawable = TextDrawable.builder()
-                        .buildRoundRect(teamShopList[adapterPosition].shop_name.trim().toUpperCase().take(1), ColorGenerator.MATERIAL.randomColor, 120)
+                val drawable = TextDrawable.builder().buildRoundRect(teamShopList[adapterPosition].shop_name.trim().toUpperCase().take(1), ColorGenerator.MATERIAL.randomColor, 120)
 
                 shop_IV.setImageDrawable(drawable)
 
@@ -182,7 +216,109 @@ class MemberAllShopListAdapter(private val context: Context, private val teamSho
                         }
                     }
                 }
+
+                if(Pref.IsNewQuotationfeatureOn){
+                    iconWrapper_rl.visibility = View.VISIBLE
+                    add_order_ll.visibility = View.GONE
+                    add_quot_ll.visibility = View.VISIBLE
+                    order_view.visibility = View.GONE
+                    history_vvview.visibility = View.VISIBLE
+                }
+                else{
+                    iconWrapper_rl.visibility = View.GONE
+                    add_order_ll.visibility = View.GONE
+                    add_quot_ll.visibility = View.GONE
+                    order_view.visibility = View.GONE
+                    history_vvview.visibility = View.GONE
+                }
+                add_quot_ll.setOnClickListener {
+                    onQuotClick(teamShopList[adapterPosition])
+                }
+
+                if(Pref.IsFeedbackHistoryActivated){
+                    iconWrapper_rl.visibility = View.VISIBLE
+                    history_llll.visibility = View.VISIBLE
+                }
+                else{
+                    iconWrapper_rl.visibility = View.GONE
+                    history_llll.visibility = View.GONE
+                }
+
+                history_llll.setOnClickListener {
+                    var obj: AddShopDBModelEntity = AddShopDBModelEntity()
+                    obj.apply {
+                        shop_id=teamShopList[adapterPosition].shop_id
+                        shopName=teamShopList[adapterPosition].shop_name
+                        address=teamShopList[adapterPosition].shop_address
+                        pinCode=teamShopList[adapterPosition].shop_pincode
+                        shopLat=teamShopList[adapterPosition].shop_lat!!.toDouble()
+                        shopLong=teamShopList[adapterPosition].shop_long!!.toDouble()
+                        ownerContactNumber=teamShopList[adapterPosition].shop_contact
+                        totalVisitCount=teamShopList[adapterPosition].total_visited
+                        lastVisitedDate = teamShopList[adapterPosition].last_visit_date
+                        type = teamShopList[adapterPosition].shop_type
+                        assigned_to_dd_id = teamShopList[adapterPosition].assign_to_dd_id
+                        assigned_to_pp_id = teamShopList[adapterPosition].assign_to_pp_id
+                        entity_code = teamShopList[adapterPosition].entity_code
+                    }
+                    onHistoryClick(obj)
+                }
+
+                if (Pref.IsAllowBreakageTrackingunderTeam) {
+                    itemView.shop_damage_ll.visibility = View.VISIBLE
+                    itemView.shop_damage_view.visibility = View.VISIBLE
+                }
+                else {
+                    itemView.shop_damage_ll.visibility = View.GONE
+                    itemView.shop_damage_view.visibility = View.GONE
+                }
+                itemView.shop_damage_ll.setOnClickListener{
+                    onDamageClick(teamShopList[adapterPosition])
+                }
+
+                if(Pref.IsNewQuotationfeatureOn || Pref.IsFeedbackHistoryActivated){
+                    iconWrapper_rl.visibility = View.VISIBLE
+                }
+                // 1.0 MemberAllShopListAdpater  AppV 4.0.6  IsAllowShopStatusUpdate
+                if(Pref.IsAllowShopStatusUpdate) {
+                    tv_update_status.visibility = View.VISIBLE
+                }
+                else {
+                    tv_update_status.visibility = View.GONE
+                }
+                tv_update_status.setOnClickListener {
+                    getShopStatusDtls(teamShopList[adapterPosition])
+                }
+
+// 4.0 MemberAllShopListFragment tufan 02-08-2023 AppV 4.1.6 mantis 0026651 start
+               /* val shopLocation = Location("")
+                shopLocation.latitude = teamShopList[adapterPosition].shop_lat.toDouble()
+                shopLocation.longitude = teamShopList[adapterPosition].shop_long.toDouble()
+                val myLoc = Location("")
+                myLoc.latitude  = Pref.current_latitude.toString().toDouble()
+                myLoc.longitude =Pref.current_longitude.toString().toDouble()
+                var mRadious:Int = NEARBY_RADIUS
+                val isShopNearby = FTStorageUtils.checkShopPositionWithinRadious(myLoc, shopLocation, mRadious)
+                if(isShopNearby && isViewAll){
+                    visit_rl.visibility =View.VISIBLE
+                }
+                val isPresent = AppDatabase.getDBInstance()!!.shopActivityDao().isShopActivityAvailable(teamShopList[adapterPosition].shop_id, AppUtils.getCurrentDateForShopActi())
+                if (isPresent) {
+                    visit_icon.visibility = View.VISIBLE
+                    visit_TV.text = "VISITED"
+                    iconWrapper_rl.visibility = View.VISIBLE
+                } else {
+                    visit_icon.visibility = View.GONE
+                    visit_TV.text = "VISIT THIS " + Pref.shopText.toUpperCase()
+                    iconWrapper_rl.visibility = View.GONE
+                }
+
+                visit_rl.setOnClickListener {
+                    onVisitShopClick(teamShopList[adapterPosition])
+                }*/
+                // 4.0 MemberAllShopListFragment tufan 02-08-2023 AppV 4.1.6 mantis 0026651 end
             }
+
         }
     }
 

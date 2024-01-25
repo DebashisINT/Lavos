@@ -2,9 +2,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:wheel="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rl_device_info_main"
-    android:background="@color/color_silver"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/color_silver">
 
     <com.lavos.widgets.AppCustomTextView
         android:id="@+id/tv_pick_date"
@@ -17,6 +17,15 @@
         android:text="26th Feb, 2020"
         android:textColor="@color/colorPrimary"
         android:textSize="@dimen/_13sdp" />
+
+    <TextView
+        android:id="@+id/backcamera"
+        android:text=""
+        android:visibility="gone"
+        android:textSize="@dimen/_13sdp"
+        android:textColor="@color/colorPrimary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_device_info_list"

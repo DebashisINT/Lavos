@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:wheel="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:fab="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:clickable="true"
+    android:focusable="true">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+
+
+    <LinearLayout
+        android:id="@+id/frag_view_details_quot_list_LL"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/_2sdp"
+        android:layout_marginLeft="@dimen/_5sdp"
+        android:layout_marginRight="@dimen/_5sdp"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:padding="@dimen/_5sdp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tv_frag_view_details_quot_list_shopName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Name"
+                android:layout_weight="1"
+                android:textSize="@dimen/_11sdp"
+                android:textColor="@color/black"/>
+
+            <ImageView
+                android:id="@+id/iv_frag_view_details_quot_list_phone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/callselector"
+                android:backgroundTint="@color/black"
+                android:layout_gravity="end"
+                android:textSize="@dimen/_11sdp"/>
+
+        </LinearLayout>
+
+        <!--Contact Details design added by saheli 09-01-2023-->
+
+
+        <LinearLayout
+            android:id="@+id/ll_frag_quto_list_dtls_contact_dtls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_frag_view_details_quot_list_contactP"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minWidth="@dimen/_30sdp"
+                android:text="Contact Person: "
+                android:textSize="@dimen/_11sdp"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:id="@+id/tv_frag_view_details_quot_list_contactPhone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minWidth="@dimen/_30sdp"
+                android:text="Contact Phone: "
+                android:textSize="@dimen/_11sdp"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:id="@+id/tv_frag_view_details_quot_list_contactEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minWidth="@dimen/_30sdp"
+                android:text="Contact Email: "
+                android:textColor="@color/black"
+                android:textSize="@dimen/_11sdp"/>
+
+        </LinearLayout>
+
+
+        <TextView
+            android:id="@+id/tv_frag_view_dtls_quto_project_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/_30sdp"
+            android:gravity="center|start"
+            android:hint="Project Name"
+            android:textColor="@color/black"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/tv_frag_view_details_quot_list_quotId"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Quot ID: "
+                android:layout_weight="1"
+                android:textColor="@color/black"
+                android:textSize="@dimen/_11sdp"/>
+
+            <TextView
+                android:id="@+id/tv_frag_view_details_quot_list_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:text="18 mar"
+                android:textColor="@color/black"
+                android:layout_marginLeft="@dimen/_5sdp"
+                android:textSize="@dimen/_11sdp"/>
+
+        </LinearLayout>
+
+
+
+
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/_3sdp"
+            android:gravity="center_vertical"
+            android:paddingLeft="@dimen/_10sdp">
+
+            <ImageView
+                android:id="@+id/shop_IV_flase"
+                android:layout_width="@dimen/_43sdp"
+                android:layout_height="0dp"
+                android:contentDescription="@null"
+                android:visibility="gone" />
+
+
+        </RelativeLayout>
+
+
+        <ImageView
+            android:id="@+id/menu_IV"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="@dimen/_5sdp"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="@dimen/_10sdp"
+            android:src="@drawable/ic_registered_shop_shortcut_menu_icon_deselect"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_100sdp"
+        android:layout_marginTop="@dimen/_5sdp">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/quot_view_list_rv"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_marginBottom="@dimen/_2sdp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        <com.pnikosis.materialishprogress.ProgressWheel
+            android:id="@+id/progress_wheel"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center_horizontal|center"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            wheel:matProg_barColor="@color/default_text_color"
+            wheel:matProg_progressIndeterminate="true" />
+
+
+        <com.lavos.widgets.AppCustomTextView
+            android:id="@+id/no_quot_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:gravity="center"
+            android:layout_gravity="center_horizontal|center"
+            android:text="@string/no_quot"
+            android:textColor="@color/colorPrimary"
+            android:textSize="@dimen/_13sdp"
+            android:textStyle="normal"
+            android:visibility="gone"/>
+
+        <com.github.clans.fab.FloatingActionMenu
+            android:id="@+id/floating_fab_frag_view_dtls"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/_20sdp"
+            android:src="@drawable/ic_add"
+            fab:menu_animationDelayPerItem="0"
+            fab:menu_buttonSpacing="0dp"
+            fab:menu_colorNormal="#1A8BA6"
+            fab:menu_colorPressed="#177D95"
+            fab:menu_colorRipple="#1A8BA6"
+            fab:menu_labels_hideAnimation="@anim/jump_to_down"
+            fab:menu_labels_margin="0dp"
+            android:visibility="gone"
+            fab:menu_labels_showAnimation="@anim/jump_from_down"
+            fab:menu_labels_style="@style/MenuLabelsStyle"
+            fab:menu_shadowColor="#444"/>
+
+
+    </FrameLayout>
+
+    <!--Term & condition design added by saheli 09-01-2023-->
+
+    <com.lavos.widgets.AppCustomTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center|start"
+        android:padding="@dimen/_1sdp"
+        android:text="@string/terms_conditions"
+        android:textColor="@color/black"
+        android:textSize="@dimen/_13sdp"
+        android:textStyle="bold"
+        android:layout_marginLeft="@dimen/_5sdp"
+        android:background="@drawable/black_line_custom" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/_5sdp"
+        android:background="@color/color_silver">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_frag_view_dtls_quot_list_taxes"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:hint="Taxes"
+                android:gravity="center|start"
+                android:paddingStart="@dimen/_10sdp"
+                android:singleLine="true"
+                android:textSize="@dimen/_11sdp"
+                android:textColor="@color/black_50" />
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_frag_view_dtls_quot_list_freight"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:hint="Freight"
+                android:gravity="center|start"
+                android:paddingStart="@dimen/_10sdp"
+                android:singleLine="true"
+                android:textSize="@dimen/_11sdp"
+                android:textColor="@color/black_50"
+                />
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_frag_view_dtls_quot_list_del_time"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:hint="Delivery Time "
+                android:paddingStart="@dimen/_10sdp"
+                android:singleLine="true"
+                android:textColor="@color/black_50"
+                android:textSize="@dimen/_11sdp" />
+
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_frag_view_dtls_quot_list_payment"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:hint="Payment"
+                android:paddingStart="@dimen/_10sdp"
+                android:singleLine="true"
+                android:textSize="@dimen/_11sdp"
+                android:textColor="@color/black_50" />
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_frag_view_dtls_quot_list_validity"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:hint="Validity "
+                android:paddingStart="@dimen/_10sdp"
+                android:singleLine="true"
+                android:textColor="@color/black_50"
+                android:textSize="@dimen/_11sdp" />
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_frag_view_dtls_quot_list_billing"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:hint="Billing"
+                android:paddingStart="@dimen/_10sdp"
+                android:singleLine="true"
+                android:textColor="@color/black_50"
+                android:textSize="@dimen/_11sdp" />
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_frag_view_dtls_quot_list_product_tolrence"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:hint="Product Tolerance of Thickness "
+                android:paddingStart="@dimen/_10sdp"
+                android:textColor="@color/black_50"
+                android:textSize="@dimen/_11sdp" />
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_frag_view_dtls_quot_list_coating_tolrence"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:hint="Tolerance of Coating Thickness"
+                android:paddingStart="@dimen/_10sdp"
+                android:textColor="@color/black_50"
+                android:textSize="@dimen/_11sdp" />
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_frag_view_dtls_quot_list_product_salemans"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:hint="Salesman"
+                android:gravity="center|start"
+                android:paddingStart="@dimen/_10sdp"
+                android:singleLine="true"
+                android:textSize="@dimen/_11sdp"
+                android:paddingEnd="@dimen/_10sdp"
+                android:textColor="@color/black_50" />
+
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_frag_view_dtls_quot_list_remarks"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:hint="Remarks"
+                android:gravity="center|start"
+                android:paddingStart="@dimen/_10sdp"
+                android:singleLine="true"
+                android:textSize="@dimen/_11sdp"
+                android:paddingEnd="@dimen/_10sdp"
+                android:textColor="@color/black_50" />
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_frag_view_dtls_quot_list_template"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:hint="Template"
+                android:gravity="center|start"
+                android:paddingStart="@dimen/_10sdp"
+                android:singleLine="true"
+                android:textSize="@dimen/_11sdp"
+                android:paddingEnd="@dimen/_10sdp"
+                android:textColor="@color/black_50" />
+
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+    <com.lavos.widgets.AppCustomTextView
+        android:id="@+id/update_TV_frag_view_details_quot_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:background="@drawable/shape_custom_border_blue_button"
+        android:textColor="@color/white"
+        android:gravity="center"
+        android:padding="@dimen/_8sdp"
+        android:text="@string/update"
+        android:textSize="@dimen/_13sdp"
+        android:visibility="gone" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

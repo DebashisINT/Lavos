@@ -62,6 +62,12 @@ class AttendanceReportAdapter(context: Context, val userLocationDataEntity: Arra
                 itemView.tv_login_time.text = "--"
 
             itemView.tv_status.text = userLocationDataEntity?.get(adapterPosition)?.status
+            if(userLocationDataEntity?.get(adapterPosition)?.status.equals("Not Login")){
+                itemView.tv_status.text = "Absent"
+            }
+            else{
+                itemView.tv_status.text = userLocationDataEntity?.get(adapterPosition)?.status
+            }
 
             if (userLocationDataEntity?.get(adapterPosition)?.status.equals("leave", ignoreCase = true))
                 itemView.tv_status.setTextColor(context.resources.getColor(R.color.bill_green))

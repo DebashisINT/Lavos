@@ -4,6 +4,6 @@
     <item android:drawable="@drawable/selected_blue_bg" android:state_pressed="true" />
     <item android:drawable="@drawable/selected_blue_bg" android:state_selected="true" />
     <item android:drawable="@drawable/selected_blue_bg" android:state_checkable="true" />
-    <item android:drawable="@drawable/deselected_blue_bg"/>
+    <item android:drawable="@drawable/deselected_green_bg"/>
 
 </selector>

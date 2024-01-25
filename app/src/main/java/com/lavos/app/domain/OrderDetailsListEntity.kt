@@ -59,4 +59,15 @@ class OrderDetailsListEntity {
 
     @ColumnInfo(name = "patient_address")
     var patient_address: String? = null
+
+    @ColumnInfo(name = "scheme_amount")
+    var scheme_amount: String? = null
+
+    @ColumnInfo(name = "Hospital")
+    var Hospital: String? = null
+
+    @ColumnInfo(name = "Email_Address")
+    var Email_Address: String? = null
+
+
 }

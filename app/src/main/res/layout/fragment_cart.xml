@@ -4,7 +4,7 @@
     android:id="@+id/rl_cart_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/smoke_white"
+    android:background="@color/color_silver"
     android:orientation="vertical">
 
     <LinearLayout
@@ -107,6 +107,7 @@
                 android:layout_marginTop="@dimen/_5sdp">
 
                 <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/tv_frag_cart_order_id"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
@@ -214,6 +215,54 @@
                     android:textColor="@android:color/black"
                     android:textSize="@dimen/_11sdp" />
             </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_5sdp">
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Hospital/Lab:"
+                    android:textColor="@color/login_txt_color"
+                    android:textSize="@dimen/_11sdp" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/tv_patient_lab"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/_10sdp"
+                    android:gravity="center"
+                    android:text="N.A."
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/_11sdp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_5sdp">
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Email Address:"
+                    android:textColor="@color/login_txt_color"
+                    android:textSize="@dimen/_11sdp" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/tv_patient_emailaddress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/_10sdp"
+                    android:gravity="center"
+                    android:text="N.A."
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/_11sdp" />
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
@@ -307,6 +356,64 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!--29-12-2021-->
+        <LinearLayout
+            android:id="@+id/ll_frag_cart_new_scheme_root"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="@dimen/_5sdp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.65">
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text=""
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/_11sdp"
+                    android:textStyle="bold" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/tv_total_scheme_qty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text=""
+                    android:layout_marginLeft="@dimen/_3sdp"
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/_11sdp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Total Scheme Value((\u20B9):"
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/_11sdp"
+                    android:textStyle="bold" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/tv_total_scheme_amount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text=""
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/_11sdp" />
+            </LinearLayout>
+        </LinearLayout>
+
         <LinearLayout
             android:id="@+id/ll_btns"
             android:layout_width="match_parent"
@@ -320,7 +427,6 @@
                 android:background="@drawable/selector_rectengular_blue_btn_bg"
                 android:gravity="center"
                 android:padding="@dimen/_7sdp"
-                android:backgroundTint="#f8424e"
                 android:text="@string/cancel"
                 android:textColor="@color/white"
                 android:textSize="@dimen/_11sdp"
@@ -338,7 +444,6 @@
                 android:background="@drawable/selector_rectengular_blue_btn_bg"
                 android:gravity="center"
                 android:padding="@dimen/_7sdp"
-                android:backgroundTint="#57a518"
                 android:text="@string/confirm_order"
                 android:textColor="@color/white"
                 android:textSize="@dimen/_11sdp" />

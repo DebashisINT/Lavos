@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/nearby_shop_list_bg"
+        android:background="@drawable/shape_cursor_two"
         android:paddingBottom="@dimen/_10sdp"
         android:layout_margin="@dimen/_10sdp">
 

@@ -32,4 +32,8 @@ class GpsStatusEntity {
 
     @ColumnInfo(name = "isUploaded")
     var isUploaded: Boolean = false
+
+    @ColumnInfo(name = "reasontagforGPS")
+    var reasontagforGPS: String? = null
+
 }

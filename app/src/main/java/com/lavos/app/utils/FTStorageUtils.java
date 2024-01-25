@@ -23,6 +23,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 
+import com.lavos.app.Pref;
 import com.lavos.features.location.model.ShopDurationRequestData;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -48,13 +49,15 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
 import static android.content.Context.ACTIVITY_SERVICE;
 
+import androidx.core.content.FileProvider;
+
 /**
  * DStorageUtils
  */
-
+// 1.0 REV 0026445: Order QR code can't share in whatsapp, its showing "The file format is not supported"
 public class FTStorageUtils {
 
-    private static String APP_FOLDERNAME = "FTS";
+    private static String APP_FOLDERNAME = "lavosApp/FTS";
     private static String folderPath;
     public static Uri IMG_URI = null;
     private static final int EOF = -1;
@@ -86,7 +89,8 @@ public class FTStorageUtils {
     public static String getFolderPath(Context context) {
         if (checkSDCardAvailable()) {
             try {
-//                File sdPath = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + APP_FOLDERNAME);
+                //File sdPath = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + APP_FOLDERNAME);
+                //27-09-2021
                 File sdPath = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() + File.separator + APP_FOLDERNAME);
                 if (!sdPath.exists()) {
                     sdPath.mkdirs();
@@ -97,7 +101,8 @@ public class FTStorageUtils {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-//            folderPath = Environment.getExternalStorageDirectory().getPath() + File.separator + APP_FOLDERNAME;
+            //folderPath = Environment.getExternalStorageDirectory().getPath() + File.separator + APP_FOLDERNAME;
+            //27-09-2021
             folderPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator + APP_FOLDERNAME;
         } else {
             try {
@@ -227,9 +232,7 @@ public class FTStorageUtils {
 
 
     public static boolean checkShopPositionWithinRadious(Location currentLocation, Location shopLocation, int radius) {
-
         return ((currentLocation.distanceTo(shopLocation)) <= radius);
-
     }
 
 
@@ -259,6 +262,17 @@ public class FTStorageUtils {
         try {
             SimpleDateFormat monthParse = new SimpleDateFormat("MM");
             SimpleDateFormat monthDisplay = new SimpleDateFormat("MMM");
+            return monthDisplay.format(monthParse.parse(month));
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return " ";
+        }
+    }
+    public static String formatMm(String month) {
+
+        try {
+            SimpleDateFormat monthParse = new SimpleDateFormat("MM");
+            SimpleDateFormat monthDisplay = new SimpleDateFormat("MM");
             return monthDisplay.format(monthParse.parse(month));
         } catch (ParseException e) {
             e.printStackTrace();
@@ -439,7 +453,7 @@ public class FTStorageUtils {
 
             PdfDocument document = new PdfDocument();
             PdfDocument.PageInfo pageInfo = new
-                    PdfDocument.PageInfo.Builder(600, 4000, 1).create();
+                    PdfDocument.PageInfo.Builder(600, 8000, 1).create();
             PdfDocument.Page page = document.startPage(pageInfo);
             Canvas canvas = page.getCanvas();
             Paint paint = new Paint();
@@ -522,6 +536,8 @@ public class FTStorageUtils {
                 Bitmap imageBitmap = Bitmap.createScaledBitmap(image, 500, 900, true);
                 canvas.drawBitmap(imageBitmap, 10, 10, null);
             }
+
+
 
 
             document.finishPage(page);
@@ -616,7 +632,10 @@ public class FTStorageUtils {
             FileOutputStream stream = new FileOutputStream(file);
             image.compress(Bitmap.CompressFormat.PNG, 90, stream);
             stream.close();
-            uri = Uri.fromFile(file);
+            // start 1.0 REV 0026445: Order QR code can't share in whatsapp, its showing "The file format is not supported"
+            uri = FileProvider.getUriForFile(context, context.getPackageName()+ ".provider", file);
+//            uri = Uri.fromFile(file);
+            // end 1.0 REV 0026445: Order QR code can't share in whatsapp, its showing "The file format is not supported"
         } catch (IOException e) {
             e.printStackTrace();
         }

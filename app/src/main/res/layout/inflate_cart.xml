@@ -82,6 +82,41 @@
                 android:textSize="@dimen/_11sdp" />
         </LinearLayout>
 
+        <!--29-12-2021-->
+        <LinearLayout
+            android:id="@+id/ll_inflate_cart_scheme"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_5sdp">
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_category_item_scheme"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text=""
+                android:textColor="@android:color/black"
+                android:textSize="@dimen/_11sdp" />
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_brand_item_scheme"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/_15sdp"
+                android:text=""
+                android:textColor="@android:color/black"
+                android:textSize="@dimen/_11sdp" />
+
+            <com.lavos.widgets.AppCustomTextView
+                android:id="@+id/tv_watt_item_scheme"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/_15sdp"
+                android:text=""
+                android:textColor="@android:color/black"
+                android:textSize="@dimen/_11sdp" />
+
+        </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

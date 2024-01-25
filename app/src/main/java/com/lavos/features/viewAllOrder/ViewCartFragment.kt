@@ -16,10 +16,14 @@ import android.widget.RelativeLayout
 import com.lavos.R
 import com.lavos.app.AppDatabase
 import com.lavos.app.Pref
+import com.lavos.app.domain.AddShopDBModelEntity
 import com.lavos.app.domain.OrderDetailsListEntity
 import com.lavos.app.uiaction.IntentActionable
 import com.lavos.app.utils.AppUtils
 import com.lavos.base.presentation.BaseFragment
+import com.lavos.features.dashboard.presentation.DashboardActivity
+import com.lavos.features.location.LocationWizard
+import com.lavos.features.viewAllOrder.orderOptimized.OrderProductCartFrag
 import com.lavos.widgets.AppCustomTextView
 
 /**
@@ -30,6 +34,8 @@ class ViewCartFragment : BaseFragment() {
     private lateinit var mContext: Context
     private lateinit var tv_total_order_value: AppCustomTextView
     private lateinit var tv_total_order_amount: AppCustomTextView
+    private lateinit var ll_schemeRoot: LinearLayout
+    private lateinit var tv_total_order_amount_sc: AppCustomTextView
     private lateinit var rv_cart_list: RecyclerView
     private lateinit var tv_cancel: AppCustomTextView
     private lateinit var tv_continue: AppCustomTextView
@@ -49,6 +55,8 @@ class ViewCartFragment : BaseFragment() {
     private lateinit var tv_patient_name: AppCustomTextView
     private lateinit var tv_patient_no: AppCustomTextView
     private lateinit var tv_patient_address: AppCustomTextView
+    private lateinit var tv_patient_lab: AppCustomTextView
+    private lateinit var tv_patient_emailaddress: AppCustomTextView
 
     companion object {
 
@@ -93,7 +101,13 @@ class ViewCartFragment : BaseFragment() {
         tv_total_order_value = view.findViewById(R.id.tv_total_order_value)
         tv_shop_name = view.findViewById(R.id.tv_shop_name)
 
-        val shop = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopDetail(orderDetails?.shop_id)
+
+        var shop = AddShopDBModelEntity()
+        try {
+             shop = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopDetail(orderDetails?.shop_id)
+        }catch (ex:Exception){
+            ex.printStackTrace()
+        }
         tv_shop_name.text = shop.shopName
 
         tv_order_id = view.findViewById(R.id.tv_order_id)
@@ -117,10 +131,23 @@ class ViewCartFragment : BaseFragment() {
         tv_patient_no = view.findViewById(R.id.tv_patient_no)
         tv_patient_address = view.findViewById(R.id.tv_patient_address)
 
+        /*06-01-2022*/
+        tv_patient_lab = view.findViewById(R.id.tv_patient_lab)
+        tv_patient_emailaddress = view.findViewById(R.id.tv_patient_emailaddress)
+
         rl_cart_main = view.findViewById(R.id.rl_cart_main)
+        ll_schemeRoot = view.findViewById(R.id.ll_frag_cart_new_scheme_root)
+        tv_total_order_amount_sc = view.findViewById(R.id.tv_total_scheme_amount)
         rl_cart_main.setOnClickListener(null)
 
         rv_cart_list.layoutManager = LinearLayoutManager(mContext)
+
+        if (!Pref.IsnewleadtypeforRuby) {
+            ll_schemeRoot.visibility = View.GONE
+        } else {
+            ll_schemeRoot.visibility = View.VISIBLE
+
+        }
 
         if (Pref.isPatientDetailsShowInOrder)
             ll_patient_info.visibility = View.VISIBLE
@@ -135,6 +162,12 @@ class ViewCartFragment : BaseFragment() {
 
         if (!TextUtils.isEmpty(orderDetails?.patient_address))
             tv_patient_address.text = orderDetails?.patient_address
+
+        if (!TextUtils.isEmpty(orderDetails?.Hospital))
+            tv_patient_lab.text = orderDetails?.Hospital
+
+        if (!TextUtils.isEmpty(orderDetails?.Email_Address))
+            tv_patient_emailaddress.text = orderDetails?.Email_Address
 
         val list = AppDatabase.getDBInstance()!!.orderProductListDao().getDataAccordingToOrderId(orderId)
 
@@ -157,8 +190,26 @@ class ViewCartFragment : BaseFragment() {
                 totalAmount += list[i].total_price?.toDouble()!!
             }
             //val totalPrice = DecimalFormat("##.##").format(totalAmount)
-            val totalPrice = String.format("%.2f", totalAmount.toFloat())
+            //val totalPrice = String.format("%.2f", totalAmount.toFloat())
+            //mantis id 26274
+            val totalPrice = String.format("%.2f", totalAmount.toDouble())
             tv_total_order_amount.text = totalPrice
+        }, 200)
+
+        Handler().postDelayed(Runnable {
+            var totalScAmount = 0.0
+            try {
+                for (i in list.indices) {
+                    totalScAmount += list[i].total_scheme_price?.toDouble()!!
+                }
+            }catch(ex:java.lang.Exception) {
+                ex.printStackTrace()
+                totalScAmount = 0.0
+            }
+            //val totalScPrice = String.format("%.2f", totalScAmount.toFloat())
+            //mantis id 26274
+            val totalScPrice = String.format("%.2f", totalScAmount.toDouble())
+            tv_total_order_amount_sc.text = totalScPrice
         }, 200)
 
 

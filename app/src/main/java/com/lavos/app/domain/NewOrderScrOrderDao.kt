@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.lavos.app.AppConstant
-import com.lavos.app.Pref
 import com.lavos.features.logoutsync.presentation.LogoutSyncFragment
 import com.lavos.features.viewAllOrder.model.ProductOrder
 import com.lavos.features.viewAllOrder.orderNew.NewOdrScrListFragment
@@ -32,12 +31,6 @@ interface NewOrderScrOrderDao {
 
     @Query("Select * from "+ AppConstant.NEW_ORDER_ENTRY +" where isUploaded=0 ")
     fun getUnSyncOrderAll(): List<NewOrderScrOrderEntity>
-
-    @Query("Select * from "+ AppConstant.NEW_ORDER_ENTRY +" where isUploaded=0 and order_id=:order_id")
-    fun getUnSyncOrderAllByOrdID(order_id:String): List<NewOrderScrOrderEntity>
-
-    @Query("Select DISTINCT order_id,shop_id,order_date from "+ AppConstant.NEW_ORDER_ENTRY +" where isUploaded=0 ")
-    fun getUnSyncOrderAllUniqOrderID(): List<LogoutSyncFragment.NewOrderRoomDataLogoutPurpose>
 
 
     @Query("Select DISTINCT order_id from "+ AppConstant.NEW_ORDER_ENTRY +" where shop_id=:shop_id order by order_date desc ")
@@ -92,6 +85,28 @@ interface NewOrderScrOrderDao {
             " color_name = UPPER(color_name) ")
     fun updateSizeNametoUpperCase()
 
+
+    @Query("delete  from "+ AppConstant.NEW_ORDER_ENTRY )
+    fun deleteAll()
+
+    @Query("Select * from "+ AppConstant.NEW_ORDER_ENTRY +" where isUploaded=0 and order_id=:order_id")
+    fun getUnSyncOrderAllByOrdID(order_id:String): List<NewOrderScrOrderEntity>
+
+    @Query("Select DISTINCT order_id,shop_id,order_date from "+ AppConstant.NEW_ORDER_ENTRY +" where isUploaded=0 ")
+    fun getUnSyncOrderAllUniqOrderID(): List<LogoutSyncFragment.NewOrderRoomDataLogoutPurpose>
+
+    @Query("SELECT rate FROM " + AppConstant.NEW_ORDER_ENTRY + " where product_id=:product_id and order_id=:order_id")
+    fun getNewOrderProductRateByOrdID(product_id:String,order_id:String): String
+
+    @Query("SELECT qty FROM " + AppConstant.NEW_ORDER_ENTRY + " where product_id=:product_id and order_id=:order_id")
+    fun getNewOrderProductQtyByOrdID(product_id:String,order_id:String):  String
+
 /*    @Query("Select gender from "+ AppConstant.NEW_ORDER_ENTRY +" where order_id=:order_id")
     fun getUniqGenderForOrderID(order_id:String): List<ProductOrder>*/
+
+
+
+    @Query("Select *  from "+ AppConstant.NEW_ORDER_ENTRY+ " where order_date=:order_date " )
+    fun getRateListByDate(order_date:String):List<NewOrderScrOrderEntity>
+
 }

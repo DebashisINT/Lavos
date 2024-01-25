@@ -5,7 +5,7 @@
     android:id="@+id/rl_add_chemist_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/smoke_white">
+    android:background="@color/color_silver">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -555,8 +555,6 @@
 
             </RelativeLayout>
 
-<!--            selector_blue_botton_bg-->
-
 
             <com.lavos.widgets.AppCustomTextView
                 android:id="@+id/tv_save"
@@ -565,7 +563,7 @@
                 android:layout_marginLeft="@dimen/_80sdp"
                 android:layout_marginRight="@dimen/_80sdp"
                 android:layout_marginTop="@dimen/_20sdp"
-                android:background="@drawable/shape_custom_border_blue_button"
+                android:background="@drawable/selector_blue_botton_bg"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"

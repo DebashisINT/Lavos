@@ -19,4 +19,11 @@ interface PjpListDao {
 
     @Query("SELECT * FROM " + AppConstant.PJP_LIST_TABLE)
     fun getAll(): List<PjpListEntity>
+
+    @Query("update " + AppConstant.PJP_LIST_TABLE+" set date=:date where pjp_id=:pjp_id")
+    fun updatePjp(date:String,pjp_id:String)
+
+
+    @Query("SELECT * FROM " + AppConstant.PJP_LIST_TABLE + " where date=:date")
+    fun getAllByDate(date:String): List<PjpListEntity>
 }

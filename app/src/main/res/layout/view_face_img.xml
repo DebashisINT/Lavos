@@ -8,18 +8,35 @@
     android:gravity="center"
     android:background="@color/white">
 
-    <ImageView
-        android:id="@+id/iv_face_img"
-        android:layout_width="@dimen/_200sdp"
-        android:layout_height="@dimen/_200sdp"/>
+    <FrameLayout
+        android:layout_width="@dimen/_250sdp"
+        android:layout_height="@dimen/_250sdp">
+
+        <ImageView
+            android:id="@+id/iv_face_img"
+            android:layout_width="@dimen/_250sdp"
+            android:layout_height="@dimen/_250sdp"/>
+
+
+            <ImageView
+                android:id="@+id/iv_face_reg_cancel"
+                android:layout_width="@dimen/_25sdp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:src="@drawable/ic_cancel_red" />
+
+
+    </FrameLayout>
+
 
     <com.lavos.widgets.AppCustomTextView
         android:id="@+id/face_name"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:text="Name  : "
-        android:gravity="center|start"
+        android:gravity="center"
         android:textColor="@color/colorPrimary"
-        android:textSize="@dimen/_13sdp" />
+        android:textSize="@dimen/_13sdp"
+        android:background="@drawable/shape_cursor_two"/>
 
 </LinearLayout>

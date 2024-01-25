@@ -4,39 +4,46 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.os.Handler
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
-import com.elvishew.xlog.XLog
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.lavos.CustomStatic
 import com.lavos.R
+import com.lavos.app.AppDatabase
 import com.lavos.app.NetworkConstant
 import com.lavos.app.Pref
 import com.lavos.app.domain.MemberEntity
+import com.lavos.app.domain.PjpListEntity
 import com.lavos.app.types.FragType
 import com.lavos.app.utils.AppUtils
 import com.lavos.base.BaseResponse
 import com.lavos.base.presentation.BaseActivity
+import com.lavos.base.presentation.BaseFragment
 import com.lavos.features.commondialog.presentation.CommonDialog
 import com.lavos.features.commondialog.presentation.CommonDialogClickListener
 import com.lavos.features.dashboard.presentation.DashboardActivity
+import com.lavos.features.dashboard.presentation.DashboardFragment
 import com.lavos.features.member.api.TeamRepoProvider
+import com.lavos.features.member.model.TeamListDataModel
 import com.lavos.features.member.model.TeamPjpDataModel
 import com.lavos.features.member.model.TeamPjpResponseModel
+import com.lavos.features.member.model.UserPjpResponseModel
 import com.lavos.widgets.AppCustomTextView
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.pnikosis.materialishprogress.ProgressWheel
 import com.rackspira.kristiawan.rackmonthpicker.RackMonthPicker
-import com.lavos.base.presentation.BaseFragment
-import com.lavos.features.member.model.TeamListDataModel
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
+import timber.log.Timber
 import java.text.DateFormatSymbols
 import java.util.*
-import kotlin.collections.ArrayList
 
 /**
  * Created by Saikat on 30-Mar-20.
@@ -230,7 +237,7 @@ class MemberPJPListFragment : BaseFragment(), View.OnClickListener {
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             val response = result as TeamPjpResponseModel
-                            XLog.d("GET TEAM PJP DATA : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
+                            Timber.d("GET TEAM PJP DATA : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
                             progress_wheel.stopSpinning()
                             if (response.status == NetworkConstant.SUCCESS) {
                                 tv_supervisor_name.text = response.supervisor_name
@@ -250,7 +257,7 @@ class MemberPJPListFragment : BaseFragment(), View.OnClickListener {
 
                         }, { error ->
                             progress_wheel.stopSpinning()
-                            XLog.d("GET TEAM PJP DATA : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                            Timber.d("GET TEAM PJP DATA : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                             error.printStackTrace()
                             (mContext as DashboardActivity).showSnackMessage(getString(R.string.something_went_wrong))
                             tv_no_data.visibility = View.VISIBLE
@@ -300,18 +307,73 @@ class MemberPJPListFragment : BaseFragment(), View.OnClickListener {
                         .subscribeOn(Schedulers.io())
                         .subscribe({ result ->
                             val response = result as BaseResponse
-                            XLog.d("DELETE PJP DATA : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
+                            Timber.d("DELETE PJP DATA : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
                             progress_wheel.stopSpinning()
                             (mContext as DashboardActivity).showSnackMessage(response.message!!)
 
                             if (response.status == NetworkConstant.SUCCESS) {
+                                CustomStatic.IsPJPAddEdited=true
+                                getPjpListApi()
+                                //getTeamPjpList()
+                            }
+                        }, { error ->
+                            progress_wheel.stopSpinning()
+                            Timber.d("DELETE PJP DATA : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                            error.printStackTrace()
+                            (mContext as DashboardActivity).showSnackMessage(getString(R.string.something_went_wrong))
+                        })
+        )
+    }
+
+
+    private fun getPjpListApi() {
+        progress_wheel.spin()
+        val repository = TeamRepoProvider.teamRepoProvider()
+        BaseActivity.compositeDisposable.add(
+                repository.getUserPJPList(AppUtils.getCurrentDateForShopActi())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe({ result ->
+                            val response = result as UserPjpResponseModel
+                            Timber.d("GET USER PJP DATA : " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
+                            if (response.status == NetworkConstant.SUCCESS) {
+                                if (response.pjp_list != null && response.pjp_list.isNotEmpty()) {
+                                    doAsync {
+                                        AppDatabase.getDBInstance()?.pjpListDao()?.deleteAll()
+                                        response.pjp_list.forEach {
+                                            val pjpEntity = PjpListEntity()
+                                            AppDatabase.getDBInstance()?.pjpListDao()?.insert(pjpEntity.apply {
+                                                pjp_id = it.id
+                                                from_time = it.from_time
+                                                to_time = it.to_time
+                                                customer_name = it.customer_name
+                                                customer_id = it.customer_id
+                                                location = it.location
+                                                date = it.date
+                                                remarks = it.remarks
+                                            })
+                                        }
+
+                                        uiThread {
+                                            progress_wheel.stopSpinning()
+                                            getTeamPjpList()
+                                        }
+                                    }
+                                } else {
+                                    progress_wheel.stopSpinning()
+                                    getTeamPjpList()
+                                }
+
+                            } else {
+                                progress_wheel.stopSpinning()
+                                AppDatabase.getDBInstance()?.pjpListDao()?.deleteAll()
                                 getTeamPjpList()
                             }
                         }, { error ->
                             progress_wheel.stopSpinning()
-                            XLog.d("DELETE PJP DATA : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                            Timber.d("GET USER PJP DATA : " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                             error.printStackTrace()
-                            (mContext as DashboardActivity).showSnackMessage(getString(R.string.something_went_wrong))
+                            getTeamPjpList()
                         })
         )
     }

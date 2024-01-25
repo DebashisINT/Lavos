@@ -18,6 +18,9 @@ interface DocumentListDao {
     @Query("DELETE FROM " + AppConstant.DOCUMENT_LIST_TABLE)
     fun deleteAll()
 
+    @Query("DELETE FROM " + AppConstant.DOCUMENT_LIST_TABLE+ " where attachment like '%http%' ")
+    fun deleteAllHttp()
+
     @Query("update " + AppConstant.DOCUMENT_LIST_TABLE + " set isUploaded=:isUploaded where list_id=:list_id")
     fun updateIsUploaded(isUploaded: Boolean, list_id: String)
 

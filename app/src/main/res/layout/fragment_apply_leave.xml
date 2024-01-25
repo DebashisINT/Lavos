@@ -5,7 +5,8 @@
     android:id="@+id/rl_leave_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="@color/color_silver"
+    android:padding="@dimen/_3sdp">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -123,7 +124,6 @@
                         android:textSize="@dimen/_13sdp" />
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
-<!--            selector_blue_botton_bg-->
 
             <com.lavos.widgets.AppCustomTextView
                 android:id="@+id/tv_submit"
@@ -132,7 +132,7 @@
                 android:layout_marginLeft="@dimen/_10sdp"
                 android:layout_marginRight="@dimen/_10sdp"
                 android:layout_marginTop="@dimen/_20sdp"
-                android:background="@drawable/shape_custom_border_blue_button"
+                android:background="@drawable/selector_blue_botton_bg"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"

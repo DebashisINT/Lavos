@@ -8,8 +8,10 @@ public interface AppConstant {
     String DBNAME = "fts_db";
     String LOCATION_TABLE = "location_db";
     String SHOP_TABLE = "shop_detail";
+    String SHOP_TABLE_ALL_TEAM = "shop_detail_all_team";
     String ATTENDANCE_TABLE = "attendance";
     String SHOP_ACTIVITY = "shop_activity";
+    String SHOP_VISIT_REVISIT_WHATSAPP_STATUS = "shop_visit_revisit_whatsapp_status";
     String GPS_STATUS = "gps_status";
     String STATE_TABLE = "state_list";
     String MARKETING_CATEGORY_TABLE = "marketing_category";
@@ -117,4 +119,62 @@ public interface AppConstant {
 
 
     boolean isImageNotFound = false;
+
+    String PROSPECT_TABLE_MASTER = "prospect_list_master";
+    String QUESTION_TABLE_MASTER = "question_list_master";
+    String QUESTION_TABLE_SUBMIT = "question_list_submit";
+
+    String ADDSHOP_SECONDARY_IMG_TABLE = "tbl_addShop_Secondary_Img";
+
+
+
+    String RETURN_DETAILS_TABLE = "tbl_return_details";
+    String RETURN_PRODUCT_LIST_TABLE = "return_product_list";
+
+    String TBL_USER_WISE_LEAVE_LIST = "tbl_user_wise_leave_list";
+
+    String TBL_SHOP_FEEDBACK = "tbl_shop_deefback";
+    String TBL_SHOP_FEEDBACK_TEMP = "tbl_shop_deefback_temp";
+    String TBL_LEAD_ACTIVITY = "tbl_lead_activity";
+
+    String SHOP_DTLS_TEAM = "shop_dtls_team";
+    String ORDER_DTLS_TEAM = "order_dtls_team";
+    String COLL_DTLS_TEAM = "coll_dtls_team";
+    String BILL_DTLS_TEAM = "bill_dtls_team";
+
+    String TBL_DIST_WISE_ORD_REPORT = "tbl_dist_wise_ord_report";
+
+    String NEW_GPS_STATUS = "new_gps_status";
+
+    String SHOP_EXTRA_CONTACT = "shop_extra_contact";
+
+    String PRODUCT_ONLINE_RATE_TEMP_TABLE = "product_online_rate_temp_table";
+
+
+    String TASK_ACTIVITY = "task_activity";
+
+    String CALL_HIS = "call_his";
+
+    String COMPANY_MASTER = "company_master";
+
+
+    String CRM_TYPE_MASTER = "crm_type_master";
+
+
+    String CRM_STATUS_MASTER = "crm_status_master";
+
+    String CRM_SOURCE_MASTER = "crm_source_master";
+
+    String CRM_STAGE_MASTER = "crm_stage_master";
+
+    String TEAM_LIST = "team_list";
+    String CONTACT_ACTIVITY = "contact_activity";
+
+    String SCHEDULE_TEMPLATE = "schedule_template";
+
+    String MODE_TEMPLATE = "mode_template";
+
+    String RULE_TEMPLATE = "rule_template";
+
+    String CRM_SCHEDULER_MASTER = "crm_scheduler_master";
 }

@@ -7,4 +7,5 @@ class NotificationListDataModel {
     var id: String? = null
     var notificationmessage: String? = null
     var date_time: String? = null
+    var phoneNo: String? = ""
 }

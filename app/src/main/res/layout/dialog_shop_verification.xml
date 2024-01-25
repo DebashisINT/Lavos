@@ -108,25 +108,27 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:background="@drawable/selector_order_history_bg"
+                android:background="@drawable/selected_new_order_history"
                 android:clickable="true"
                 android:focusable="true"
-                android:backgroundTint="#f8424e "
                 android:gravity="center"
                 android:text="@string/cancel"
                 android:textColor="@drawable/selector_text_clor_blue_white"
                 android:textSize="@dimen/_13sdp" />
+
+            <Space
+                android:layout_width="@dimen/_2sdp"
+                android:layout_height="match_parent"/>
 
             <com.lavos.widgets.AppCustomTextView
                 android:id="@+id/ok_TV"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:background="@drawable/selector_order_history_bg"
+                android:background="@drawable/deselected_new_order_history"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
-                android:backgroundTint="#57a518"
                 android:text="@string/ok"
                 android:textColor="@drawable/selector_text_clor_blue_white"
                 android:textSize="@dimen/_13sdp" />

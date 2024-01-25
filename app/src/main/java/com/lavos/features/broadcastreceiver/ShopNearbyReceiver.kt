@@ -19,7 +19,7 @@ class ShopNearbyReceiver : BroadcastReceiver() {
         // assumes WordService is a registered service
         //        Intent intent = new Intent(context, WordService.class);
         //        context.startService(intent);
-//        XLog.d("onReceive : ShopNearbyReceiver")
+        println("tag_noti_check "+intent.extras)
         val extras = intent.extras
         if (extras != null) {
 
@@ -29,7 +29,6 @@ class ShopNearbyReceiver : BroadcastReceiver() {
 
             if (shoulIBotherToNotify(shopId!!))
                 return
-
 
             if (shopname != null) {
 

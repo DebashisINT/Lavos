@@ -8,6 +8,8 @@ import com.lavos.app.AppConstant
 /**
  * Created by Saikat on 12-11-2018.
  */
+// Revision work
+// 1.0 OrderProductListEntity AppV 4.0.6 saheli 20-01-2023 table data added mantis 25601
 @Entity(tableName = AppConstant.ORDER_PRODUCT_LIST_TABLE)
 class OrderProductListEntity {
 
@@ -53,4 +55,23 @@ class OrderProductListEntity {
 
     @ColumnInfo(name = "shop_id")
     var shop_id: String? = null
+
+    /*28-12-2021*/
+    @ColumnInfo(name = "scheme_qty")
+    var scheme_qty: String? = null
+
+    @ColumnInfo(name = "scheme_rate")
+    var scheme_rate: String? = null
+
+    @ColumnInfo(name = "total_scheme_price")
+    var total_scheme_price: String? = null
+
+    @ColumnInfo(name = "MRP")
+    var MRP: String? = null
+
+    @ColumnInfo(name = "order_mrp")
+    var order_mrp: String? = null
+
+    @ColumnInfo(name = "order_discount")
+    var order_discount: String? = null
 }

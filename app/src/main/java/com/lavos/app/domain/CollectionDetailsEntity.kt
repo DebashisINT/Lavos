@@ -63,5 +63,12 @@ class CollectionDetailsEntity {
     @ColumnInfo(name = "patient_address")
     var patient_address: String? = null
 
+    @ColumnInfo(name = "Hospital")
+    var Hospital: String? = null
+
+    @ColumnInfo(name = "Email_Address")
+    var Email_Address: String? = null
+
+
 
 }

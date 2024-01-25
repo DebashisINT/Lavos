@@ -26,8 +26,9 @@ import com.lavos.app.utils.FTStorageUtils
 import com.lavos.base.presentation.BaseFragment
 import com.lavos.features.dashboard.presentation.DashboardActivity
 import com.lavos.test.viewPermission.AdapterViewPermission
-import com.elvishew.xlog.XLog
+
 import kotlinx.android.synthetic.main.fragment_view_permission.*
+import timber.log.Timber
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
@@ -247,10 +248,10 @@ class ViewPermissionFragment: BaseFragment(), View.OnClickListener {
         permList = (permList + permListDenied).toMutableList()
 
         for(i in 0..permList.size-1){
-            XLog.d("Permission Name"+permList.get(i).permissionName + " Status : ")
+            Timber.d("Permission Name"+permList.get(i).permissionName + " Status : ")
         }
         for(i in 0..permListDenied.size-1){
-            XLog.d("Permission Name"+permListDenied.get(i).permissionName + " Status : ")
+            Timber.d("Permission Name"+permListDenied.get(i).permissionName + " Status : ")
         }
 
 
@@ -330,9 +331,9 @@ class ViewPermissionFragment: BaseFragment(), View.OnClickListener {
                             val fileUrl = Uri.parse(path)
 
                             val file = File(fileUrl.path)
-//                            val uri = Uri.fromFile(file)
+                            //val uri = Uri.fromFile(file)
+                            //27-09-2021
                             val uri: Uri = FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
-
                             shareIntent.type = "image/png"
                             shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
                             startActivity(Intent.createChooser(shareIntent, "Share pdf using"));

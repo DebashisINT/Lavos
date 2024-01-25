@@ -4,6 +4,8 @@ package com.lavos.features.location.model
 /**
  * Created by Pratishruti on 28-11-2017.
  */
+// revision History
+// extra output parameter added by saheli 13-03-2023 mantis 0001
 class ShopDurationRequestData {
 
     var shop_id: String? = null
@@ -28,6 +30,21 @@ class ShopDurationRequestData {
     var in_location: String? = null
     var out_location: String? = null
     var shop_revisit_uniqKey: String? = null
+
+    var agency_name: String? = null
+    var approximate_1st_billing_value: String?= null
+    var updated_by: String?= null
+    var updated_on: String?= null
+    var pros_id: String?= null
+    var isnewShop: Boolean? = null
+    var multi_contact_name: String?= null
+    var multi_contact_number: String?= null
+    var IsShopUpdate: Boolean? = null
+    var shopid: String? = null
+
+    var distFromProfileAddrKms: String? = null
+    var stationCode: String? = null
+
 
 
 //    "visited_date": "yyyy-MM-dd",

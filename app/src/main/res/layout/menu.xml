@@ -3,26 +3,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/menu_black_color"
+    android:background="@drawable/sidebar_image_3"
     android:gravity="end">
+    <!--android:background="@drawable/shape_custom_side_menu" -->
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+      <ScrollView
+          android:layout_width="match_parent"
+          android:layout_height="match_parent">
 
-        <RelativeLayout
-            android:id="@+id/menu_RL"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="end">
+          <RelativeLayout
+              android:id="@+id/menu_RL"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:gravity="end">
 
-            <!--        <android.support.v7.widget.CardView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/_8sdp"
-                        android:layout_marginTop="?actionBarSize"
-                        app:cardElevation="@dimen/_5sdp"
-                        app:cardUseCompatPadding="true">-->
+              <!--        <android.support.v7.widget.CardView
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:layout_marginEnd="@dimen/_8sdp"
+                          android:layout_marginTop="?actionBarSize"
+                          app:cardElevation="@dimen/_5sdp"
+                          app:cardUseCompatPadding="true">-->
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -33,7 +34,8 @@
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/ic_menu_header_image">
+                    android:background="@drawable/ic_menu_header_image"
+                    android:backgroundTint="#1A2F8FF7">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -123,7 +125,7 @@
                             android:layout_height="wrap_content"
                             android:gravity="center"
                             android:text="@string/login_time"
-                            android:textColor="@color/white"
+                            android:textColor="@color/lightest_gray"
                             android:textSize="@dimen/_10sdp" />
 
                         <com.lavos.widgets.AppCustomTextView
@@ -133,7 +135,7 @@
                             android:layout_marginLeft="@dimen/_2sdp"
                             android:layout_toRightOf="@+id/login_time_text_tv"
                             android:text="10:55"
-                            android:textColor="@color/white"
+                            android:textColor="@color/lightest_gray"
                             android:textSize="@dimen/_10sdp" />
 
                         <com.lavos.widgets.AppCustomTextView
@@ -144,7 +146,7 @@
                             android:layout_marginLeft="@dimen/_3sdp"
                             android:layout_toRightOf="@+id/login_time_tv"
                             android:text="am"
-                            android:textColor="@color/white"
+                            android:textColor="@color/lightest_gray"
                             android:textSize="@dimen/_7sdp" />
 
 
@@ -158,14 +160,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_add_order_icon"
+                    android:drawableStart="@drawable/icon_home_svg"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/home"
-                    android:textColor="@color/light_gray"
-                    android:textSize="@dimen/_12sdp" />
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp"
+                    />
 
                 <com.lavos.widgets.AppCustomTextView
                     android:id="@+id/photo_registration"
@@ -178,7 +181,74 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="Photo Registration"
-                    android:textColor="@color/light_gray"
+                    android:drawableTint="@color/white"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp"
+                    android:visibility="visible"
+                    android:textStyle="normal"/>
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/photo_team_attendance"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:drawableStart="@drawable/ic_attendance_machine"
+                    android:drawableTint="@color/white"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:text="Team Attendance"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp"
+                    android:visibility="visible" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/tb_auto_revisit_menu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawableStart="@drawable/ic_nearby_new"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:text="Revisit"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp"
+                    android:visibility="visible" />
+
+                <!-- 3.0  AppV 4.0.6  DashboardActivity -->
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/tb_total_visit_menu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawableStart="@drawable/ic_nearby_new"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:text="Total Visit"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp"
+                    android:visibility="visible" />
+
+
+                <!--clear Attendance -->
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/tv_clear_attendance"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:drawableStart="@drawable/ic_attendance"
+                    android:drawableTint="@color/white"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:text="Attendance Clear"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -187,13 +257,29 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_bot"
+                    android:drawableStart="@drawable/ic_bot1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/chat_bot"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp"
+                    android:visibility="visible" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/distributor_wise_order_list_TV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:drawableStart="@drawable/ic_order_icon"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:drawableTint="@color/white"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:text="Distributor Wise Order List"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -202,13 +288,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_changepas"
+                    android:drawableStart="@drawable/ic_changepas1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/change_pwd"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp" />
 
                 <com.lavos.widgets.AppCustomTextView
@@ -216,13 +302,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_add_attendance_icon"
+                    android:drawableStart="@drawable/ic_add_attendance_icon_1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/add_attendance"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp" />
 
                 <com.lavos.widgets.AppCustomTextView
@@ -230,13 +316,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_attendance_icon"
+                    android:drawableStart="@drawable/ic_view_attendance"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/view_attendance"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp" />
 
                 <com.lavos.widgets.AppCustomTextView
@@ -244,13 +330,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_add_attendance_icon"
+                    android:drawableStart="@drawable/ic_add_attendance_icon2"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/update_work_type"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp" />
 
                 <com.lavos.widgets.AppCustomTextView
@@ -258,13 +344,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_add_attendance_icon"
+                    android:drawableStart="@drawable/ic_applyleave1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/apply_leave"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp" />
 
                 <com.lavos.widgets.AppCustomTextView
@@ -278,11 +364,71 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/shops"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp" />
 
                 <com.lavos.widgets.AppCustomTextView
                     android:id="@+id/nearby_shop_TV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawableStart="@drawable/ic_nearby_new"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:text="@string/nearby_shops"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp"
+                    android:visibility="visible" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/contacts_TV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawableStart="@drawable/ic_userclient"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:text="Contacts"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp"
+                    android:visibility="visible" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/menu_beat_TV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:drawableStart="@drawable/ic_nearby_new1"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:text="Beat"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp"
+                    android:visibility="visible" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/menu_market_assist_TV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:drawableStart="@drawable/ic_machine_learning"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:text="Market Assistant"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp"
+                    android:visibility="visible" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/tv_pending_out_loc_menu"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
@@ -291,10 +437,56 @@
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
-                    android:text="@string/nearby_shops"
-                    android:textColor="@color/light_gray"
+                    android:text="Pending Out Location"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/assigned_survey_TV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:drawableStart="@drawable/ic_surveys_audit"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:text="Survey"
+                    android:drawableTint="@color/white"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp" />
+
+                <!--mantis 0026023 A new Menu named as
+                ‘Task Management’ should be implemented in the menu bar.-->
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/assigned_lead_TV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawableStart="@drawable/ic_professional_skills_lead"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:text="Assigned Lead"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/task_management_TV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:drawableStart="@drawable/ic_professional_skills_lead1"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:text="Task Management"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp" />
 
                 <com.lavos.widgets.AppCustomTextView
                     android:id="@+id/nearby_user_TV"
@@ -307,7 +499,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/nearby_user"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -322,9 +514,10 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/activities"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible"
+                    android:drawableTint="@color/white"
                     android:gravity="center_vertical"/>
 
                 <com.lavos.widgets.AppCustomTextView
@@ -332,13 +525,28 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_order_history_icon"
+                    android:drawableStart="@drawable/ic_order_history_icon1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/history"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp" />
+                <!--Performace Menu In Menu bar 24-03-2023 by saheli-->
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/tv_performance_teamMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:drawableStart="@drawable/ic_performance1"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:text="Performance Insights"
+                    android:visibility="visible"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp" />
 
                 <com.lavos.widgets.AppCustomTextView
@@ -352,7 +560,8 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/quotation"
-                    android:textColor="@color/light_gray"
+                    android:drawableTint="@color/white"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp" />
 
                 <com.lavos.widgets.AppCustomTextView
@@ -360,13 +569,31 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_order_icon"
+                    android:drawableStart="@drawable/ic_order_icon1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/orders"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp" />
+
+
+
+                <!--Return Menu-->
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/return_TV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:drawableTint="@color/white"
+                    android:drawableStart="@drawable/ic_return_ruby_customized"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:text="@string/returns"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp" />
 
                 <!--<com.lavos.widgets.AppCustomTextView
@@ -393,13 +620,13 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:drawablePadding="@dimen/_15sdp"
-                        android:drawableStart="@drawable/ic_collection"
+                        android:drawableStart="@drawable/ic_collection1"
                         android:paddingBottom="@dimen/_7sdp"
                         android:paddingLeft="@dimen/_17sdp"
                         android:paddingRight="@dimen/_17sdp"
                         android:paddingTop="@dimen/_15sdp"
                         android:text="@string/collection"
-                        android:textColor="@color/light_gray"
+                        android:textColor="@color/lightest_gray"
                         android:textSize="@dimen/_12sdp"
                         android:layout_toLeftOf="@+id/iv_collection_drop_down_icon"
                         android:layout_alignParentLeft="true"/>
@@ -426,7 +653,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/report"
-                            android:textColor="@color/light_gray"
+                            android:textColor="@color/lightest_gray"
                             android:textSize="@dimen/_12sdp"
                             android:paddingTop="@dimen/_10sdp"
                             android:paddingBottom="@dimen/_10sdp"/>
@@ -436,7 +663,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/entry"
-                            android:textColor="@color/light_gray"
+                            android:textColor="@color/lightest_gray"
                             android:textSize="@dimen/_12sdp"
                             android:paddingTop="@dimen/_10sdp"
                             android:paddingBottom="@dimen/_10sdp"/>
@@ -455,7 +682,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/report_on_state"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp" />
 
                 <com.lavos.widgets.AppCustomTextView
@@ -469,7 +696,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/stock_details_pp_dd"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="gone" />
 
@@ -484,7 +711,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/outstanding_details_pp_dd"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="gone" />
 
@@ -499,7 +726,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/ta_text"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="gone" />
 
@@ -514,7 +741,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/mis_reports"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="gone" />
 
@@ -529,7 +756,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="Location"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="gone" />
 
@@ -538,13 +765,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_reimbursement_icon"
+                    android:drawableStart="@drawable/ic_reimbursement_icon1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/reimbursement"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="gone" />
 
@@ -559,7 +786,8 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/list_of_party"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
+                    android:drawableTint="@color/white"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible"
                     android:gravity="center_vertical"/>
@@ -575,7 +803,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/team_details"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -590,7 +818,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/all_team"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -620,7 +848,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/timesheet"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible"
                     android:gravity="center_vertical"/>
@@ -636,9 +864,10 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/task_without_colon"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible"
+                    android:drawableTint="@color/white"
                     android:gravity="center_vertical"/>
 
                 <com.lavos.widgets.AppCustomTextView
@@ -652,7 +881,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/achievement"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="gone" />
 
@@ -667,7 +896,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/performance"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="gone" />
 
@@ -681,17 +910,17 @@
                         android:id="@+id/reports_TV"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:drawablePadding="@dimen/_15sdp"
-                        android:drawableStart="@drawable/ic_add_order_report_icon"
-                        android:paddingBottom="@dimen/_7sdp"
-                        android:paddingLeft="@dimen/_17sdp"
-                        android:paddingRight="@dimen/_17sdp"
-                        android:paddingTop="@dimen/_15sdp"
-                        android:text="@string/reports"
-                        android:textColor="@color/light_gray"
-                        android:textSize="@dimen/_12sdp"
+                        android:layout_alignParentLeft="true"
                         android:layout_toLeftOf="@+id/iv_drop_down_icon"
-                        android:layout_alignParentLeft="true"/>
+                        android:drawableStart="@drawable/ic_add_order_report_icon"
+                        android:drawablePadding="@dimen/_15sdp"
+                        android:paddingLeft="@dimen/_17sdp"
+                        android:paddingTop="@dimen/_15sdp"
+                        android:paddingRight="@dimen/_17sdp"
+                        android:paddingBottom="@dimen/_7sdp"
+                        android:text="@string/reports"
+                        android:textColor="@color/lightest_gray"
+                        android:textSize="@dimen/_12sdp" />
 
                     <androidx.appcompat.widget.AppCompatImageView
                         android:id="@+id/iv_drop_down_icon"
@@ -715,7 +944,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/new_attendance_report"
-                            android:textColor="@color/light_gray"
+                            android:textColor="@color/lightest_gray"
                             android:textSize="@dimen/_12sdp"
                             android:paddingTop="@dimen/_10sdp"
                             android:paddingBottom="@dimen/_10sdp"/>
@@ -725,7 +954,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/performance_report"
-                            android:textColor="@color/light_gray"
+                            android:textColor="@color/lightest_gray"
                             android:textSize="@dimen/_12sdp"
                             android:paddingTop="@dimen/_10sdp"
                             android:paddingBottom="@dimen/_10sdp"/>
@@ -735,7 +964,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/visit_report"
-                            android:textColor="@color/light_gray"
+                            android:textColor="@color/lightest_gray"
                             android:textSize="@dimen/_12sdp"
                             android:paddingTop="@dimen/_10sdp"
                             android:paddingBottom="@dimen/_10sdp"/>
@@ -745,7 +974,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/meeting_details"
-                            android:textColor="@color/light_gray"
+                            android:textColor="@color/lightest_gray"
                             android:textSize="@dimen/_12sdp"
                             android:paddingTop="@dimen/_10sdp"
                             android:paddingBottom="@dimen/_10sdp"/>
@@ -755,7 +984,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/achv_report"
-                            android:textColor="@color/light_gray"
+                            android:textColor="@color/lightest_gray"
                             android:textSize="@dimen/_12sdp"
                             android:paddingTop="@dimen/_10sdp"
                             android:paddingBottom="@dimen/_10sdp"/>
@@ -765,7 +994,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/targ_achv_report"
-                            android:textColor="@color/light_gray"
+                            android:textColor="@color/lightest_gray"
                             android:textSize="@dimen/_12sdp"
                             android:paddingTop="@dimen/_10sdp"
                             android:paddingBottom="@dimen/_10sdp"/>
@@ -784,8 +1013,9 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/dynamic"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
+                    android:drawableTint="@color/white"
                     android:visibility="visible"
                     android:gravity="center_vertical"/>
 
@@ -800,7 +1030,8 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/map_view"
-                    android:textColor="@color/light_gray"
+                    android:drawableTint="@color/white"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -809,13 +1040,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_my_order_icon"
+                    android:drawableStart="@drawable/ic_share_logs_new"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/share_log"
-                    android:textColor="@color/light_gray"
+                    android:drawableTint="@color/white"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -830,7 +1062,8 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/share_loc"
-                    android:textColor="@color/light_gray"
+                    android:drawableTint="@color/white"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -845,7 +1078,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/view_home_loc"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -860,7 +1093,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/weather"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -875,8 +1108,9 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/doc_repo"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
+                    android:drawableTint="@color/white"
                     android:visibility="visible" />
 
                 <com.lavos.widgets.AppCustomTextView
@@ -890,7 +1124,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/chat"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -905,7 +1139,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/scan"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -913,14 +1147,14 @@
                     android:id="@+id/device_info_TV"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawablePadding="@dimen/_15sdp"
                     android:drawableStart="@drawable/ic_device_information"
-                    android:paddingBottom="@dimen/_7sdp"
+                    android:drawablePadding="@dimen/_15sdp"
                     android:paddingLeft="@dimen/_17sdp"
-                    android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingBottom="@dimen/_7sdp"
                     android:text="@string/device_info"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -928,14 +1162,14 @@
                     android:id="@+id/permission_info_TV"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:drawableStart="@drawable/ic_permisioninfo_new"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_device_information"
-                    android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
-                    android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingBottom="@dimen/_7sdp"
                     android:text="@string/permission_info"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -950,7 +1184,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/micro_learning"
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -966,7 +1200,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text=""
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
 
@@ -981,9 +1215,41 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text=""
-                    android:textColor="@color/light_gray"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/check_custom_status_TV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:drawableStart="@drawable/ic_machine_learning"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:text="Service Check"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp"
+                    android:visibility="gone" />
+
+                <!--mantis 0025783 In-app privacy policy working in menu & Login -->
+
+                <com.lavos.widgets.AppCustomTextView
+                    android:id="@+id/privacy_policy_tv_menu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:drawableStart="@drawable/ic_party_status"
+                    android:drawableTint="@color/white"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:text="Privacy policy"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp" />
 
                 <com.lavos.widgets.AppCustomTextView
                     android:id="@+id/logout_TV"
@@ -996,8 +1262,10 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/sync_logout"
-                    android:textColor="@color/light_gray"
+                    android:drawableTint="@color/white"
+                    android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp" />
+
 
                 <com.lavos.widgets.AppCustomTextView
                     android:id="@+id/version_name_TV"
@@ -1008,8 +1276,11 @@
                     android:gravity="center"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/version_name"
-                    android:textColor="@color/light_gray"
-                    android:textSize="@dimen/_8sdp" />
+                    android:textColor="@color/color_custom_red"
+                    android:textStyle="bold"
+                    android:textSize="@dimen/_12sdp" />
+
+
 
             </LinearLayout>
 

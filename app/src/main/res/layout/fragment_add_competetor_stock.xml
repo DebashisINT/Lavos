@@ -110,7 +110,7 @@
         android:id="@+id/ll_add_comp_stock_bar_heading"
         android:layout_width="match_parent"
         android:layout_height="@dimen/_40sdp"
-        android:background="@color/attendance_top_bar_color"
+        android:background="@drawable/shape_custom_border_blue_button"
         android:gravity="center"
         android:orientation="horizontal"
         android:paddingTop="@dimen/_10sdp"
@@ -193,7 +193,7 @@
                 android:id="@+id/tv_save_competetor_stock"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/shape_custom_border_blue_button"
+                android:background="@drawable/deselected_new_order_history"
                 android:gravity="center"
                 android:padding="@dimen/_10sdp"
                 android:text="Confirm"
@@ -220,12 +220,14 @@
             android:id="@+id/fab_add_competetor_stock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_add"
-            app:fabSize="normal"
-            android:background="@color/white"
-            android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
-            android:layout_margin="@dimen/_40sdp"/>
+            android:layout_alignParentBottom="true"
+            android:layout_marginTop="@dimen/_40sdp"
+            android:layout_marginEnd="@dimen/_40sdp"
+            android:layout_marginBottom="@dimen/_40sdp"
+            android:background="@color/white"
+            android:src="@drawable/ic_add"
+            app:fabSize="normal" />
 
 
         <com.lavos.app.widgets.MovableFloatingActionButton

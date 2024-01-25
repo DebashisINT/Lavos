@@ -1,15 +1,18 @@
 package com.lavos.features.device_info.presentation
 
 import android.content.Context
-import androidx.recyclerview.widget.RecyclerView
+import android.hardware.Camera
+import android.os.Build
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import com.lavos.R
 import com.lavos.app.domain.BatteryNetStatusEntity
 import com.lavos.app.utils.AppUtils
 import kotlinx.android.synthetic.main.inflate_device_info_item.view.*
+import kotlin.math.roundToInt
 
 class DeviceInfoAdapter(private val mContext: Context, private val list: ArrayList<BatteryNetStatusEntity>?,
                         private val onSyncClick: (BatteryNetStatusEntity) -> Unit) : RecyclerView.Adapter<DeviceInfoAdapter.MyViewHolder>() {
@@ -63,7 +66,64 @@ class DeviceInfoAdapter(private val mContext: Context, private val list: ArrayLi
                         onSyncClick(list?.get(adapterPosition))
                     }
                 }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P){
+                    tv_back_camera.text = "Unable to detected"
+                    tv_front_camera.text =  "Unable to detected"
+                }
+                else{
+                    tv_back_camera.text = getBackCameraResolutionInMp().roundToInt().toString() + " Megapixels "
+                    tv_front_camera.text = getFrontCameraResolutionInMp().roundToInt().toString()+ " Megapixels "
+                }
+
             }
         }
+    }
+
+    fun getBackCameraResolutionInMp(): Float {
+        val noOfCameras: Int = Camera.getNumberOfCameras()
+        var maxResolution = -1f
+        var pixelCount: Long = -1
+        for (i in 0 until noOfCameras) {
+            val cameraInfo: Camera.CameraInfo = Camera.CameraInfo()
+            Camera.getCameraInfo(i, cameraInfo)
+            if (cameraInfo.facing === Camera.CameraInfo.CAMERA_FACING_BACK) {
+                val camera: Camera = Camera.open(i)
+                val cameraParams: Camera.Parameters = camera.getParameters()
+                for (j in 0 until cameraParams.getSupportedPictureSizes().size) {
+                    val pixelCountTemp: Int = cameraParams.getSupportedPictureSizes().get(j).width * cameraParams.getSupportedPictureSizes().get(j).height // Just changed i to j in this loop
+                    if (pixelCountTemp > pixelCount) {
+                        pixelCount = pixelCountTemp.toLong()
+                        maxResolution = pixelCountTemp.toFloat() / 1024000.0f
+
+                    }
+                }
+                camera.release()
+            }
+        }
+        return maxResolution
+    }
+
+    fun getFrontCameraResolutionInMp(): Float {
+        val noOfCameras: Int = Camera.getNumberOfCameras()
+        var maxResolution = -1f
+        var pixelCount: Long = -1
+        for (i in 0 until noOfCameras) {
+            val cameraInfo: Camera.CameraInfo = Camera.CameraInfo()
+            Camera.getCameraInfo(i, cameraInfo)
+            if (cameraInfo.facing === Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                val camera: Camera = Camera.open(i)
+                val cameraParams: Camera.Parameters = camera.getParameters()
+                for (j in 0 until cameraParams.getSupportedPictureSizes().size) {
+                    val pixelCountTemp: Int = cameraParams.getSupportedPictureSizes().get(j).width * cameraParams.getSupportedPictureSizes().get(j).height // Just changed i to j in this loop
+                    if (pixelCountTemp > pixelCount) {
+                        pixelCount = pixelCountTemp.toLong()
+                        maxResolution = pixelCountTemp.toFloat() / 1024000.0f
+
+                    }
+                }
+                camera.release()
+            }
+        }
+        return maxResolution
     }
 }

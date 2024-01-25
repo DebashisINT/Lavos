@@ -20,9 +20,10 @@ import com.lavos.features.alarm.presetation.AlarmRingingService
 import com.lavos.features.alarm.presetation.FloatingWidgetService
 import com.lavos.features.location.LocationFuzedService
 import com.lavos.features.location.LocationJobService
-import com.elvishew.xlog.XLog
+
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import timber.log.Timber
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -78,9 +79,9 @@ class AlarmReceiver : BroadcastReceiver() {
         if (intent.hasExtra("request_code")) {
             if (intent.getIntExtra("request_code", 0) == 123) {
                 if (FTStorageUtils.isMyServiceRunning(LocationFuzedService::class.java, context)) {
-                    XLog.e("Alarm_Service: Service is running.")
+                    Timber.e("Alarm_Service: Service is running.")
                 } else {
-                    XLog.e("Alarm_Service: Service is stopped.")
+                    Timber.e("Alarm_Service: Service is stopped.")
 
                     if (Pref.user_id != null && Pref.user_id!!.isNotEmpty()) {
 
@@ -101,9 +102,9 @@ class AlarmReceiver : BroadcastReceiver() {
                             val resultCode = jobScheduler.schedule(jobInfo)
 
                             if (resultCode == JobScheduler.RESULT_SUCCESS) {
-                                XLog.d("===============================Job scheduled (Alarm Receiver)============================")
+                                Timber.d("===============================Job scheduled (Alarm Receiver)============================")
                             } else {
-                                XLog.d("=====================Job not scheduled (Alarm Receiver)====================================")
+                                Timber.d("=====================Job not scheduled (Alarm Receiver)====================================")
                             }
                         } else {
                             val serviceLauncher = Intent(context, LocationFuzedService::class.java)
@@ -140,7 +141,7 @@ class AlarmReceiver : BroadcastReceiver() {
               val intent = Intent(context, AlarmReceiver::class.java)
               intent.action = SEND_ACTION
 
-              val broadcast = PendingIntent.getBroadcast(context, INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_IMMUTABLE)
+              val broadcast = PendingIntent.getBroadcast(context, INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
               //Reprogramamos la alarma si ya existía
               //            alarmManager.cancel(broadcast);
@@ -171,7 +172,7 @@ class AlarmReceiver : BroadcastReceiver() {
             val intent = Intent(context, AlarmReceiver::class.java)
             intent.action = SEND_ACTION
 
-            val broadcast = PendingIntent.getBroadcast(context, INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_IMMUTABLE)
+            val broadcast = PendingIntent.getBroadcast(context, INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
             alarmManager.cancel(broadcast)
 
@@ -191,7 +192,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
               val intent = Intent(context, AlarmReceiver::class.java)
 
-              val pendingIntent = PendingIntent.getBroadcast(context, ALARM_REQUEST_CODE_MORNING, intent, PendingIntent.FLAG_IMMUTABLE)
+              val pendingIntent = PendingIntent.getBroadcast(context, ALARM_REQUEST_CODE_MORNING, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
               val calendar = Calendar.getInstance()
 
@@ -214,6 +215,8 @@ class AlarmReceiver : BroadcastReceiver() {
 
             val intent = Intent(context, AlarmReceiver::class.java)
             intent.putExtra("requestCode", requestCode)
+//            val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_ONE_SHOT)
+        // FLAG_IMMUTABLE update
             val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE)
 
             val calendar = Calendar.getInstance(Locale.ENGLISH)
@@ -238,6 +241,8 @@ class AlarmReceiver : BroadcastReceiver() {
 
             val intent = Intent(context, AlarmReceiver::class.java)
             intent.putExtra("requestCode", requestCode)
+//            val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_ONE_SHOT)
+            // FLAG_IMMUTABLE update
             val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE)
 
             val calendar = Calendar.getInstance(Locale.ENGLISH)
@@ -276,7 +281,9 @@ class AlarmReceiver : BroadcastReceiver() {
             cal.add(Calendar.SECOND, 20)
             val manager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager//get instance of alarm manager
             val alarmIntent = Intent(context, AlarmReceiver::class.java)
-            val pendingIntent = PendingIntent.getBroadcast(context, requestCode, alarmIntent, 0)
+//            val pendingIntent = PendingIntent.getBroadcast(context, requestCode, alarmIntent, 0)
+            // FLAG_IMMUTABLE update
+            val pendingIntent = PendingIntent.getBroadcast(context, requestCode, alarmIntent,PendingIntent.FLAG_IMMUTABLE)
             manager.set(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)//set alarm manager with entered timer by converting into milliseconds
 
 
@@ -285,6 +292,8 @@ class AlarmReceiver : BroadcastReceiver() {
         fun stopAlarmManager(context: Context, alarmRequestCode: Int) {
             val manager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val alarmIntent = Intent(context, AlarmReceiver::class.java)
+//            val pendingIntent = PendingIntent.getBroadcast(context, alarmRequestCode, alarmIntent, PendingIntent.FLAG_NO_CREATE)
+            // FLAG_IMMUTABLE update
             val pendingIntent = PendingIntent.getBroadcast(context, alarmRequestCode, alarmIntent, PendingIntent.FLAG_IMMUTABLE)
             if (pendingIntent != null) {
                 manager.cancel(pendingIntent)//cancel the alarm manager of the pending intent
@@ -323,6 +332,8 @@ class AlarmReceiver : BroadcastReceiver() {
 
             val intent = Intent(context, AlarmReceiver::class.java)
             intent.putExtra("request_code", requestCode)
+            //val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            // FLAG_IMMUTABLE update
             val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE)
 
             val calendar = Calendar.getInstance(Locale.ENGLISH)
@@ -344,6 +355,8 @@ class AlarmReceiver : BroadcastReceiver() {
         fun stopServiceAlarm(context: Context, alarmRequestCode: Int) {
             val manager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val alarmIntent = Intent(context, NewAlarmReceiver::class.java)
+//            val pendingIntent = PendingIntent.getBroadcast(context, alarmRequestCode, alarmIntent, PendingIntent.FLAG_NO_CREATE)
+            // FLAG_IMMUTABLE update
             val pendingIntent = PendingIntent.getBroadcast(context, alarmRequestCode, alarmIntent, PendingIntent.FLAG_IMMUTABLE)
             if (pendingIntent != null) {
                 manager.cancel(pendingIntent)//cancel the alarm manager of the pending intent

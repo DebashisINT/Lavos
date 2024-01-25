@@ -2,12 +2,29 @@ package com.lavos.features.shopdetail.presentation.api
 
 import android.content.Context
 import android.net.Uri
+import android.os.Environment
 import android.text.TextUtils
+import android.util.Log
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.lavos.app.FileUtils
+import com.lavos.app.Pref
+import com.lavos.base.BaseResponse
+import com.lavos.features.addshop.model.AddLogReqData
 import com.lavos.features.addshop.model.AddShopRequestData
 import com.lavos.features.addshop.model.AddShopResponse
+import com.lavos.features.addshop.model.LogFileResponse
+import com.lavos.features.contacts.CallHisDtls
+import com.lavos.features.contacts.CompanyReqData
+import com.lavos.features.contacts.ContactMasterRes
+import com.lavos.features.contacts.SourceMasterRes
+import com.lavos.features.contacts.StageMasterRes
+import com.lavos.features.contacts.StatusMasterRes
+import com.lavos.features.contacts.TypeMasterRes
 import com.lavos.features.dashboard.presentation.DashboardActivity
+import com.lavos.features.document.model.AddEditDocumentInputParams
+import com.lavos.features.document.model.DocumentAttachmentModel
+import com.lavos.features.login.model.WhatsappApiData
+import com.lavos.features.login.model.WhatsappApiFetchData
 import com.google.gson.Gson
 import io.reactivex.Observable
 import okhttp3.MediaType
@@ -22,6 +39,49 @@ class EditShopRepo(val apiService: EditShopApi) {
 
     fun editShop(shop: AddShopRequestData): Observable<AddShopResponse> {
         return apiService.editShop(shop)
+    }
+
+    fun whatsAppStatusSync(obj: WhatsappApiData): Observable<BaseResponse> {
+        return apiService.whatsAppStatusSyncApi(obj)
+    }
+
+    fun whatsAppStatusFetch(user_id: String): Observable<WhatsappApiFetchData> {
+        return apiService.whatsAppStatusFetchApi(user_id)
+    }
+
+    fun callCompanyMaster(session_token: String): Observable<ContactMasterRes> {
+        return apiService.callCompanyMasterApi(session_token)
+    }
+
+    fun saveCompanyMaster(companyName: String): Observable<BaseResponse> {
+        return apiService.saveCompanyMasterApi(Pref.session_token.toString(),Pref.user_id.toString(),companyName)
+    }
+
+    fun saveCompanyMasterNw(companyName: CompanyReqData): Observable<BaseResponse> {
+        return apiService.saveCompanyMasterApiNw(companyName)
+    }
+
+    fun callTypeMaster(session_token: String): Observable<TypeMasterRes> {
+        return apiService.callTypeMasterApi(session_token)
+    }
+
+    fun callStatusMaster(session_token: String): Observable<StatusMasterRes> {
+        return apiService.callStatusMasterApi(session_token)
+    }
+    fun callSourceMaster(session_token: String): Observable<SourceMasterRes> {
+        return apiService.callSourceMasterApi(session_token)
+    }
+
+    fun callStageMaster(session_token: String): Observable<StageMasterRes> {
+        return apiService.callStageMasterApi(session_token)
+    }
+
+    fun callLogListSaveApi(callLogHisSave: CallHisDtls?): Observable<BaseResponse> {
+        return apiService.callLogListSaveApi(callLogHisSave)
+    }
+
+    fun callCallListHisAPI(user_id: String): Observable<CallHisDtls> {
+        return apiService.callCallListHisAPI(user_id)
     }
 
     fun addShopWithImage(shop: AddShopRequestData, shop_image: String?, context: Context): Observable<AddShopResponse> {
@@ -121,4 +181,56 @@ class EditShopRepo(val apiService: EditShopApi) {
             apiService.editShopWithImage(jsonInString, profile_img_data)
         // return apiService.getAddShopWithoutImage(jsonInString)
     }
+
+
+
+    fun addLogfile(user_id: AddLogReqData, shop_image: String, context: Context): Observable<LogFileResponse> {
+       /* var log_attachments:MultipartBody.Part? = null
+        if (!TextUtils.isEmpty(shop_image)) {
+            val profile_img_file = FileUtils.getFile(context, Uri.parse(shop_image))
+            if (profile_img_file != null && profile_img_file.exists()) {
+                val profileImgBody = RequestBody.create(MediaType.parse("multipart/form-data"), profile_img_file)
+                log_attachments = MultipartBody.Part.createFormData("attachments", profile_img_file.name, profileImgBody)
+            }
+        }
+
+        val imageName = Pref.user_id + "~" + shop_image+ "~"
+        //val fileName = imageName + "_" + System.currentTimeMillis() + "." + fileExt
+        val fileName = imageName + "_" + System.currentTimeMillis() + ".txt"
+
+        Log.e("Document Image", "File Name=========> $fileName")
+        //var shopObject: RequestBody? = null
+        var jsonInString = ""
+        try {
+            jsonInString = Gson().toJson(user_id)
+            //  shopObject = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), jsonInString)
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
+
+
+        return  apiService.logshareFile(jsonInString, log_attachments)
+        // return apiService.getAddShopWithoutImage(jsonInString)*/
+
+
+
+        //////
+        var log_attachments_new:MultipartBody.Part? = null
+        var log_attachments_file: File? = null
+        log_attachments_file = File(shop_image)
+        val profileImgBody = RequestBody.create(MediaType.parse("multipart/form-data"), log_attachments_file)
+        var jsonInString = ""
+        try {
+            jsonInString = ObjectMapper().writeValueAsString(user_id)
+            //  shopObject = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), jsonInString)
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
+        log_attachments_new = MultipartBody.Part.createFormData("attachments", "${Pref.user_id}.zip", profileImgBody)
+        return  apiService.logshareFile(jsonInString, log_attachments_new)
+    }
+
+
+
+
 }

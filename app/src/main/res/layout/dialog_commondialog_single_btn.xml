@@ -94,7 +94,7 @@
             android:text="@string/ok"
             android:textSize="@dimen/_13sdp"
             android:gravity="center"
-            android:background="@drawable/selector_order_history_bg"
+            android:background="@drawable/deselected_new_order_history"
             android:textColor="@drawable/selector_text_clor_blue_white"
             android:clickable="true"
             android:focusable="true"

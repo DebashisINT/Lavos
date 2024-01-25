@@ -14,6 +14,7 @@ import android.view.ViewGroup
 import android.view.Window
 import android.widget.ImageView
 import com.lavos.R
+import com.lavos.app.Pref
 import com.lavos.app.domain.StageEntity
 import com.lavos.widgets.AppCustomEditText
 import com.lavos.widgets.AppCustomTextView
@@ -75,7 +76,15 @@ class StageListDialog: DialogFragment() {
 
         rv_common_dialog_list.adapter = adapter
 
-        dialog_header_TV.text = "Stage"
+        /*6-12-2021*/
+        if(Pref.IsnewleadtypeforRuby){
+            dialog_header_TV.text = "Prospect"
+        }
+        else{
+            dialog_header_TV.text = "Stage"
+        }
+
+//        dialog_header_TV.text = "Stage"
         et_search = v.findViewById(R.id.et_search)
         iv_close_icon = v.findViewById(R.id.iv_close_icon)
 

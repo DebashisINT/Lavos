@@ -24,12 +24,13 @@ public class AndroidAudioRecorder {
     private Activity activity;
     private Fragment fragment;
 
-//    private String filePath = Environment.getExternalStorageDirectory() + "/recorded_audio.wav";
+    //private String filePath = Environment.getExternalStorageDirectory() + "/recorded_audio.wav";
+    //27-09-2021
     private String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/recorded_audio.wav";
-
     private AudioSource source = AudioSource.MIC;
     private AudioChannel channel = AudioChannel.STEREO;
-    private AudioSampleRate sampleRate = AudioSampleRate.HZ_44100;
+    //private AudioSampleRate sampleRate = AudioSampleRate.HZ_44100;
+    private AudioSampleRate sampleRate = AudioSampleRate.HZ_100;
     private int color = Color.parseColor("#546E7A");
     private int requestCode = 0;
     private boolean autoStart = false;

@@ -13,9 +13,26 @@ import com.amulyakhare.textdrawable.util.ColorGenerator
 import com.lavos.R
 import com.lavos.app.AppDatabase
 import com.lavos.app.Pref
+import com.lavos.app.domain.AddShopDBModelEntity
 import com.lavos.app.domain.MemberShopEntity
 import com.lavos.app.utils.AppUtils
 import kotlinx.android.synthetic.main.inflate_member_shop_list.view.*
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.history_llll
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.history_vvview
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.last_visited_date_TV
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.ll_shop_code
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.myshop_address_TV
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.myshop_name_TV
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.shop_IV
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.total_visited_value_TV
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.tv_shop_code
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.tv_shop_contact_no
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.visit_rl
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.iconWrapper_rl
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.add_quot_ll
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.add_order_ll
+import kotlinx.android.synthetic.main.inflate_member_shop_list.view.order_view
+import kotlinx.android.synthetic.main.inflate_nearby_shops.view.*
 
 /**
  * Created by Saikat on 03-Jul-20.
@@ -149,7 +166,8 @@ class OfflineAllShopAdapter(private val context: Context, private val teamShopLi
                         tv_funnel_stage_header.visibility = View.GONE
                         tv_funnel_stage.visibility = View.GONE
                     }
-                } else {
+                }
+                else {
                     tv_funnel_stage_header.visibility = View.GONE
                     tv_funnel_stage.visibility = View.GONE
                     tv_stage_header.visibility = View.GONE
@@ -192,6 +210,10 @@ class OfflineAllShopAdapter(private val context: Context, private val teamShopLi
                         }
                     }
                 }
+
+                iconWrapper_rl.visibility = View.GONE
+
+
             }
         }
     }
